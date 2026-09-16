@@ -2,12 +2,14 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './App.css';
 import Dashboard from './pages/Dashboard';
 import Account from './pages/Account';
+import Login from './pages/login';
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
+          <Route path="/login" element={<Login />} />
           <Route path="/" element={<Navigate replace to="/dashboard" />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/account" element={<Account />} />
