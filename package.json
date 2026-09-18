@@ -14,11 +14,16 @@
   "dependencies": {
     "@stripe/react-stripe-js": "^6.10.0",
     "@stripe/stripe-js": "^9.16.0",
+    "@untitledui/icons": "^0.0.22",
     "axios": "^1.20.0",
+    "lucide-react": "^1.47.0",
     "react": "^19.2.8",
+    "react-aria": "^3.52.1",
+    "react-aria-components": "^1.21.1",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

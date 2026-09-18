@@ -3,18 +3,21 @@ import './App.css';
 import Dashboard from './pages/Dashboard';
 import Account from './pages/Account';
 import Login from './pages/login';
+import NotFound from './pages/NotFound';
+import RootLayout from './layouts/Root_layout';
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/" element={<Navigate replace to="/dashboard" />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/account" element={<Account />} />
-          {/* Slot for future pages - add new routes here */}
-          <Route path="*" element={<div>404 - Page Not Found</div>} />
+          <Route path="/" element={<RootLayout />}>
+            <Route index element={<Navigate replace to="/dashboard" />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="account" element={<Account />} />
+          </Route>
+          <Route path="login" element={<Login />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </Router>

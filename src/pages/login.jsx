@@ -29,10 +29,10 @@ const Login = () => {
 
         <div className="px-9 py-8">
           {/* Header */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 flex items-center justify-center ">
+          <div className="flex items-center gap- mb-8">
+            <div className="w-8 h-8 flex items-center justify-center ">
               <img
-                src="logo-3.png"
+                src="/images/favicon.svg"
                 alt="logo"
                 className="w-12 h-12 object-contain"
                 onError={(e) => {
@@ -41,7 +41,7 @@ const Login = () => {
                 }}
               />
             </div>
-            <div>
+            <div className="flex-1 text-center">
               <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Welcome back</h1>
               <p className="text-xs text-gray-400 mt-0.5">Hotel management System</p>
             </div>
