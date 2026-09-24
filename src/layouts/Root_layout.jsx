@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import NavBar from './NavBar';
+// import NavBar from './NavBar';
 import { SidebarNavigationSimpleDemo } from '../components/sideBar';
 // import Footer from './Footer';
 
@@ -9,7 +9,7 @@ const RootLayout = () => {
     <div className="flex">
       <SidebarNavigationSimpleDemo />
       <div className="flex-1">
-        <NavBar />
+        {/* <NavBar /> */}
         <main className="pt-14">
           {' '}
           {/* offset for fixed NavBar height */}
