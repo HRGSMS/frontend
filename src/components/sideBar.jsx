@@ -7,13 +7,11 @@ import {
   HomeLine,
   LineChartUp03,
   MessageChatCircle,
-  NotificationBox,
   Package,
   PieChart03,
   Rows01,
   Settings01,
   User01,
-  Users01,
   UsersPlus,
 } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
@@ -23,16 +21,6 @@ const navItemsSimple = [
     label: 'Dashboard',
     href: '/dashboard',
     icon: HomeLine,
-    items: [
-      { label: 'Overview', href: '/dashboard/overview', icon: Grid03 },
-      { label: 'Analytics', href: '/dashboard/analytics', icon: LineChartUp03 },
-      {
-        label: 'Notifications',
-        href: '/dashboard/notifications',
-        icon: NotificationBox,
-        badge: 3,
-      },
-    ],
   },
   {
     label: 'Reservations',
@@ -45,22 +33,9 @@ const navItemsSimple = [
     ],
   },
   {
-    label: 'Rooms',
+    label: 'Room Inventory',
     href: '/rooms',
     icon: Package,
-    items: [
-      { label: 'Room Status', href: '/rooms/status', icon: Grid03 },
-      { label: 'Room Types', href: '/rooms/types', icon: Archive },
-    ],
-  },
-  {
-    label: 'Guests',
-    href: '/guests',
-    icon: Users01,
-    items: [
-      { label: 'Guest Directory', href: '/guests/directory', icon: Users01 },
-      { label: 'Guest Lookup', href: '/guests/lookup', icon: User01 },
-    ],
   },
   {
     label: 'Service Requests',
@@ -69,9 +44,9 @@ const navItemsSimple = [
     badge: 5,
   },
   {
-    label: 'Housekeeping',
-    href: '/housekeeping',
-    icon: CheckDone01,
+    label: 'Service Catalog',
+    href: '/service-catalog',
+    icon: CurrencyDollarCircle,
   },
   {
     label: 'Reports',
@@ -80,10 +55,12 @@ const navItemsSimple = [
     items: [
       { label: 'Occupancy', href: '/reports/occupancy', icon: PieChart03 },
       { label: 'Revenue', href: '/reports/revenue', icon: LineChartUp03 },
+      { label: 'Billing Summary', href: '/reports/billing-summary', icon: CurrencyDollarCircle },
+      { label: 'Service Usage', href: '/reports/service-usage', icon: Grid03 },
     ],
   },
   {
-    label: 'Staff',
+    label: 'Staff', // Admin only, per spec — pending role-based filtering
     href: '/staff',
     icon: UsersPlus,
   },
@@ -91,6 +68,11 @@ const navItemsSimple = [
     label: 'Billing & Invoices',
     href: '/billing',
     icon: CurrencyDollarCircle,
+  },
+  {
+    label: 'Audit Log', // Admin only, per spec — pending role-based filtering
+    href: '/audit-log',
+    icon: Archive,
   },
 ];
 
@@ -128,16 +110,16 @@ export const SidebarNavigationSimpleDemo = () => {
   const { pathname } = useLocation();
 
   return (
-    <aside className="hidden h-screen w-64 shrink-0 sticky top-0 border-r border-gray-200 bg-white md:flex md:flex-col">
-      <div className="flex items-center gap-5 border-b border-gray-200 px-6 py-4">
+    <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-gray-200 bg-white md:flex md:flex-col">
+      <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-5">
         <img
           src="/favicon.svg"
           alt="Sky Nest Hotels logo"
           className="h-8 w-8 shrink-0 object-contain"
         />
         <div>
-          <div className="text-lg font-bold leading-tight text-gray-900">Sky Nest Hotels</div>
-          <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 py-2">
+          <div className="text-cyan-600 text-xl font-bold leading-tight">Sky Nest Hotels</div>
+          <div className="text-xs font-medium uppercase tracking-wide text-gray-500 pt-1">
             Executive management
           </div>
         </div>
@@ -156,7 +138,7 @@ export const SidebarNavigationSimpleDemo = () => {
           </div>
         ))}
       </nav>
-      <div className="border-t border-gray-200 px-3 py-2">
+      <div className="border-t border-gray-200 px-3 py-4">
         {footerItems.map((item) => (
           <SidebarItem key={item.label} item={item} activeUrl={pathname} />
         ))}

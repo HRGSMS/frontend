@@ -5,6 +5,8 @@ import Account from './pages/Account';
 import Login from './pages/login';
 import NotFound from './pages/NotFound';
 import RootLayout from './layouts/Root_layout';
+import ReservationsListPage from './pages/Reservationslistpage ';
+import NewReservationPage from './pages/Newreservationpage ';
 
 function App() {
   return (
@@ -15,7 +17,14 @@ function App() {
             <Route index element={<Navigate replace to="/dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="account" element={<Account />} />
+
+            <Route path="reservations">
+              <Route index element={<Navigate replace to="all" />} />
+              <Route path="all" element={<ReservationsListPage />} />
+              <Route path="new" element={<NewReservationPage onCreateBooking={() => {}} />} />
+            </Route>
           </Route>
+
           <Route path="login" element={<Login />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
