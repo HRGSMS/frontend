@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>SkyNest Hotels - Branch Overview</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Playfair+Display:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary": "#ffffff",
+                    "tertiary-container": "#262a2c",
+                    "surface": "#f9f9ff",
+                    "primary": "#00152f",
+                    "on-tertiary-fixed": "#181c1e",
+                    "surface-container-high": "#dee8ff",
+                    "inverse-primary": "#b0c8f0",
+                    "secondary": "#735c00",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed": "#d4e3ff",
+                    "surface-container-low": "#f0f3ff",
+                    "on-secondary-container": "#745c00",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "tertiary-fixed": "#e0e3e6",
+                    "on-surface": "#111c2c",
+                    "tertiary-fixed-dim": "#c3c7ca",
+                    "error-container": "#ffdad6",
+                    "secondary-container": "#fed65b",
+                    "on-background": "#111c2c",
+                    "background": "#f9f9ff",
+                    "surface-dim": "#cfdaf1",
+                    "surface-container": "#e7eeff",
+                    "on-tertiary-container": "#8d9194",
+                    "on-tertiary-fixed-variant": "#43474a",
+                    "secondary-fixed": "#ffe088",
+                    "on-primary-fixed": "#001c3a",
+                    "surface-tint": "#485f82",
+                    "inverse-on-surface": "#ebf1ff",
+                    "outline-variant": "#c4c6cf",
+                    "on-error-container": "#93000a",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed-variant": "#574500",
+                    "surface-variant": "#d8e3fa",
+                    "surface-container-lowest": "#ffffff",
+                    "on-primary-container": "#7a92b7",
+                    "outline": "#74777f",
+                    "on-secondary-fixed": "#241a00",
+                    "primary-container": "#0f2a4a",
+                    "primary-fixed-dim": "#b0c8f0",
+                    "surface-bright": "#f9f9ff",
+                    "secondary-fixed-dim": "#e9c349",
+                    "on-surface-variant": "#43474e",
+                    "inverse-surface": "#263142",
+                    "tertiary": "#111618",
+                    "surface-container-highest": "#d8e3fa",
+                    "on-primary-fixed-variant": "#304869"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-mobile": "20px",
+                    "unit": "8px",
+                    "container-max": "1440px",
+                    "margin-desktop": "64px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-sm": [
+                            "Inter"
+                    ],
+                    "headline-md": [
+                            "Playfair Display"
+                    ],
+                    "display-lg-mobile": [
+                            "Playfair Display"
+                    ],
+                    "body-md": [
+                            "Inter"
+                    ],
+                    "label-md": [
+                            "Inter"
+                    ],
+                    "headline-sm": [
+                            "Playfair Display"
+                    ],
+                    "display-lg": [
+                            "Playfair Display"
+                    ],
+                    "body-lg": [
+                            "Inter"
+                    ]
+            },
+            "fontSize": {
+                    "label-sm": [
+                            "12px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "headline-md": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.3",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "32px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "1.5",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "label-md": [
+                            "14px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "0.05em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "headline-sm": [
+                            "24px",
+                            {
+                                    "lineHeight": "1.4",
+                                    "fontWeight": "600"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "1.2",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "1.6",
+                                    "fontWeight": "400"
+                            }
+                    ]
+            }
+    },
+        },
+      }
+    </script>
+<style>
+        /* Ambient Sapphire Shadow */
+        .shadow-ambient {
+            box-shadow: 0 20px 40px -10px rgba(0, 21, 47, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen">
+<!-- TopNavBar -->
+<nav class="hidden md:flex bg-surface/70 backdrop-blur-md fixed top-0 right-0 left-64 h-20 justify-between items-center px-margin-desktop w-[calc(100%-16rem)] z-40 transition-all duration-300">
+<div class="flex items-center gap-8">
+<h1 class="text-headline-sm font-headline-sm text-primary font-bold hidden">SkyNest Management</h1>
+<div class="flex gap-6">
+<!-- Navigation Links -->
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Colombo</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Kandy</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors text-label-md font-label-md" href="#">Galle</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<!-- Trailing Icons -->
+<button class="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors group">
+<span class="material-symbols-outlined transition-transform duration-200 group-hover:scale-110">notifications</span>
+</button>
+<button class="text-primary hover:bg-surface-container-high p-2 rounded-full transition-colors group">
+<span class="material-symbols-outlined transition-transform duration-200 group-hover:scale-110">apps</span>
+</button>
+<!-- Trailing Primary Action / Profile -->
+<button class="flex items-center gap-2 px-4 py-2 bg-surface-container-low hover:bg-surface-container-high rounded-full transition-colors shadow-sm">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-primary/10">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a luxury hotel executive manager in a brightly lit modern office with subtle blue and gold accents in the background, conveying competence and hospitality in a light-mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0nMiTfz7_bzUakCYRhm7X0-WmfZ1_EHHTS0-QXz6eXZ5UQSEjjSOpuUATvymVvJpz0LfPD3o2XMAYS8KZnO0Ai3KdjsS588nBanHsUB9ngXqyj9M43eRFuzbRxNu4-nNwNBsc4A_nA-bqQ3CTKB2XqSE6uzlYVUTd50LAy4ZkFyjNU7dSCoHPbmmvW2qISNW-sVL3_-AZ3LDr7Kq8HgwUPI8nMMbSojblwkXLPyKC-EJxffp6S8Sdj2vSREJfRnNCvlD5kB14qwz4"/>
+</div>
+<span class="text-label-md font-label-md text-primary font-semibold">Profile</span>
+</button>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 backdrop-blur-xl bg-white/80 shadow-[30px_0_60px_-15px_rgba(0,21,47,0.15)] z-50 py-8 px-4 justify-between transition-all duration-300">
+<div>
+<!-- Header -->
+<div class="mb-12 px-2">
+<div class="flex items-center gap-4 mb-2">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">hotel_class</span>
+</div>
+<h2 class="text-headline-sm font-headline-sm font-bold text-primary tracking-tight">SkyNest Hotels</h2>
+</div>
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-widest pl-14">Executive Management</p>
+</div>
+<!-- Tabs -->
+<ul class="space-y-2">
+<!-- Active Tab -->
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-primary font-bold border-r-4 border-primary bg-surface-container-low transition-all duration-300 ease-in-out scale-95 origin-left" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="text-label-md font-label-md">Branch Overview</span>
+</a>
+</li>
+<!-- Inactive Tabs -->
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">calendar_month</span>
+<span class="text-label-md font-label-md">Bookings</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">concierge</span>
+<span class="text-label-md font-label-md">Guest Services</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-3 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">assessment</span>
+<span class="text-label-md font-label-md">Reports</span>
+</a>
+</li>
+</ul>
+</div>
+<div>
+<!-- CTA -->
+<button class="w-full mb-8 py-3 px-4 bg-primary text-on-primary rounded-lg text-label-md font-label-md font-semibold hover:shadow-lg hover:shadow-primary/20 transition-all duration-300 flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Booking
+            </button>
+<!-- Footer Tabs -->
+<ul class="space-y-2 border-t border-outline-variant/30 pt-4">
+<li>
+<a class="flex items-center gap-4 px-4 py-2 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:rotate-45 transition-transform">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-4 px-4 py-2 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all duration-300 group" href="#">
+<span class="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">help_center</span>
+<span class="text-label-md font-label-md">Support</span>
+</a>
+</li>
+</ul>
+</div>
+</aside>
+<!-- Main Canvas -->
+<main class="md:ml-64 pt-24 md:pt-32 px-4 md:px-margin-desktop pb-24 max-w-container-max mx-auto">
+<!-- Hero Header Section -->
+<header class="mb-16">
+<h1 class="text-display-lg-mobile md:text-display-lg font-display-lg-mobile md:font-display-lg text-primary mb-2">Good Morning, Management</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-2xl">Here's a serene overview of your properties' performance today.</p>
+</header>
+<!-- Key Stats Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-16">
+<!-- Total Occupancy -->
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-ambient flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute top-0 right-0 w-32 h-32 bg-secondary/5 rounded-bl-full -z-10 transition-transform duration-700 group-hover:scale-150"></div>
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-4">
+<span class="material-symbols-outlined text-secondary">king_bed</span>
+<h3 class="text-label-md font-label-md uppercase tracking-wider">Total Occupancy</h3>
+</div>
+<p class="text-headline-md font-headline-md text-primary">85%</p>
+</div>
+<div class="mt-8">
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[85%] rounded-full relative">
+<div class="absolute inset-0 bg-white/20 w-1/2 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Bookings -->
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-ambient flex flex-col justify-between relative overflow-hidden group">
+<div class="absolute bottom-0 right-0 w-24 h-24 bg-primary/5 rounded-tl-full -z-10 transition-transform duration-700 group-hover:scale-150"></div>
+<div>
+<div class="flex items-center gap-2 text-on-surface-variant mb-4">
+<span class="material-symbols-outlined text-primary">confirmation_number</span>
+<h3 class="text-label-md font-label-md uppercase tracking-wider">Active Bookings</h3>
+</div>
+<p class="text-headline-md font-headline-md text-primary">42</p>
+</div>
+<div class="mt-8 flex items-center gap-2 text-label-sm font-label-sm text-secondary">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span>+12% vs yesterday</span>
+</div>
+</div>
+<!-- Revenue Today -->
+<div class="bg-primary text-on-primary rounded-xl p-8 shadow-ambient shadow-primary/30 flex flex-col justify-between relative overflow-hidden">
+<div class="absolute inset-0 opacity-20 pointer-events-none" style="background-image: radial-gradient(circle at 100% 0%, #ffffff 0%, transparent 60%);"></div>
+<div>
+<div class="flex items-center gap-2 text-inverse-primary mb-4 relative z-10">
+<span class="material-symbols-outlined">payments</span>
+<h3 class="text-label-md font-label-md uppercase tracking-wider">Revenue Today</h3>
+</div>
+<p class="text-headline-md font-headline-md relative z-10">$12,400</p>
+</div>
+<div class="mt-8 h-12 relative z-10 opacity-70">
+<!-- Faux Sparkline -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 30">
+<path d="M0,25 Q10,15 20,20 T40,10 T60,15 T80,5 T100,0 L100,30 L0,30 Z" fill="rgba(255,255,255,0.1)"></path>
+<path d="M0,25 Q10,15 20,20 T40,10 T60,15 T80,5 T100,0" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</section>
+<!-- Main Content Area Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Branch Performance (Takes up 8 columns on large screens) -->
+<div class="lg:col-span-8 space-y-8">
+<div class="flex justify-between items-end mb-6 border-b border-outline-variant/30 pb-4">
+<h2 class="text-headline-sm font-headline-sm text-primary">Branch Performance</h2>
+<button class="text-label-md font-label-md text-secondary hover:text-primary transition-colors flex items-center gap-1">
+                        View All <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<!-- Colombo Branch Card -->
+<article class="bg-surface-container-lowest rounded-xl shadow-ambient overflow-hidden flex flex-col md:flex-row group">
+<div class="md:w-2/5 h-48 md:h-auto relative overflow-hidden">
+<img alt="Colombo Property" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="An expansive, light-filled luxury hotel lobby in Colombo, Sri Lanka. Floor-to-ceiling windows show a bright, sunny sky. The interior features modern minimalist furniture, white marble floors, and subtle gold accents, evoking a serene, premium atmosphere in a light-mode color palette." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9qJ5YtvCPuCjQT1WhBOodyUXgrdtDeP_yK7R_sVCjqB8lzhnEXcosfI1qLLr2xH1ppEPZral1_9BNpq-ZvlTOtZMfx7cRkDvd5XSmnAnh4CFbVkDJGkdSAP1ysi9Z5Tgg3lWpqwxnNqf8aHcsTjXfYmyh_g3UnpSQmVlUvmezo7zij7EjrhD0uN_2BRSi3numXS3dVo5_lABsuaEBRSw7jKDQAJCTkdDYUjNza37Wye-F7wc_OhiczuPqbVe-8aSk3sbHTHNb6Sgh"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex items-end p-6">
+<h3 class="text-headline-sm font-headline-sm text-white font-bold tracking-wide">Colombo</h3>
+</div>
+</div>
+<div class="md:w-3/5 p-6 md:p-8 flex flex-col justify-between">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Occupancy</p>
+<p class="text-headline-sm font-headline-sm text-primary">92%</p>
+</div>
+<div class="flex gap-4">
+<div class="text-center">
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Arr</p>
+<p class="text-body-lg font-body-lg text-primary font-semibold">14</p>
+</div>
+<div class="text-center">
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Dep</p>
+<p class="text-body-lg font-body-lg text-primary font-semibold">8</p>
+</div>
+</div>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mb-6">
+<div class="bg-secondary h-full rounded-full w-[92%]"></div>
+</div>
+<div class="flex justify-end">
+<button class="px-6 py-2 border border-secondary text-secondary rounded-full text-label-md font-label-md hover:bg-secondary/5 transition-colors">Manage Branch</button>
+</div>
+</div>
+</article>
+<!-- Kandy Branch Card -->
+<article class="bg-surface-container-lowest rounded-xl shadow-ambient overflow-hidden flex flex-col md:flex-row group">
+<div class="md:w-2/5 h-48 md:h-auto relative overflow-hidden">
+<img alt="Kandy Property" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A serene luxury hotel infinity pool overlooking the lush green mountains of Kandy, Sri Lanka. The sky is bright and expansive. Minimalist lounge chairs with white cushions dot the deck. The scene is bathed in soft, high-key natural light, fitting a premium, airy aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjo6mdaQQ66QRtFZ_DiaHQ4Vrx2n2yska7xCHUNhai3CSKSPM-XDwBZXMNcHG74hnVM6bapxeWMJwq-ZgBQM9114QSecmpJ_ll64lzB2GlLnEwu1Z2VS6aOREUx8zruOzgaL7vY2GUbwCom_UPNEO_tgK5aLHAGxl82p_K4WFN8j1HKANkszH3XNXKzTY9N_cOT2zkXAlveL1dJLhrucYG5pTHgirLaDS-2ePK8H7Z5qlkD6XzjqxDrxuVTJiRcbczRFIDrH8xWq5H"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent flex items-end p-6">
+<h3 class="text-headline-sm font-headline-sm text-white font-bold tracking-wide">Kandy</h3>
+</div>
+</div>
+<div class="md:w-3/5 p-6 md:p-8 flex flex-col justify-between">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Occupancy</p>
+<p class="text-headline-sm font-headline-sm text-primary">78%</p>
+</div>
+<div class="flex gap-4">
+<div class="text-center">
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Arr</p>
+<p class="text-body-lg font-body-lg text-primary font-semibold">22</p>
+</div>
+<div class="text-center">
+<p class="text-label-sm font-label-sm text-on-surface-variant uppercase tracking-wider mb-1">Dep</p>
+<p class="text-body-lg font-body-lg text-primary font-semibold">15</p>
+</div>
+</div>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full mb-6">
+<div class="bg-primary h-full rounded-full w-[78%]"></div>
+</div>
+<div class="flex justify-end">
+<button class="px-6 py-2 border border-secondary text-secondary rounded-full text-label-md font-label-md hover:bg-secondary/5 transition-colors">Manage Branch</button>
+</div>
+</div>
+</article>
+</div>
+<!-- Sidebar (Takes up 4 columns on large screens) -->
+<div class="lg:col-span-4 space-y-8 mt-12 lg:mt-0">
+<!-- Recent Activity Feed -->
+<div class="bg-surface/50 backdrop-blur-md border border-white rounded-xl p-6 shadow-ambient">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-headline-sm font-headline-sm text-primary">Activity</h2>
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+</div>
+<div class="space-y-6">
+<!-- Activity Item 1 -->
+<div class="flex gap-4 relative">
+<div class="absolute left-[15px] top-8 bottom-[-24px] w-[2px] bg-surface-container-high"></div>
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center flex-shrink-0 z-10 border-2 border-white">
+<span class="material-symbols-outlined text-[16px] text-primary">how_to_reg</span>
+</div>
+<div>
+<p class="text-body-md font-body-md text-primary font-medium">Guest Check-in</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Mr. Silva arrived at Kandy Branch.</p>
+<p class="text-label-sm font-label-sm text-outline mt-1">10 mins ago</p>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="flex gap-4 relative">
+<div class="absolute left-[15px] top-8 bottom-[-24px] w-[2px] bg-surface-container-high"></div>
+<div class="w-8 h-8 rounded-full bg-[#fef5d9] flex items-center justify-center flex-shrink-0 z-10 border-2 border-white">
+<span class="material-symbols-outlined text-[16px] text-secondary">spa</span>
+</div>
+<div>
+<p class="text-body-md font-body-md text-primary font-medium">Service Request</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Room 302 requested Spa reservation.</p>
+<p class="text-label-sm font-label-sm text-outline mt-1">25 mins ago</p>
+</div>
+</div>
+<!-- Activity Item 3 -->
+<div class="flex gap-4 relative">
+<div class="w-8 h-8 rounded-full bg-primary-fixed flex items-center justify-center flex-shrink-0 z-10 border-2 border-white">
+<span class="material-symbols-outlined text-[16px] text-primary">bookmark_added</span>
+</div>
+<div>
+<p class="text-body-md font-body-md text-primary font-medium">New Booking</p>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Penthouse suite confirmed for Colombo.</p>
+<p class="text-label-sm font-label-sm text-outline mt-1">1 hour ago</p>
+</div>
+</div>
+</div>
+</div>
+<!-- KPI Mini Chart -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-ambient">
+<h3 class="text-label-md font-label-md uppercase tracking-wider text-on-surface-variant mb-4">7-Day Revenue Trend</h3>
+<div class="h-32 w-full relative flex items-end gap-2 px-2">
+<!-- Simple CSS Bar Chart for atmospheric feel -->
+<div class="w-1/7 bg-surface-container-high h-[40%] rounded-t-sm hover:bg-primary/20 transition-colors w-full"></div>
+<div class="w-1/7 bg-surface-container-high h-[60%] rounded-t-sm hover:bg-primary/20 transition-colors w-full"></div>
+<div class="w-1/7 bg-surface-container-high h-[50%] rounded-t-sm hover:bg-primary/20 transition-colors w-full"></div>
+<div class="w-1/7 bg-surface-container-high h-[80%] rounded-t-sm hover:bg-primary/20 transition-colors w-full"></div>
+<div class="w-1/7 bg-surface-container-high h-[70%] rounded-t-sm hover:bg-primary/20 transition-colors w-full"></div>
+<div class="w-1/7 bg-surface-container-high h-[90%] rounded-t-sm hover:bg-primary/20 transition-colors w-full"></div>
+<div class="w-1/7 bg-primary h-[100%] rounded-t-sm shadow-[0_0_15px_rgba(0,21,47,0.3)] w-full"></div>
+</div>
+<div class="flex justify-between mt-2 text-label-sm font-label-sm text-outline px-2">
+<span>Mon</span>
+<span class="text-primary font-semibold">Sun</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>
