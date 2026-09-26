@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 
@@ -66,6 +67,39 @@ const FrontDeskDashboard: React.FC = () => {
     );
   }
 
+  const navItems = [
+    {
+      title: 'Reservations',
+      description: 'View and manage all reservations',
+      icon: '📋',
+      path: '/frontdesk/reservations',
+    },
+    {
+      title: 'New Reservation',
+      description: 'Create a new booking',
+      icon: '➕',
+      path: '/frontdesk/reservations/new',
+    },
+    {
+      title: 'Check In / Out',
+      description: 'Process guest check-ins and check-outs',
+      icon: '🔑',
+      path: '/frontdesk/check-in-out',
+    },
+    {
+      title: 'Payment Processing',
+      description: 'Handle payments and billing',
+      icon: '💳',
+      path: '/frontdesk/payment-processing',
+    },
+    {
+      title: 'Service Requests',
+      description: 'Manage guest service requests',
+      icon: '🛎️',
+      path: '/frontdesk/service-requests',
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -80,7 +114,6 @@ const FrontDeskDashboard: React.FC = () => {
               </div>
             </div>
             <div className="hidden md:flex md:items-center md:space-x-4">
-              {/* User info would go here */}
               <div className="flex items-center">
                 <span className="mr-4 text-sm text-gray-600">
                   Welcome, {user?.fullName?.split(' ')[0]}!
@@ -94,6 +127,24 @@ const FrontDeskDashboard: React.FC = () => {
       {/* Main content */}
       <main className="mt-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+          {/* Navigation Cards */}
+          <section className="mb-8">
+            <h2 className="text-lg font-medium text-gray-900 mb-4">Quick Navigation</h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow duration-200 border border-gray-100 hover:border-indigo-200"
+                >
+                  <div className="text-3xl mb-3">{item.icon}</div>
+                  <h3 className="font-semibold text-gray-900 mb-1">{item.title}</h3>
+                  <p className="text-sm text-gray-500">{item.description}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+
           {/* Stats Overview */}
           <div className="grid gap-6 mb-8 sm:grid-cols-2 lg:grid-cols-4">
             <div className="bg-white rounded-lg shadow p-6">
