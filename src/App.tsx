@@ -7,6 +7,12 @@ import NotFound from './pages/NotFound';
 import RootLayout from './layouts/Root_layout';
 import ReservationsListPage from './pages/Reservationslistpage ';
 import NewReservationPage from './pages/Newreservationpage ';
+import ReportsPage from './pages/ReportsPage';
+import OverviewReport from './components/reports/OverviewReport';
+import OccupancyReport from './components/reports/OccupancyReport';
+import RevenueReport from './components/reports/RevenueReport';
+import BillingSummaryReport from './components/reports/BillingSummaryReport';
+import ServiceUsageReport from './components/reports/ServiceUsageReport';
 
 function App() {
   return (
@@ -22,6 +28,14 @@ function App() {
               <Route index element={<Navigate replace to="all" />} />
               <Route path="all" element={<ReservationsListPage />} />
               <Route path="new" element={<NewReservationPage onCreateBooking={() => {}} />} />
+            </Route>
+
+            <Route path="reports" element={<ReportsPage />}>
+              <Route index element={<OverviewReport />} />
+              <Route path="occupancy" element={<OccupancyReport />} />
+              <Route path="revenue" element={<RevenueReport />} />
+              <Route path="billing-summary" element={<BillingSummaryReport />} />
+              <Route path="service-usage" element={<ServiceUsageReport />} />
             </Route>
           </Route>
 
