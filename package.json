@@ -22,8 +22,8 @@
     "react-aria-components": "^1.21.1",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3",
-    "socket.io-client": "^4.8.3",
     "tailwind-merge": "^3.7.0"
+    "socket.io-client": "^4.8.4"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

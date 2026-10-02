@@ -1,48 +1,16 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css';
-import Dashboard from './pages/Dashboard';
-import Account from './pages/Account';
-import Login from './pages/login';
-import NotFound from './pages/NotFound';
-import RootLayout from './layouts/Root_layout';
-import ReservationsListPage from './pages/Reservationslistpage ';
-import NewReservationPage from './pages/Newreservationpage ';
-import ReportsPage from './pages/ReportsPage';
-import OverviewReport from './components/reports/OverviewReport';
-import OccupancyReport from './components/reports/OccupancyReport';
-import RevenueReport from './components/reports/RevenueReport';
-import BillingSummaryReport from './components/reports/BillingSummaryReport';
-import ServiceUsageReport from './components/reports/ServiceUsageReport';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { AppRouter } from './routes/AppRouter';
+import { SocketProvider } from './context/SocketContext';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<RootLayout />}>
-            <Route index element={<Navigate replace to="/dashboard" />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="account" element={<Account />} />
-
-            <Route path="reservations">
-              <Route index element={<Navigate replace to="all" />} />
-              <Route path="all" element={<ReservationsListPage />} />
-              <Route path="new" element={<NewReservationPage onCreateBooking={() => {}} />} />
-            </Route>
-
-            <Route path="reports" element={<ReportsPage />}>
-              <Route index element={<OverviewReport />} />
-              <Route path="occupancy" element={<OccupancyReport />} />
-              <Route path="revenue" element={<RevenueReport />} />
-              <Route path="billing-summary" element={<BillingSummaryReport />} />
-              <Route path="service-usage" element={<ServiceUsageReport />} />
-            </Route>
-          </Route>
-
-          <Route path="login" element={<Login />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+      <AuthProvider>
+        <SocketProvider>
+          <AppRouter />
+        </SocketProvider>
+      </AuthProvider>
     </Router>
   );
 }
