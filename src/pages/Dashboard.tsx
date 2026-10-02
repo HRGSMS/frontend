@@ -1,6 +1,6 @@
 import React from 'react';
 import ManagerDashboard from '../sections/managerDashborad';
-import FrontDeskDashboard from '../sections/Frontdeskdashboard ';
+import FrontDeskDashboard from '../sections/Frontdeskdashboard';
 
 const Dashboard: React.FC = () => {
   // const { user } = useAuth();

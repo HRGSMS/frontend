@@ -1,3 +1,4 @@
+import type { FC, SVGProps } from 'react';
 import {
   Archive,
   BarChartSquare02,
@@ -16,7 +17,15 @@ import {
 } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 
-const navItemsSimple = [
+export interface NavItem {
+  label: string;
+  href: string;
+  icon: FC<SVGProps<SVGSVGElement>>;
+  badge?: number | string;
+  items?: NavItem[];
+}
+
+const navItemsSimple: NavItem[] = [
   {
     label: 'Dashboard',
     href: '/dashboard',
@@ -76,13 +85,19 @@ const navItemsSimple = [
   },
 ];
 
-const footerItems = [
+const footerItems: NavItem[] = [
   { label: 'Settings', href: '/settings', icon: Settings01 },
   { label: 'Support', href: '/support', icon: MessageChatCircle },
   { label: 'My Account', href: '/account', icon: User01 },
 ];
 
-const SidebarItem = ({ item, activeUrl, nested = false }) => {
+interface SidebarItemProps {
+  item: NavItem;
+  activeUrl: string;
+  nested?: boolean;
+}
+
+const SidebarItem: FC<SidebarItemProps> = ({ item, activeUrl, nested = false }) => {
   const Icon = item.icon;
   const isActive = activeUrl === item.href;
 
@@ -106,7 +121,7 @@ const SidebarItem = ({ item, activeUrl, nested = false }) => {
   );
 };
 
-export const SidebarNavigationSimpleDemo = () => {
+export const SidebarNavigationSimpleDemo: FC = () => {
   const { pathname } = useLocation();
 
   return (

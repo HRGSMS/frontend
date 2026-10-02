@@ -5,8 +5,8 @@ import Account from './pages/Account';
 import Login from './pages/login';
 import NotFound from './pages/NotFound';
 import RootLayout from './layouts/Root_layout';
-import ReservationsListPage from './pages/Reservationslistpage ';
-import NewReservationPage from './pages/Newreservationpage ';
+import ReservationsListPage from './pages/Reservationslistpage';
+import NewReservationPage from './pages/Newreservationpage';
 
 function App() {
   return (

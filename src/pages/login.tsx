@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import type { FC, ReactNode, ChangeEvent } from 'react';
+import { useState } from 'react';
 
 const inputClass =
   'w-full h-10 pl-9 pr-3 rounded-lg border border-gray-200 bg-white text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-100 transition';
 
 const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1';
 
-const IconInput = ({ icon, children }) => (
+interface IconInputProps {
+  icon: string;
+  children: ReactNode;
+}
+
+const IconInput: FC<IconInputProps> = ({ icon, children }) => (
   <div className="relative">
     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
       {icon}
@@ -14,11 +20,12 @@ const IconInput = ({ icon, children }) => (
   </div>
 );
 
-const Login = () => {
+const Login: FC = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPass, setShowPass] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
   const handleLogin = () => alert('Login successful!');
 
   return (
@@ -36,8 +43,11 @@ const Login = () => {
                 alt="logo"
                 className="w-12 h-12 object-contain"
                 onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentNode.innerHTML = '<span class="text-xl">⚕️</span>';
+                  const target = e.currentTarget;
+                  target.style.display = 'none';
+                  if (target.parentElement) {
+                    target.parentElement.innerHTML = '<span class="text-xl">⚕️</span>';
+                  }
                 }}
               />
             </div>

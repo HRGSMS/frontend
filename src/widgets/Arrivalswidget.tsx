@@ -1,10 +1,21 @@
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 
 // TODO: replace with a real API call (e.g. GET /api/reservations/arrivals/today)
 // once the backend endpoint exists. Shape assumed:
 // { id, guestName, roomNumber, reservationId, expectedTime, status }[]
 // status: 'confirmed' | 'checked-in' | 'no-show'
-const mockArrivals = [
+
+export interface Arrival {
+  id: number;
+  guestName: string;
+  roomNumber: string;
+  reservationId: string;
+  expectedTime: string;
+  status: 'confirmed' | 'checked-in' | 'no-show';
+}
+
+const mockArrivals: Arrival[] = [
   {
     id: 1,
     guestName: 'Nimal Perera',
@@ -47,14 +58,24 @@ const mockArrivals = [
   },
 ];
 
-const statusConfig = {
+const statusConfig: Record<string, { label: string; bg: string; text: string }> = {
   confirmed: { label: 'Confirmed', bg: 'bg-blue-50', text: 'text-blue-700' },
   'checked-in': { label: 'Checked In', bg: 'bg-green-50', text: 'text-green-700' },
   'no-show': { label: 'No-show', bg: 'bg-red-50', text: 'text-red-700' },
 };
 
+export interface ArrivalsWidgetProps {
+  arrivals?: Arrival[];
+  canCheckIn?: boolean;
+  onCheckIn?: (id: number) => void;
+}
+
 // Front desk gets the "Check In" action; other roles see the list read-only.
-const ArrivalsWidget = ({ arrivals = mockArrivals, canCheckIn = false, onCheckIn }) => {
+const ArrivalsWidget: FC<ArrivalsWidgetProps> = ({
+  arrivals = mockArrivals,
+  canCheckIn = false,
+  onCheckIn,
+}) => {
   const pendingCount = arrivals.filter((a) => a.status === 'confirmed').length;
 
   return (

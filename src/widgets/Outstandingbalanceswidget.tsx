@@ -1,22 +1,37 @@
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 
 // TODO: replace with a real API call (e.g. GET /api/billing/outstanding?branchId=...)
 // once billingApi.getOutstandingBalances() exists. Shape assumed based on the
 // Booking table's OutstandingAmount field: { id, guestName, roomNumber, outstandingAmount }[]
-const mockOutstanding = [
+
+export interface OutstandingBalance {
+  id: number;
+  guestName: string;
+  roomNumber: string;
+  outstandingAmount: number;
+}
+
+const mockOutstanding: OutstandingBalance[] = [
   { id: 1, guestName: 'Nimal Perera', roomNumber: '204', outstandingAmount: 18500 },
   { id: 2, guestName: 'Ishara Wickramasinghe', roomNumber: '215', outstandingAmount: 42000 },
   { id: 3, guestName: 'Dilshan Rathnayake', roomNumber: '402', outstandingAmount: 9200 },
 ];
 
-const formatCurrency = (value) =>
+const formatCurrency = (value: number): string =>
   new Intl.NumberFormat('en-LK', {
     style: 'currency',
     currency: 'LKR',
     maximumFractionDigits: 0,
   }).format(value);
 
-const OutstandingBalancesWidget = ({ balances = mockOutstanding }) => {
+export interface OutstandingBalancesWidgetProps {
+  balances?: OutstandingBalance[];
+}
+
+const OutstandingBalancesWidget: FC<OutstandingBalancesWidgetProps> = ({
+  balances = mockOutstanding,
+}) => {
   const total = balances.reduce((sum, b) => sum + b.outstandingAmount, 0);
 
   return (

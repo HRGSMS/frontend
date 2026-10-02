@@ -1,10 +1,21 @@
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 
 // TODO: replace with a real API call (e.g. GET /api/reservations/departures/today)
 // once the backend endpoint exists. Shape assumed:
 // { id, guestName, roomNumber, reservationId, outstandingAmount, status }[]
 // status: 'pending' | 'checked-out'
-const mockDepartures = [
+
+export interface Departure {
+  id: number;
+  guestName: string;
+  roomNumber: string;
+  reservationId: string;
+  outstandingAmount: number;
+  status: 'pending' | 'checked-out';
+}
+
+const mockDepartures: Departure[] = [
   {
     id: 1,
     guestName: 'Sanjeewa Herath',
@@ -31,9 +42,19 @@ const mockDepartures = [
   },
 ];
 
+export interface DeparturesWidgetProps {
+  departures?: Departure[];
+  canCheckOut?: boolean;
+  onCheckOut?: (id: number) => void;
+}
+
 // Front desk gets the "Check Out" action; other roles see the list read-only.
 // Mirrors the backend rule: check-out is disabled while OutstandingAmount > 0.
-const DeparturesWidget = ({ departures = mockDepartures, canCheckOut = false, onCheckOut }) => {
+const DeparturesWidget: FC<DeparturesWidgetProps> = ({
+  departures = mockDepartures,
+  canCheckOut = false,
+  onCheckOut,
+}) => {
   const pendingCount = departures.filter((d) => d.status === 'pending').length;
 
   return (

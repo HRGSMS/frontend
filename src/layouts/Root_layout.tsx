@@ -1,10 +1,10 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Outlet } from 'react-router-dom';
 // import NavBar from './NavBar';
 import { SidebarNavigationSimpleDemo } from '../components/sideBar';
 // import Footer from './Footer';
 
-const RootLayout = () => {
+const RootLayout: FC = () => {
   return (
     <div className="flex">
       <SidebarNavigationSimpleDemo />

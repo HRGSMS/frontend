@@ -1,15 +1,31 @@
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 
 // TODO: replace with a real API call (e.g. GET /api/services/usage?status=Requested)
 // once serviceApi.listServiceUsage() exists. Shape assumed based on the
 // ServiceUsage table: { id, serviceName, roomNumber, quantity, usageTime }[]
-const mockPendingRequests = [
+
+export interface ServiceRequest {
+  id: number;
+  serviceName: string;
+  roomNumber: string;
+  quantity: number;
+  usageTime: string;
+}
+
+const mockPendingRequests: ServiceRequest[] = [
   { id: 1, serviceName: 'Room Service', roomNumber: '204', quantity: 2, usageTime: '12:40 PM' },
   { id: 2, serviceName: 'Laundry', roomNumber: '108', quantity: 1, usageTime: '1:15 PM' },
   { id: 3, serviceName: 'Spa Booking', roomNumber: '311', quantity: 1, usageTime: '2:00 PM' },
 ];
 
-const PendingServiceRequestsWidget = ({ requests = mockPendingRequests }) => (
+export interface PendingServiceRequestsWidgetProps {
+  requests?: ServiceRequest[];
+}
+
+const PendingServiceRequestsWidget: FC<PendingServiceRequestsWidgetProps> = ({
+  requests = mockPendingRequests,
+}) => (
   <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
     <div className="mb-3 flex items-center justify-between">
       <h3 className="text-sm font-semibold text-gray-900">Pending Service Requests</h3>
