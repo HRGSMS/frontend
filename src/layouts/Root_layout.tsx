@@ -10,9 +10,7 @@ const RootLayout: FC = () => {
       <SidebarNavigationSimpleDemo />
       <div className="flex-1">
         {/* <NavBar /> */}
-        <main className="pt-14">
-          {' '}
-          {/* offset for fixed NavBar height */}
+        <main className="min-h-screen">
           <Outlet />
         </main>
       </div>

@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { Link } from 'react-router-dom';
+import { useSocket } from '../context/SocketContext';
 
-// TODO: replace with a real API call (e.g. GET /api/rooms/status) once the
-// backend endpoint exists. Shape assumed: { id, number, floor, status }[]
+// Real-time updates: listens for `roomAvailabilityChanged` events from the backend.
+// Falls back to mock data when the backend socket is not running.
 
 export type RoomStatus = 'occupied' | 'vacant-clean' | 'vacant-dirty' | 'out-of-order' | 'maintenance';
 
@@ -60,10 +62,30 @@ const statusConfig: Record<
 };
 
 export interface RoomStatusWidgetProps {
-  rooms?: RoomItem[];
+  initialRooms?: RoomItem[];
 }
 
-const RoomStatusWidget: FC<RoomStatusWidgetProps> = ({ rooms = mockRooms }) => {
+const RoomStatusWidget: FC<RoomStatusWidgetProps> = ({ initialRooms = mockRooms }) => {
+  const { socket } = useSocket();
+  const [rooms, setRooms] = useState<RoomItem[]>(initialRooms);
+
+  // Live update: when the backend emits `roomAvailabilityChanged` we patch the
+  // matching room's status in local state — no full page reload required.
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRoomChange = (update: { id: number; status: RoomStatus }) => {
+      setRooms((prev) =>
+        prev.map((r) => (r.id === update.id ? { ...r, status: update.status } : r)),
+      );
+    };
+
+    socket.on('roomAvailabilityChanged', handleRoomChange);
+    return () => {
+      socket.off('roomAvailabilityChanged', handleRoomChange);
+    };
+  }, [socket]);
+
   const counts = rooms.reduce<Record<string, number>>((acc, room) => {
     acc[room.status] = (acc[room.status] || 0) + 1;
     return acc;

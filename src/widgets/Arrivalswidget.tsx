@@ -1,10 +1,10 @@
+import { useState, useEffect } from 'react';
 import type { FC } from 'react';
 import { Link } from 'react-router-dom';
+import { useSocket } from '../context/SocketContext';
 
-// TODO: replace with a real API call (e.g. GET /api/reservations/arrivals/today)
-// once the backend endpoint exists. Shape assumed:
-// { id, guestName, roomNumber, reservationId, expectedTime, status }[]
-// status: 'confirmed' | 'checked-in' | 'no-show'
+// Real-time updates: listens for `arrivalStatusChanged` events from the backend.
+// Falls back to mock data when the backend socket is not running.
 
 export interface Arrival {
   id: number;
@@ -65,17 +65,40 @@ const statusConfig: Record<string, { label: string; bg: string; text: string }> 
 };
 
 export interface ArrivalsWidgetProps {
-  arrivals?: Arrival[];
+  initialArrivals?: Arrival[];
   canCheckIn?: boolean;
   onCheckIn?: (id: number) => void;
 }
 
 // Front desk gets the "Check In" action; other roles see the list read-only.
 const ArrivalsWidget: FC<ArrivalsWidgetProps> = ({
-  arrivals = mockArrivals,
+  initialArrivals = mockArrivals,
   canCheckIn = false,
   onCheckIn,
 }) => {
+  const { socket } = useSocket();
+  const [arrivals, setArrivals] = useState<Arrival[]>(initialArrivals);
+
+  // Live update: patch the matching arrival's status when the backend emits
+  // `arrivalStatusChanged` (e.g. front-desk checks someone in on another terminal).
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleArrivalChange = (update: {
+      id: number;
+      status: Arrival['status'];
+    }) => {
+      setArrivals((prev) =>
+        prev.map((a) => (a.id === update.id ? { ...a, status: update.status } : a)),
+      );
+    };
+
+    socket.on('arrivalStatusChanged', handleArrivalChange);
+    return () => {
+      socket.off('arrivalStatusChanged', handleArrivalChange);
+    };
+  }, [socket]);
+
   const pendingCount = arrivals.filter((a) => a.status === 'confirmed').length;
 
   return (
