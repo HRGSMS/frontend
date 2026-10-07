@@ -141,7 +141,7 @@ const RequestServicePage = () => {
             id="service"
             value={selectedServiceId}
             onChange={(event) => setSelectedServiceId(event.target.value)}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
             required
           >
             <option value="">Select a service</option>
@@ -186,7 +186,7 @@ const RequestServicePage = () => {
             onChange={(event) =>
               setQuantity(Math.max(1, Number(event.target.value)))
             }
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
             required
           />
         </div>
@@ -205,7 +205,7 @@ const RequestServicePage = () => {
             onChange={(event) => setInstructions(event.target.value)}
             rows={4}
             placeholder="Enter any special instructions..."
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none"
           />
         </div>
 
