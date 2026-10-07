@@ -116,7 +116,7 @@ const FrontDeskDashboard: React.FC = () => {
             <div className="hidden md:flex md:items-center md:space-x-4">
               <div className="flex items-center">
                 <span className="mr-4 text-sm text-gray-600">
-                  Welcome, {user?.fullName?.split(' ')[0]}!
+                  Welcome, {user?.name?.split(' ')[0]}!
                 </span>
               </div>
             </div>

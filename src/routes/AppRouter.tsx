@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 // Front Desk Pages
 import FrontDeskDashboard from '../pages/frontdesk/FrontDeskDashboard';
@@ -9,11 +10,62 @@ import CheckInOutPage from '../pages/frontdesk/CheckInOutPage';
 import PaymentProcessingPage from '../pages/frontdesk/PaymentProcessingPage';
 import ServiceRequestsQueuePage from '../pages/frontdesk/ServiceRequestsQueuePage';
 
+// Auth Pages
+import { Login } from '../pages/Login';
+
+// Protected Route Wrapper
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Public Route Wrapper (redirects authenticated users away from login)
+const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/frontdesk/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+};
+
 export const AppRouter = () => {
   return (
     <Routes>
-      {/* Front Desk Routes - No authentication required */}
-      <Route path="/frontdesk/*" element={<FrontDeskRoutes />} />
+      {/* Public Routes */}
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+
+      {/* Protected Front Desk Routes */}
+      <Route
+        path="/frontdesk/*"
+        element={
+          <ProtectedRoute>
+            <FrontDeskRoutes />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Redirect root to frontdesk dashboard */}
       <Route
