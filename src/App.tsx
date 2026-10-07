@@ -7,6 +7,7 @@ import NotFound from './pages/NotFound';
 import RootLayout from './layouts/Root_layout';
 import ReservationsListPage from './pages/Reservationslistpage ';
 import NewReservationPage from './pages/Newreservationpage ';
+import RequestServicePage from './pages/guest/RequestServicePage';
 
 function App() {
   return (
@@ -23,6 +24,8 @@ function App() {
               <Route path="all" element={<ReservationsListPage />} />
               <Route path="new" element={<NewReservationPage onCreateBooking={() => {}} />} />
             </Route>
+
+            <Route path="services/request" element={<RequestServicePage />} />
           </Route>
 
           <Route path="login" element={<Login />} />
