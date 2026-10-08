@@ -7,6 +7,8 @@ import Account from '../pages/Account';
 import { Login } from '../pages/Login';
 import { Unauthorized } from '../pages/Unauthorized';
 import FrontDeskDashboard from '../pages/frontdesk/FrontDeskDashboard';
+import AdminDashboard from '../pages/admin/AdminDashboard';
+import ManagerDashboard from '../pages/manager/ManagerDashboard';
 import ReservationsListPage from '../pages/frontdesk/ReservationsListPage';
 import NewReservationPage from '../pages/frontdesk/NewReservationPage';
 import ReservationDetailPage from '../pages/frontdesk/ReservationDetailPage';
@@ -74,12 +76,12 @@ export function AppRouter() {
             <Route path="/frontdesk/payment-processing" element={<PaymentProcessingPage />} />
             <Route path="/frontdesk/service-requests" element={<ServiceRequestsQueuePage />} />
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/admin/dashboard" element={<RoleDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<Placeholder title="User Management" />} />
             <Route path="/admin/settings" element={<Placeholder title="System Settings" />} />
             <Route path="/admin/reports" element={<Placeholder title="System Reports" />} />
             <Route path="/manager" element={<Navigate to="/manager/dashboard" replace />} />
-            <Route path="/manager/dashboard" element={<RoleDashboard />} />
+            <Route path="/manager/dashboard" element={<ManagerDashboard />} />
             <Route path="/manager/reports" element={<Placeholder title="Revenue Reports" />} />
             <Route path="/manager/analytics" element={<Placeholder title="Analytics" />} />
             <Route path="/manager/staff" element={<Placeholder title="Staff Management" />} />
