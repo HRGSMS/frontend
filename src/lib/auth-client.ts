@@ -1,50 +1,18 @@
-import { createAuthClient } from '@better-auth/client';
-import type { Auth } from 'better-auth';
+import { createAuthClient } from 'better-auth/react';
+import { adminClient } from 'better-auth/client/plugins';
+import { authBaseURL } from './config';
 
-// BetterAuth client configuration
-// createAuthClient takes Auth server type as generic, returns a function that takes options
-const getAuthClient = createAuthClient<Auth>();
-
-export const authClient = getAuthClient({
-  baseURL: 'http://localhost:4000',
-  // Enable cookie-based auth for SSR/Next.js compatibility
-  fetchOptions: {
-    credentials: 'include',
-  },
+export const authClient = createAuthClient({
+  baseURL: authBaseURL,
+  basePath: '/api/auth',
+  plugins: [adminClient()],
+  fetchOptions: { credentials: 'include' },
 });
-
-// Export types for use in components
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  role?: string;
-  branchId?: string;
-  image?: string;
-};
-
-export type Session = {
-  user: User;
-  expiresAt: Date;
-  token: string;
-};
-
-// Auth methods - using the client directly
-export const signIn = async (email: string, password: string) => {
-  // @ts-expect-error - dynamic access to email provider
-  return authClient.signIn.email({
-    email,
-    password,
-    rememberMe: true,
-  });
-};
-
-export const signOut = async () => {
-  return authClient.signOut();
-};
-
-export const getSession = async () => {
-  return authClient.getSession();
-};
-
+export type Session = typeof authClient.$Infer.Session;
+// Branch membership must be supplied and enforced by the server.
+export type User = Session['user'] & { branchId?: string | number | null };
+export const signIn = (email: string, password: string) =>
+  authClient.signIn.email({ email, password, rememberMe: false });
+export const signOut = () => authClient.signOut();
+export const getSession = () => authClient.getSession({ query: { disableCookieCache: true } });
 export const useSession = authClient.useSession;

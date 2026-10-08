@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useSocket } from '../../context/SocketContext';
+import { useAuth } from '../../context/auth-state';
+import { useSocket } from '../../context/socket-state';
 
 const FrontDeskDashboard: React.FC = () => {
   const { user } = useAuth();
   const { socket } = useSocket();
+
+  const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager' || isAdmin;
   const [todaysArrivals, setTodaysArrivals] = useState<any[]>([]);
   const [todaysDepartures, setTodaysDepartures] = useState<any[]>([]);
   const [occupancyRate, setOccupancyRate] = useState(0);
@@ -20,12 +23,12 @@ const FrontDeskDashboard: React.FC = () => {
       // Mock data
       setTodaysArrivals([
         { id: 1, guestName: 'John Smith', roomNumber: '101', checkInTime: '14:00' },
-        { id: 2, guestName: 'Jane Doe', roomNumber: '105', checkInTime: '15:30' }
+        { id: 2, guestName: 'Jane Doe', roomNumber: '105', checkInTime: '15:30' },
       ]);
 
       setTodaysDepartures([
         { id: 1, guestName: 'Bob Johnson', roomNumber: '201', checkOutTime: '11:00' },
-        { id: 2, guestName: 'Alice Brown', roomNumber: '205', checkOutTime: '10:00' }
+        { id: 2, guestName: 'Alice Brown', roomNumber: '205', checkOutTime: '10:00' },
       ]);
 
       setOccupancyRate(75);
@@ -34,27 +37,19 @@ const FrontDeskDashboard: React.FC = () => {
 
     loadDashboardData();
 
-    // Socket listeners for real-time updates
-    if (socket) {
-      socket.on('occupancy-updated', (data: any) => {
-        setOccupancyRate(data.occupancyRate);
-      });
-
-      socket.on('new-arrival', (data: any) => {
-        setTodaysArrivals(prev => [...prev, data.arrival]);
-      });
-
-      socket.on('new-departure', (data: any) => {
-        setTodaysDepartures(prev => [...prev, data.departure]);
-      });
-    }
+    const onOccupancy = (data: { occupancyRate: number }) => setOccupancyRate(data.occupancyRate);
+    const onArrival = (data: { arrival: unknown }) =>
+      setTodaysArrivals((prev) => [...prev, data.arrival]);
+    const onDeparture = (data: { departure: unknown }) =>
+      setTodaysDepartures((prev) => [...prev, data.departure]);
+    socket?.on('occupancy-updated', onOccupancy);
+    socket?.on('new-arrival', onArrival);
+    socket?.on('new-departure', onDeparture);
 
     return () => {
-      if (socket) {
-        socket.off('occupancy-updated');
-        socket.off('new-arrival');
-        socket.off('new-departure');
-      }
+      socket?.off('occupancy-updated', onOccupancy);
+      socket?.off('new-arrival', onArrival);
+      socket?.off('new-departure', onDeparture);
     };
   }, [user, socket]);
 
@@ -98,6 +93,37 @@ const FrontDeskDashboard: React.FC = () => {
       icon: '🛎️',
       path: '/frontdesk/service-requests',
     },
+    ...(isAdmin
+      ? [
+          {
+            title: 'Admin Panel',
+            description: 'User management & system settings',
+            icon: '⚙️',
+            path: '/admin/users',
+          },
+          {
+            title: 'Reports',
+            description: 'System-wide reports & analytics',
+            icon: '📊',
+            path: '/admin/reports',
+          },
+        ]
+      : isManager
+        ? [
+            {
+              title: 'Manager Reports',
+              description: 'Revenue & occupancy reports',
+              icon: '📈',
+              path: '/manager/reports',
+            },
+            {
+              title: 'Staff Management',
+              description: 'Manage front desk staff',
+              icon: '👥',
+              path: '/manager/staff',
+            },
+          ]
+        : []),
   ];
 
   return (
@@ -108,15 +134,16 @@ const FrontDeskDashboard: React.FC = () => {
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-semibold text-gray-900">
-                  Front Desk Dashboard
-                </h1>
+                <h1 className="text-xl font-semibold text-gray-900">Front Desk Dashboard</h1>
               </div>
             </div>
             <div className="hidden md:flex md:items-center md:space-x-4">
               <div className="flex items-center">
                 <span className="mr-4 text-sm text-gray-600">
                   Welcome, {user?.name?.split(' ')[0]}!
+                </span>
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                  {user?.role?.replace('_', ' ') || 'Unknown'}
                 </span>
               </div>
             </div>
@@ -177,7 +204,10 @@ const FrontDeskDashboard: React.FC = () => {
                   {todaysArrivals.length > 0 ? (
                     <div className="space-y-4">
                       {todaysArrivals.map((arrival: any) => (
-                        <div key={arrival.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div
+                          key={arrival.id}
+                          className="flex justify-between items-center p-3 bg-gray-50 rounded"
+                        >
                           <div>
                             <p className="font-medium text-gray-900">{arrival.guestName}</p>
                             <p className="text-sm text-gray-500">Room {arrival.roomNumber}</p>
@@ -189,7 +219,9 @@ const FrontDeskDashboard: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-center py-4 text-gray-500">No arrivals scheduled for today</p>
+                    <p className="text-center py-4 text-gray-500">
+                      No arrivals scheduled for today
+                    </p>
                   )}
                 </div>
               </div>
@@ -202,7 +234,10 @@ const FrontDeskDashboard: React.FC = () => {
                   {todaysDepartures.length > 0 ? (
                     <div className="space-y-4">
                       {todaysDepartures.map((departure: any) => (
-                        <div key={departure.id} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                        <div
+                          key={departure.id}
+                          className="flex justify-between items-center p-3 bg-gray-50 rounded"
+                        >
                           <div>
                             <p className="font-medium text-gray-900">{departure.guestName}</p>
                             <p className="text-sm text-gray-500">Room {departure.roomNumber}</p>
@@ -214,7 +249,9 @@ const FrontDeskDashboard: React.FC = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-center py-4 text-gray-500">No departures scheduled for today</p>
+                    <p className="text-center py-4 text-gray-500">
+                      No departures scheduled for today
+                    </p>
                   )}
                 </div>
               </div>

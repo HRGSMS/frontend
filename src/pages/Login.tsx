@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/auth-state';
 
 export const Login = () => {
-  const navigate = useNavigate();
-  const { signIn, isLoading } = useAuth();
+  const { signIn, isLoading, authError, refreshSession } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,14 +14,11 @@ export const Login = () => {
     setError(null);
     setIsSubmitting(true);
 
-    const { error: signInError } = await signIn(email, password);
+    const result = await signIn(email, password);
+    const { error: signInError } = result;
 
     if (signInError) {
       setError(signInError.message || 'Invalid email or password');
-    } else {
-      // Redirect based on user role
-      // For now, redirect to frontdesk dashboard
-      navigate('/frontdesk/dashboard', { replace: true });
     }
     setIsSubmitting(false);
   };
@@ -33,22 +28,50 @@ export const Login = () => {
       <div className="max-w-md w-full space-y-8">
         <div>
           <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
-            <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z" />
+            <svg
+              className="h-8 w-8 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z"
+              />
             </svg>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            HRGMS
-          </h2>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">HRGMS</h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Hotel Revenue & Guest Management System
+            SkyNest Hotel Reservation & Guest Services
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {authError && (
+            <div role="alert" className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+              <p>{authError}</p>
+              <button
+                type="button"
+                onClick={() => void refreshSession()}
+                className="mt-2 underline"
+              >
+                Retry session check
+              </button>
+            </div>
+          )}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm" role="alert">
+            <div
+              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+              role="alert"
+            >
               {error}
             </div>
           )}
@@ -99,9 +122,25 @@ export const Login = () => {
             >
               {isSubmitting || isLoading ? (
                 <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   Signing in...
                 </span>
@@ -112,12 +151,10 @@ export const Login = () => {
           </div>
         </form>
 
-        <div className="text-center text-sm text-gray-500">
-          <p>Demo credentials:</p>
-          <p className="font-mono text-xs mt-1">frontdesk@hotel.com / password123</p>
-          <p className="font-mono text-xs mt-1">manager@hotel.com / password123</p>
-          <p className="font-mono text-xs mt-1">admin@hotel.com / password123</p>
-        </div>
+        <p className="text-center text-sm text-gray-500">
+          Use the account provided by your hotel administrator. Contact your administrator if you
+          cannot access your account.
+        </p>
       </div>
     </div>
   );

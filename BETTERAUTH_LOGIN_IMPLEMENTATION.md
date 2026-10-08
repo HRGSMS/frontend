@@ -1,313 +1,51 @@
-# BetterAuth Login Implementation
+# Authentication implementation
 
-## Date: 2026-10-07
+The frontend uses `better-auth/react` from the installed Better Auth 1.7.7 package, matching the backend. The obsolete `@better-auth/client` alpha dependency has been removed.
 
-## Summary
-Implemented a complete login page with BetterAuth integration for the HRGMS frontend, replacing the previous mock authentication system.
+## Configuration
 
----
+Copy `.env.sample` to `.env.local`. The defaults are:
 
-## Changes Made
+- `VITE_API_BASE_URL=http://localhost:4000/api`
+- `VITE_AUTH_BASE_URL=http://localhost:4000/api/auth`
+- `VITE_SOCKET_URL=http://localhost:4000`
 
-### 1. New Dependencies
-```bash
-npm install @better-auth/client better-auth
-```
-- `@better-auth/client` - BetterAuth client library for frontend
-- `better-auth` - TypeScript type definitions
+Auth and Axios requests include cookies. Configure production origins on the backend and use HTTPS. These Vite variables are public and must not contain secrets. The frontend stores no session tokens or passwords in local storage.
 
----
+The shared authenticated header offers sign-out and an account security page at `/account`. Password changes require the current password, validate the replacement password, and request revocation of other sessions through Better Auth's `/change-password` endpoint. Password reset by email remains dependent on backend email configuration.
 
-### 2. New Files Created
+## Login and permissions
 
-#### `src/lib/auth-client.ts`
-BetterAuth client configuration and helper functions.
+Accounts are provisioned by the server; public signup is disabled there. A user never chooses their role during login. Login uses `POST /api/auth/sign-in/email`, then verifies `GET /api/auth/get-session?disableCookieCache=true` before granting access. Session types are inferred from the matching client and admin plugin.
 
-```typescript
-import { createAuthClient } from '@better-auth/client';
-import type { Auth } from 'better-auth';
+| Server role   | Landing route        | Permitted areas                     |
+| ------------- | -------------------- | ----------------------------------- |
+| admin         | /admin/dashboard     | admin, manager, frontdesk, services |
+| manager       | /manager/dashboard   | manager, frontdesk, services        |
+| front_desk    | /frontdesk/dashboard | frontdesk, services                 |
+| service_staff | /services/dashboard  | services                            |
+| guest         | /guest/dashboard     | guest                               |
 
-const getAuthClient = createAuthClient<Auth>();
+Unknown/missing roles fail closed to the access-denied screen. Signed-out users visiting a protected route are sent to login. After login, a permitted internal destination is restored; otherwise the user's role determines the landing page. Manager/admin/guest/service dashboard screens provide navigation; business modules still contain their existing placeholders.
 
-export const authClient = getAuthClient({
-  baseURL: 'http://localhost:4000',
-  fetchOptions: { credentials: 'include' },
-});
+## Session lifecycle
 
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  role?: string;
-  branchId?: string;
-  image?: string;
-};
+The server session is restored on startup, rechecked on window focus and every minute, and checked for local expiry every second. Sign-out revokes the cookie-backed server session before clearing normal authenticated state; failures are visible and retryable. Protected content is hidden after 15 minutes without user activity. Other tabs receive auth-change and activity notifications through storage events; these notifications contain no credentials and never grant access without querying the server.
 
-export type Session = {
-  user: User;
-  expiresAt: Date;
-  token: string;
-};
+Session refresh responses are revision-checked to avoid overwriting newer login/logout state. Initial verification failures fail closed and expose a retry action. Business API 401 responses trigger session revalidation; requests, especially bookings/payments, are never automatically replayed.
 
-export const signIn = async (email: string, password: string) => {
-  return authClient.signIn.email({ email, password, rememberMe: true });
-};
+Socket connections are established only for an authenticated user with a server-provided branch ID. They send cookies and disconnect when the user/branch changes or logs out. No fallback branch is guessed.
 
-export const signOut = async () => authClient.signOut();
-export const getSession = async () => authClient.getSession();
-export const useSession = authClient.useSession;
-```
+## Backend requirements and current limits
 
-#### `src/pages/Login.tsx`
-Clean, accessible login page with:
-- Email/password form with validation
-- Loading states and error handling
-- Demo credentials display for testing
-- Redirects to `/frontdesk/dashboard` on success
+The current backend mounts Better Auth at `/api/auth`, configures the admin plugin, supports email/password login, and seeds admin/manager/front_desk accounts. Those accounts must actually exist in the database; the frontend has no demo-login bypass.
 
----
+The backend does not currently expose branch membership on auth users or initialize Socket.io. Add a trusted branch field and validate room subscriptions server-side before enabling branch updates. All hotel REST endpoints must enforce authentication, roles and branch scope on the server; frontend route guards are not API authorization.
 
-### 3. Modified Files
+Password reset email delivery, MFA, failed-attempt lockout and server-enforced inactivity policy are not configured in the current backend. The frontend does not pretend these features are available. Its inactivity lock hides content locally, but server revocation can fail during an outage and requires a server policy for enforcement across reloads/devices. Guest and service staff are supported by the frontend permission policy but are not seeded by the existing backend script.
 
-#### `src/context/AuthContext.tsx`
-**Complete rewrite** - Replaced mock auth with BetterAuth:
-- Added `signIn`, `signOut`, `refreshSession` methods
-- Session management with `isLoading`, `isAuthenticated` states
-- Fetches session on mount via `authClient.getSession()`
+## Validation
 
-#### `src/routes/AppRouter.tsx`
-**Major routing updates:**
-- Added `/login` public route (wrapped in `PublicRoute`)
-- Added `ProtectedRoute` wrapper for authenticated routes
-- Added `PublicRoute` wrapper for login page (redirects authenticated users away)
-- All `/frontdesk/*` routes now protected
+Run `npm test`, `npm run build`, and `npm run lint`. Tests exercise the actual modern Better Auth client against mocked HTTP responses, credential transport, session restoration/expiry/errors, logout failures, every role's permissions, and safe redirect selection. A live login requires a running backend and initialized MySQL; these mocked checks do not verify database or deployment configuration.
 
-#### `src/pages/frontdesk/FrontDeskDashboard.tsx`
-- Fixed user property: `user?.fullName` → `user?.name` (matches BetterAuth User type)
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                     App.tsx                             │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │              BrowserRouter                        │  │
-│  │  ┌────────────────────────────────────────────┐  │  │
-│  │  │           AuthProvider                     │  │  │
-│  │  │  ┌──────────────────────────────────────┐  │  │  │
-│  │  │  │         SocketProvider               │  │  │  │
-│  │  │  │  ┌────────────────────────────────┐  │  │  │  │
-│  │  │  │  │         AppRouter              │  │  │  │  │
-│  │  │  │  │  ┌─────────┐ ┌───────────────┐ │  │  │  │  │
-│  │  │  │  │  │ /login  │ │ /frontdesk/*  │ │  │  │  │  │
-│  │  │  │  │  │PublicRt │ │ ProtectedRt   │ │  │  │  │  │
-│  │  │  │  │  │ (Login) │ │ (Dashboard,   │ │  │  │  │  │
-│  │  │  │  │  │         │ │  Reservations,│ │  │  │  │  │
-│  │  │  │  │  │         │ │  etc.)        │ │  │  │  │  │
-│  │  │  │  │  └─────────┘ └───────────────┘ │  │  │  │  │
-│  │  │  │  └────────────────────────────────┘  │  │  │  │
-│  │  │  └──────────────────────────────────────┘  │  │  │
-│  │  └────────────────────────────────────────────┘  │  │
-│  └──────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-```
-
----
-
-## Flow
-
-1. **Unauthenticated user visits `/`**
-   → Redirects to `/frontdesk/dashboard`
-   → `ProtectedRoute` checks `isAuthenticated` (false)
-   → Redirects to `/login`
-
-2. **User submits login form**
-   → `signIn(email, password)` calls BetterAuth backend at `http://localhost:4000`
-   → On success: sets user/session state, redirects to `/frontdesk/dashboard`
-
-3. **Authenticated user visits `/login`**
-   → `PublicRoute` checks `isAuthenticated` (true)
-   → Redirects to `/frontdesk/dashboard`
-
-4. **Session persistence**
-   → Cookies included via `credentials: 'include'`
-   → Session refreshed on app mount via `refreshSession()`
-
----
-
-## Next Steps
-
-### 1. Backend Configuration Required
-Configure your BetterAuth backend at `http://localhost:4000`:
-
-```typescript
-// Backend (better-auth server)
-import { betterAuth } from 'better-auth';
-
-export const auth = betterAuth({
-  baseURL: 'http://localhost:4000',
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: false, // Set true for production
-  },
-  session: {
-    cookieCache: {
-      enabled: true,
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    },
-  },
-  // Add database adapter (PostgreSQL, MySQL, etc.)
-  database: { /* your adapter */ },
-});
-```
-
-### 2. Create Demo Users
-Add test users to your database:
-- `frontdesk@hotel.com` / `password123` (role: FrontDesk)
-- `manager@hotel.com` / `password123` (role: Manager)
-- `admin@hotel.com` / `password123` (role: Admin)
-
-### 3. Role-Based Redirects (Recommended)
-Update `Login.tsx` to redirect based on user role:
-
-```typescript
-const { error: signInError } = await signIn(email, password);
-
-if (signInError) {
-  setError(signInError.message || 'Invalid email or password');
-} else {
-  // Role-based redirect
-  const role = user?.role;
-  switch (role) {
-    case 'Manager':
-    case 'Admin':
-      navigate('/manager/dashboard', { replace: true });
-      break;
-    case 'FrontDesk':
-    default:
-      navigate('/frontdesk/dashboard', { replace: true });
-      break;
-  }
-}
-```
-
-### 4. Add Logout Button
-Add logout functionality to dashboard/header:
-
-```typescript
-// In any component
-const { signOut, user } = useAuth();
-
-const handleLogout = async () => {
-  await signOut();
-  // Redirects to /login automatically via ProtectedRoute
-};
-
-return (
-  <button onClick={handleLogout}>
-    Logout {user?.name}
-  </button>
-);
-```
-
-### 5. Protected API Calls
-Update API clients to include auth token:
-
-```typescript
-// src/api/apiClient.ts
-const api = axios.create({
-  baseURL: 'http://localhost:4000/api',
-  withCredentials: true, // Include cookies
-});
-
-// Or add Authorization header
-api.interceptors.request.use((config) => {
-  const session = authClient.getSession(); // or from context
-  if (session?.token) {
-    config.headers.Authorization = `Bearer ${session.token}`;
-  }
-  return config;
-});
-```
-
-### 6. Email Verification (Production)
-Enable email verification in backend:
-```typescript
-emailAndPassword: {
-  enabled: true,
-  requireEmailVerification: true,
-  sendVerificationEmail: async ({ user, url }) => {
-    // Send email via SendGrid, Resend, etc.
-  }
-}
-```
-
-### 7. Social Providers (Optional)
-Add OAuth providers to backend:
-```typescript
-socialProviders: {
-  github: {
-    clientId: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  },
-  google: {
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  },
-}
-```
-
-Then update Login.tsx to show social login buttons.
-
----
-
-## Testing
-
-### Manual Test Checklist
-- [ ] Visit `http://localhost:5173` → redirects to `/login`
-- [ ] Enter invalid credentials → shows error message
-- [ ] Enter valid credentials → redirects to `/frontdesk/dashboard`
-- [ ] Refresh page → stays authenticated (session persists)
-- [ ] Visit `/login` while authenticated → redirects to dashboard
-- [ ] Click logout → redirects to `/login`
-
-### Build Verification
-```bash
-npm run build
-# Should complete without errors
-```
-
-### Dev Server
-```bash
-npm run dev
-# Visit http://localhost:5173
-```
-
----
-
-## Notes
-
-- **Cookie-based auth**: Uses `credentials: 'include'` for automatic cookie handling
-- **TypeScript**: All types exported from `src/lib/auth-client.ts`
-- **Error handling**: Graceful fallbacks with user-friendly messages
-- **Accessibility**: Semantic HTML, proper labels, focus states
-- **Responsive**: Works on mobile and desktop
-
----
-
-## Files Summary
-
-| File | Status | Description |
-|------|--------|-------------|
-| `src/lib/auth-client.ts` | ✅ Created | BetterAuth client config |
-| `src/pages/Login.tsx` | ✅ Created | Login page component |
-| `src/context/AuthContext.tsx` | ✅ Rewritten | Auth state management |
-| `src/routes/AppRouter.tsx` | ✅ Updated | Protected/public routes |
-| `src/pages/frontdesk/FrontDeskDashboard.tsx` | ✅ Fixed | User property reference |
-| `package.json` | ✅ Updated | BetterAuth dependencies |
-
----
-
-*Generated on 2026-10-07*
+A live check against the existing local backend verified front-desk, manager and administrator logins with the expected server roles, front-desk session retrieval, and successful sign-out for all three accounts. A subsequent session lookup confirmed the front-desk session was revoked. Temporary test sessions were revoked. No account passwords were changed during verification.

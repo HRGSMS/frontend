@@ -1,111 +1,180 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { authClient, type User, type Session } from '../lib/auth-client';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { authClient, type Session } from '../lib/auth-client';
+import { authenticate, endSession, readSession } from '../lib/auth-session';
+import { homeForRole } from '../lib/auth-policy';
 
-// Define the shape of our Auth Context
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
-  signOut: () => Promise<void>;
-  refreshSession: () => Promise<void>;
+import { AuthContext } from './auth-state';
+
+const AUTH_CHANGE = 'hrgms:auth-change';
+const ACTIVITY = 'hrgms:activity';
+const IDLE_MS = 15 * 60 * 1000;
+const message = (error: unknown) =>
+  error instanceof Error ? error.message : 'Authentication is unavailable. Please try again.';
+function publish() {
+  try {
+    localStorage.setItem(AUTH_CHANGE, `${Date.now()}:${Math.random()}`);
+  } catch {
+    /* Storage may be disabled. */
+  }
 }
-
-export const AuthContext = createContext<AuthContextType | null>(null);
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [data, setData] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const revision = useRef(0);
+  const lastActivity = useRef(0);
+  const busy = useRef(false);
+  const locallyLocked = useRef(false);
 
-  const isAuthenticated = !!user && !!session;
-
-  // Fetch session on mount
-  const refreshSession = async () => {
+  const refreshSession = useCallback(async () => {
+    if (busy.current || locallyLocked.current) return;
+    const current = ++revision.current;
     try {
-      setIsLoading(true);
-      const { data, error } = await authClient.getSession();
-      if (data) {
-        setUser(data.user);
-        setSession(data);
-      } else {
-        setUser(null);
-        setSession(null);
-      }
-      if (error) {
-        console.error('Session fetch error:', error);
-      }
-    } catch (err) {
-      console.error('Failed to fetch session:', err);
-      setUser(null);
-      setSession(null);
+      const next = await readSession(authClient);
+      if (current !== revision.current) return;
+      if (next && lastActivity.current === 0) lastActivity.current = Date.now();
+      setData(next);
+      setAuthError(null);
+    } catch (error) {
+      if (current !== revision.current) return;
+      setData(null);
+      setAuthError(message(error));
     } finally {
-      setIsLoading(false);
+      if (current === revision.current) setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    refreshSession();
   }, []);
 
-  const handleSignIn = async (email: string, password: string) => {
-    setIsLoading(true);
+  const signIn = async (email: string, password: string) => {
+    busy.current = true;
+    const current = ++revision.current;
     try {
-      // @ts-expect-error - dynamic access to email provider
-      const { data, error } = await authClient.signIn.email({
-        email,
-        password,
-        rememberMe: true,
-      });
-      if (data) {
-        setUser(data.user);
-        setSession(data);
-        return { error: undefined };
+      const next = await authenticate(authClient, email, password);
+      if (current !== revision.current)
+        return { error: new Error('Your session changed. Please try again.') };
+      locallyLocked.current = false;
+      lastActivity.current = Date.now();
+      setData(next);
+      setAuthError(null);
+      publish();
+      return { redirectUrl: homeForRole(next.user.role) };
+    } catch (error) {
+      return { error: new Error(message(error)) };
+    } finally {
+      busy.current = false;
+      setIsLoading(false);
+    }
+  };
+
+  const signOut = useCallback(async () => {
+    busy.current = true;
+    const current = ++revision.current;
+    try {
+      await endSession(authClient);
+      if (current !== revision.current) return;
+      locallyLocked.current = true;
+      setData(null);
+      setAuthError(null);
+      publish();
+    } catch (error) {
+      if (current === revision.current) setAuthError(message(error));
+      throw error;
+    } finally {
+      busy.current = false;
+    }
+  }, []);
+
+  const invalidateRequests = useCallback(() => {
+    ++revision.current;
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    queueMicrotask(() => {
+      if (active) void refreshSession();
+    });
+    const onFocus = () => {
+      void refreshSession();
+    };
+    const onExpired = () => {
+      ++revision.current;
+      setData(null);
+      setAuthError(null);
+      void refreshSession();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === AUTH_CHANGE) {
+        locallyLocked.current = false;
+        lastActivity.current = Date.now();
+        setData(null);
+        void refreshSession();
       }
-      return { error: error || new Error('Sign in failed') };
-    } catch (err) {
-      return { error: err as Error };
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      if (event.key === ACTIVITY && event.newValue)
+        lastActivity.current = Math.max(lastActivity.current, Number(event.newValue) || 0);
+    };
+    window.addEventListener('focus', onFocus);
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('hrgms:session-expired', onExpired);
+    const poll = window.setInterval(onFocus, 60000);
+    return () => {
+      active = false;
+      invalidateRequests();
+      window.clearInterval(poll);
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('hrgms:session-expired', onExpired);
+    };
+  }, [refreshSession, invalidateRequests]);
 
-  const handleSignOut = async () => {
-    setIsLoading(true);
-    try {
-      await authClient.signOut();
-      setUser(null);
-      setSession(null);
-    } catch (err) {
-      console.error('Sign out error:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const value: AuthContextType = {
-    user,
-    session,
-    isLoading,
-    isAuthenticated,
-    signIn: handleSignIn,
-    signOut: handleSignOut,
-    refreshSession,
-  };
+  useEffect(() => {
+    if (!data) return;
+    let lastPublished = 0;
+    let ending = false;
+    const onActivity = () => {
+      lastActivity.current = Date.now();
+      if (Date.now() - lastPublished > 5000) {
+        lastPublished = Date.now();
+        try {
+          localStorage.setItem(ACTIVITY, String(lastActivity.current));
+        } catch {
+          /* Optional activity sync. */
+        }
+      }
+    };
+    const events = ['pointerdown', 'keydown', 'scroll', 'touchstart'] as const;
+    events.forEach((event) => window.addEventListener(event, onActivity, { passive: true }));
+    const interval = window.setInterval(() => {
+      if (new Date(data.session.expiresAt).getTime() <= Date.now()) {
+        locallyLocked.current = true;
+        ++revision.current;
+        setData(null);
+      } else if (!ending && Date.now() - lastActivity.current >= IDLE_MS) {
+        ending = true;
+        locallyLocked.current = true;
+        ++revision.current;
+        setData(null);
+        void signOut().catch(() => undefined);
+      }
+    }, 1000);
+    return () => {
+      window.clearInterval(interval);
+      events.forEach((event) => window.removeEventListener(event, onActivity));
+    };
+  }, [data, signOut]);
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={{
+        user: data?.user ?? null,
+        session: data?.session ?? null,
+        isLoading,
+        isAuthenticated: !!data,
+        authError,
+        signIn,
+        signOut,
+        refreshSession,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
-};
-
-// Custom hook to easily access auth context in any component
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+}
