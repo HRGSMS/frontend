@@ -1,8 +1,21 @@
+import { useState, useEffect } from 'react';
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
+import { useSocket } from '../context/SocketContext';
 
-// TODO: replace with a real API call (e.g. GET /api/rooms/status) once the
-// backend endpoint exists. Shape assumed: { id, number, floor, status }[]
-const mockRooms = [
+// Real-time updates: listens for `roomAvailabilityChanged` events from the backend.
+// Falls back to mock data when the backend socket is not running.
+
+export type RoomStatus = 'occupied' | 'vacant-clean' | 'vacant-dirty' | 'out-of-order' | 'maintenance';
+
+export interface RoomItem {
+  id: number;
+  number: string;
+  floor: number;
+  status: RoomStatus;
+}
+
+const mockRooms: RoomItem[] = [
   { id: 1, number: '101', floor: 1, status: 'occupied' },
   { id: 2, number: '102', floor: 1, status: 'vacant-clean' },
   { id: 3, number: '103', floor: 1, status: 'vacant-dirty' },
@@ -17,7 +30,10 @@ const mockRooms = [
   { id: 12, number: '304', floor: 3, status: 'occupied' },
 ];
 
-const statusConfig = {
+const statusConfig: Record<
+  RoomStatus,
+  { label: string; dot: string; bg: string; text: string }
+> = {
   occupied: { label: 'Occupied', dot: 'bg-red-500', bg: 'bg-red-50', text: 'text-red-700' },
   'vacant-clean': {
     label: 'Vacant · Clean',
@@ -45,8 +61,32 @@ const statusConfig = {
   },
 };
 
-const RoomStatusWidget = ({ rooms = mockRooms }) => {
-  const counts = rooms.reduce((acc, room) => {
+export interface RoomStatusWidgetProps {
+  initialRooms?: RoomItem[];
+}
+
+const RoomStatusWidget: FC<RoomStatusWidgetProps> = ({ initialRooms = mockRooms }) => {
+  const { socket } = useSocket();
+  const [rooms, setRooms] = useState<RoomItem[]>(initialRooms);
+
+  // Live update: when the backend emits `roomAvailabilityChanged` we patch the
+  // matching room's status in local state — no full page reload required.
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRoomChange = (update: { id: number; status: RoomStatus }) => {
+      setRooms((prev) =>
+        prev.map((r) => (r.id === update.id ? { ...r, status: update.status } : r)),
+      );
+    };
+
+    socket.on('roomAvailabilityChanged', handleRoomChange);
+    return () => {
+      socket.off('roomAvailabilityChanged', handleRoomChange);
+    };
+  }, [socket]);
+
+  const counts = rooms.reduce<Record<string, number>>((acc, room) => {
     acc[room.status] = (acc[room.status] || 0) + 1;
     return acc;
   }, {});
@@ -62,15 +102,17 @@ const RoomStatusWidget = ({ rooms = mockRooms }) => {
 
       {/* Status count summary */}
       <div className="mb-4 flex flex-wrap gap-2">
-        {Object.entries(statusConfig).map(([key, cfg]) => (
-          <span
-            key={key}
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${cfg.bg} ${cfg.text}`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-            {cfg.label}: {counts[key] || 0}
-          </span>
-        ))}
+        {(Object.entries(statusConfig) as [RoomStatus, (typeof statusConfig)[RoomStatus]][]).map(
+          ([key, cfg]) => (
+            <span
+              key={key}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${cfg.bg} ${cfg.text}`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+              {cfg.label}: {counts[key] || 0}
+            </span>
+          ),
+        )}
       </div>
 
       {/* Room grid */}

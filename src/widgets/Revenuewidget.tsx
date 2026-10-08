@@ -1,23 +1,32 @@
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 
 // TODO: replace with a real API call (e.g. GET /api/reports/revenue/today)
 // once the backend endpoint exists. Shape assumed:
 // { todayRevenue, roomsSold, totalRooms, last7Days: number[] }
-const mockRevenue = {
+
+export interface RevenueData {
+  todayRevenue: number;
+  roomsSold: number;
+  totalRooms: number;
+  last7Days: number[];
+}
+
+const mockRevenue: RevenueData = {
   todayRevenue: 584000,
   roomsSold: 34,
   totalRooms: 48,
   last7Days: [420000, 460000, 510000, 490000, 530000, 560000, 584000],
 };
 
-const formatCurrency = (value) =>
+const formatCurrency = (value: number): string =>
   new Intl.NumberFormat('en-LK', {
     style: 'currency',
     currency: 'LKR',
     maximumFractionDigits: 0,
   }).format(value);
 
-const Sparkline = ({ values }) => {
+const Sparkline: FC<{ values: number[] }> = ({ values }) => {
   const max = Math.max(...values);
   const min = Math.min(...values);
   const range = max - min || 1;
@@ -38,7 +47,11 @@ const Sparkline = ({ values }) => {
   );
 };
 
-const RevenueWidget = ({ data = mockRevenue }) => {
+export interface RevenueWidgetProps {
+  data?: RevenueData;
+}
+
+const RevenueWidget: FC<RevenueWidgetProps> = ({ data = mockRevenue }) => {
   const { todayRevenue, roomsSold, totalRooms, last7Days } = data;
   const adr = roomsSold > 0 ? todayRevenue / roomsSold : 0;
   const revPar = totalRooms > 0 ? todayRevenue / totalRooms : 0;

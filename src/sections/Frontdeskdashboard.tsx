@@ -1,6 +1,6 @@
-import React from 'react';
-import ArrivalsWidget from '../widgets/Arrivalswidget ';
-import DeparturesWidget from '../widgets/Departureswidget ';
+import type { FC } from 'react';
+import ArrivalsWidget from '../widgets/Arrivalswidget';
+import DeparturesWidget from '../widgets/Departureswidget';
 import RoomStatusWidget from '../widgets/RoomStatusWidget';
 
 // TODO: replace with useAuth() once AuthContext exists (Phase 0).
@@ -8,12 +8,12 @@ import RoomStatusWidget from '../widgets/RoomStatusWidget';
 // TODO: subscribe to `roomAvailabilityChanged` via useSocket() once SocketContext exists,
 // so RoomStatusWidget updates live instead of on page load only.
 
-const FrontDeskDashboard = () => {
-  const handleCheckIn = (id) => {
+const FrontDeskDashboard: FC = () => {
+  const handleCheckIn = (id: number) => {
     console.log('check in', id);
   };
 
-  const handleCheckOut = (id) => {
+  const handleCheckOut = (id: number) => {
     console.log('check out', id);
   };
 

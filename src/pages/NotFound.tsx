@@ -1,7 +1,7 @@
-import React from 'react';
+import type { FC } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-const NotFound = () => {
+const NotFound: FC = () => {
   const navigate = useNavigate();
 
   return (
@@ -26,7 +26,7 @@ const NotFound = () => {
           </Link>
 
           <button
-            onClick={() => navigate(-1, { replace: true })}
+            onClick={() => navigate(-1)}
             className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white font-semibold px-8 py-3 rounded-lg transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 duration-200"
           >
             Go Back

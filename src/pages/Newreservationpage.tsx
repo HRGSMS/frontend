@@ -1,3 +1,4 @@
+import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 
 // TODO: replace with real API calls once these exist:
@@ -7,7 +8,43 @@ import { useMemo, useState } from 'react';
 // - reservationApi.createBooking(data)
 // - a guest search endpoint (not explicitly listed in api/ yet — flag for backend)
 
-const mockGuests = [
+export interface Guest {
+  guestId?: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+}
+
+export interface Branch {
+  branchId: number;
+  name: string;
+}
+
+export interface RoomType {
+  roomTypeId: number;
+  typeName: string;
+  dailyRate: number;
+}
+
+export interface AvailableRoom {
+  roomId: number;
+  roomNumber: string;
+  roomTypeId: number;
+  typeName: string;
+  dailyRate: number;
+}
+
+export interface BookingPayload {
+  guest: Guest | null;
+  branchId: number;
+  roomId: number | null;
+  checkInTime: string;
+  checkOutTime: string;
+  totalCharge: number;
+}
+
+const mockGuests: Guest[] = [
   {
     guestId: 1,
     firstName: 'Nimal',
@@ -31,38 +68,38 @@ const mockGuests = [
   },
 ];
 
-const mockBranches = [
+const mockBranches: Branch[] = [
   { branchId: 1, name: 'Sky Nest Colombo' },
   { branchId: 2, name: 'Sky Nest Kandy' },
 ];
 
-const mockRoomTypes = [
+const mockRoomTypes: RoomType[] = [
   { roomTypeId: 1, typeName: 'Standard', dailyRate: 12000 },
   { roomTypeId: 2, typeName: 'Deluxe', dailyRate: 18000 },
   { roomTypeId: 3, typeName: 'Suite', dailyRate: 32000 },
 ];
 
 // Mock availability result — in reality this comes from getAvailability(params)
-const mockAvailableRooms = [
+const mockAvailableRooms: AvailableRoom[] = [
   { roomId: 12, roomNumber: '204', roomTypeId: 2, typeName: 'Deluxe', dailyRate: 18000 },
   { roomId: 15, roomNumber: '207', roomTypeId: 2, typeName: 'Deluxe', dailyRate: 18000 },
   { roomId: 22, roomNumber: '310', roomTypeId: 3, typeName: 'Suite', dailyRate: 32000 },
 ];
 
-const nightsBetween = (checkIn, checkOut) => {
+const nightsBetween = (checkIn: string, checkOut: string): number => {
   if (!checkIn || !checkOut) return 0;
-  const ms = new Date(checkOut) - new Date(checkIn);
+  const ms = new Date(checkOut).getTime() - new Date(checkIn).getTime();
   return Math.max(0, Math.round(ms / (1000 * 60 * 60 * 24)));
 };
 
-const formatCurrency = (value) =>
+const formatCurrency = (value: number): string =>
   new Intl.NumberFormat('en-LK', {
     style: 'currency',
     currency: 'LKR',
     maximumFractionDigits: 0,
   }).format(value);
 
-const Stepper = ({ step }) => {
+const Stepper: FC<{ step: number }> = ({ step }) => {
   const steps = ['Guest', 'Availability', 'Confirm'];
   return (
     <div className="mb-6 flex items-center gap-2">
@@ -94,14 +131,18 @@ const Stepper = ({ step }) => {
   );
 };
 
-const NewReservationPage = ({ onCreateBooking }) => {
+interface NewReservationPageProps {
+  onCreateBooking?: (data: BookingPayload) => void;
+}
+
+const NewReservationPage: FC<NewReservationPageProps> = ({ onCreateBooking }) => {
   const [step, setStep] = useState(1);
 
   // Step 1: guest
-  const [guestMode, setGuestMode] = useState('existing');
+  const [guestMode, setGuestMode] = useState<'existing' | 'new'>('existing');
   const [guestSearch, setGuestSearch] = useState('');
-  const [selectedGuest, setSelectedGuest] = useState(null);
-  const [newGuest, setNewGuest] = useState({
+  const [selectedGuest, setSelectedGuest] = useState<Guest | null>(null);
+  const [newGuest, setNewGuest] = useState<Guest>({
     firstName: '',
     lastName: '',
     email: '',
@@ -113,10 +154,9 @@ const NewReservationPage = ({ onCreateBooking }) => {
   const [roomTypeId, setRoomTypeId] = useState('all');
   const [checkInTime, setCheckInTime] = useState('');
   const [checkOutTime, setCheckOutTime] = useState('');
-  const [searched, setSearched] = useState(false);
 
   // Step 3: room selection
-  const [selectedRoomId, setSelectedRoomId] = useState(null);
+  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
   const [confirmed, setConfirmed] = useState(false);
 
   const filteredGuests = useMemo(
@@ -146,12 +186,11 @@ const NewReservationPage = ({ onCreateBooking }) => {
   const totalCharge = selectedRoom ? selectedRoom.dailyRate * nights : 0;
 
   const handleSearch = () => {
-    setSearched(true);
     setStep(3);
   };
 
   const handleConfirmBooking = () => {
-    const bookingData = {
+    const bookingData: BookingPayload = {
       guest,
       branchId,
       roomId: selectedRoomId,

@@ -1,10 +1,23 @@
+import type { FC } from 'react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 // TODO: replace with a real API call (e.g. reservationApi.listBookings(filters))
 // once the backend endpoint exists. Shape assumed based on the Booking + Guest +
 // BookingRooms tables in the ERD.
-const mockReservations = [
+export interface Reservation {
+  bookingId: string;
+  guestName: string;
+  roomNumbers: string[];
+  checkInTime: string;
+  checkOutTime: string;
+  bookingStatus: string;
+  paymentStatus: string;
+  totalCharge: number;
+  outstandingAmount: number;
+}
+
+const mockReservations: Reservation[] = [
   {
     bookingId: 'RES-4530',
     guestName: 'Nimal Perera',
@@ -205,7 +218,7 @@ const mockReservations = [
   },
 ];
 
-const statusConfig = {
+const statusConfig: Record<string, { bg: string; text: string }> = {
   Confirmed: { bg: 'bg-blue-50', text: 'text-blue-700' },
   CheckedIn: { bg: 'bg-green-50', text: 'text-green-700' },
   CheckedOut: { bg: 'bg-gray-100', text: 'text-gray-700' },
@@ -213,23 +226,27 @@ const statusConfig = {
   NoShow: { bg: 'bg-amber-50', text: 'text-amber-700' },
 };
 
-const paymentStatusConfig = {
+const paymentStatusConfig: Record<string, { bg: string; text: string }> = {
   Paid: { bg: 'bg-green-50', text: 'text-green-700' },
   Partial: { bg: 'bg-amber-50', text: 'text-amber-700' },
   Unpaid: { bg: 'bg-red-50', text: 'text-red-700' },
 };
 
-const formatCurrency = (value) =>
+const formatCurrency = (value: number): string =>
   new Intl.NumberFormat('en-LK', {
     style: 'currency',
     currency: 'LKR',
     maximumFractionDigits: 0,
   }).format(value);
 
-const formatDate = (iso) =>
+const formatDate = (iso: string): string =>
   new Date(iso).toLocaleDateString('en-LK', { month: 'short', day: 'numeric', year: 'numeric' });
 
-const ReservationsListPage = ({ reservations = mockReservations }) => {
+interface ReservationsListPageProps {
+  reservations?: Reservation[];
+}
+
+const ReservationsListPage: FC<ReservationsListPageProps> = ({ reservations = mockReservations }) => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
 

@@ -1,9 +1,19 @@
+import type { FC } from 'react';
 import { Link } from 'react-router-dom';
 
 // TODO: replace with a real API call (e.g. GET /api/rooms/occupancy) once the
 // backend endpoint exists. Shape assumed:
 // { totalRooms, occupiedRooms, vacantRooms, outOfOrderRooms, occupancyYesterday }
-const mockOccupancy = {
+
+export interface OccupancyData {
+  totalRooms: number;
+  occupiedRooms: number;
+  vacantRooms: number;
+  outOfOrderRooms: number;
+  occupancyYesterday: number;
+}
+
+const mockOccupancy: OccupancyData = {
   totalRooms: 48,
   occupiedRooms: 34,
   vacantRooms: 12,
@@ -11,7 +21,11 @@ const mockOccupancy = {
   occupancyYesterday: 68, // percentage, for the trend comparison
 };
 
-const OccupancyWidget = ({ data = mockOccupancy }) => {
+export interface OccupancyWidgetProps {
+  data?: OccupancyData;
+}
+
+const OccupancyWidget: FC<OccupancyWidgetProps> = ({ data = mockOccupancy }) => {
   const { totalRooms, occupiedRooms, vacantRooms, outOfOrderRooms, occupancyYesterday } = data;
   const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
   const delta = occupancyRate - occupancyYesterday;

@@ -1,3 +1,4 @@
+import type { FC, SVGProps } from 'react';
 import {
   Archive,
   BarChartSquare02,
@@ -6,6 +7,7 @@ import {
   Grid03,
   HomeLine,
   LineChartUp03,
+  LogOut01,
   MessageChatCircle,
   Package,
   PieChart03,
@@ -15,8 +17,19 @@ import {
   UsersPlus,
 } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import type { UserRole } from '../types/auth';
 
-const navItemsSimple = [
+export interface NavItem {
+  label: string;
+  href: string;
+  icon: FC<SVGProps<SVGSVGElement>>;
+  badge?: number | string;
+  items?: NavItem[];
+  allowedRoles?: UserRole[];
+}
+
+const navItemsSimple: NavItem[] = [
   {
     label: 'Dashboard',
     href: '/dashboard',
@@ -26,6 +39,7 @@ const navItemsSimple = [
     label: 'Reservations',
     href: '/reservations',
     icon: Rows01,
+    allowedRoles: ['frontdesk', 'manager', 'admin'],
     items: [
       { label: 'All Reservations', href: '/reservations/all', icon: Rows01 },
       { label: 'New Reservation', href: '/reservations/new', icon: CheckDone01 },
@@ -36,22 +50,26 @@ const navItemsSimple = [
     label: 'Room Inventory',
     href: '/rooms',
     icon: Package,
+    allowedRoles: ['frontdesk', 'manager', 'admin'],
   },
   {
     label: 'Service Requests',
     href: '/service-requests',
     icon: MessageChatCircle,
     badge: 5,
+    allowedRoles: ['frontdesk', 'manager', 'admin'],
   },
   {
     label: 'Service Catalog',
     href: '/service-catalog',
     icon: CurrencyDollarCircle,
+    allowedRoles: ['manager', 'admin'],
   },
   {
     label: 'Reports',
     href: '/reports',
     icon: BarChartSquare02,
+    allowedRoles: ['manager', 'admin'],
     items: [
       { label: 'Occupancy', href: '/reports/occupancy', icon: PieChart03 },
       { label: 'Revenue', href: '/reports/revenue', icon: LineChartUp03 },
@@ -60,29 +78,37 @@ const navItemsSimple = [
     ],
   },
   {
-    label: 'Staff', // Admin only, per spec — pending role-based filtering
+    label: 'Staff',
     href: '/staff',
     icon: UsersPlus,
+    allowedRoles: ['admin'],
   },
   {
     label: 'Billing & Invoices',
     href: '/billing',
     icon: CurrencyDollarCircle,
+    allowedRoles: ['frontdesk', 'manager', 'admin'],
   },
   {
-    label: 'Audit Log', // Admin only, per spec — pending role-based filtering
+    label: 'Audit Log',
     href: '/audit-log',
     icon: Archive,
+    allowedRoles: ['admin'],
   },
 ];
 
-const footerItems = [
-  { label: 'Settings', href: '/settings', icon: Settings01 },
-  { label: 'Support', href: '/support', icon: MessageChatCircle },
+const footerItems: NavItem[] = [
+  { label: 'Settings', href: '/account', icon: Settings01 },
   { label: 'My Account', href: '/account', icon: User01 },
 ];
 
-const SidebarItem = ({ item, activeUrl, nested = false }) => {
+interface SidebarItemProps {
+  item: NavItem;
+  activeUrl: string;
+  nested?: boolean;
+}
+
+const SidebarItem: FC<SidebarItemProps> = ({ item, activeUrl, nested = false }) => {
   const Icon = item.icon;
   const isActive = activeUrl === item.href;
 
@@ -106,11 +132,20 @@ const SidebarItem = ({ item, activeUrl, nested = false }) => {
   );
 };
 
-export const SidebarNavigationSimpleDemo = () => {
+export const SidebarNavigationSimpleDemo: FC = () => {
   const { pathname } = useLocation();
+  const { user, logout } = useAuth();
+
+  const userRole = user?.role || 'guest';
+
+  // Role-based filtering
+  const visibleNavItems = navItemsSimple.filter(
+    (item) => !item.allowedRoles || item.allowedRoles.includes(userRole),
+  );
 
   return (
     <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-gray-200 bg-white md:flex md:flex-col">
+      {/* Brand Header */}
       <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-5">
         <img
           src="/favicon.svg"
@@ -118,14 +153,16 @@ export const SidebarNavigationSimpleDemo = () => {
           className="h-8 w-8 shrink-0 object-contain"
         />
         <div>
-          <div className="text-cyan-600 text-xl font-bold leading-tight">Sky Nest Hotels</div>
-          <div className="text-xs font-medium uppercase tracking-wide text-gray-500 pt-1">
-            Executive management
+          <div className="text-cyan-700 text-lg font-bold leading-tight">Sky Nest Hotels</div>
+          <div className="text-[11px] font-medium uppercase tracking-wider text-gray-400 pt-0.5">
+            {user?.branchName || 'Hotel Management'}
           </div>
         </div>
       </div>
+
+      {/* Main Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Main navigation">
-        {navItemsSimple.map((item) => (
+        {visibleNavItems.map((item) => (
           <div key={item.label} className="mb-1">
             <SidebarItem item={item} activeUrl={pathname} />
             {item.items && (
@@ -138,10 +175,43 @@ export const SidebarNavigationSimpleDemo = () => {
           </div>
         ))}
       </nav>
-      <div className="border-t border-gray-200 px-3 py-4">
-        {footerItems.map((item) => (
-          <SidebarItem key={item.label} item={item} activeUrl={pathname} />
-        ))}
+
+      {/* User Card & Logout */}
+      <div className="border-t border-gray-200 p-3 bg-gray-50/50">
+        <div className="flex items-center justify-between mb-3 px-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user.name}
+                className="w-8 h-8 rounded-full object-cover shrink-0 ring-1 ring-gray-200"
+              />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-cyan-700 text-white flex items-center justify-center font-bold text-xs shrink-0">
+                {user?.name?.[0] || 'U'}
+              </div>
+            )}
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-gray-900 truncate">{user?.name}</div>
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-cyan-700">
+                {user?.role}
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={logout}
+            title="Log Out"
+            className="text-gray-400 hover:text-red-600 p-1.5 rounded-md hover:bg-gray-100 transition-colors"
+          >
+            <LogOut01 className="size-4 shrink-0" />
+          </button>
+        </div>
+
+        <div className="space-y-1">
+          {footerItems.map((item) => (
+            <SidebarItem key={item.label} item={item} activeUrl={pathname} />
+          ))}
+        </div>
       </div>
     </aside>
   );
