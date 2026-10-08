@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { authClient, type Session } from '../lib/auth-client';
 import { authenticate, endSession, readSession } from '../lib/auth-session';
-import { homeForRole } from '../lib/auth-policy';
 
 import { AuthContext } from './auth-state';
 
@@ -56,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setData(next);
       setAuthError(null);
       publish();
-      return { redirectUrl: homeForRole(next.user.role) };
+      return {};
     } catch (error) {
       return { error: new Error(message(error)) };
     } finally {
@@ -96,6 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       void refreshSession();
     };
     const onExpired = () => {
+      // A delayed response from an older API request must not cancel a new login/logout.
+      if (busy.current) return;
       ++revision.current;
       setData(null);
       setAuthError(null);

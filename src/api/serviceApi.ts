@@ -11,7 +11,13 @@ export const serviceApi = {
     return response.data;
   },
 
-  requestService: async (data: { bookingId: number; roomId: number; serviceId: number; quantity: number; instructions?: string }) => {
+  requestService: async (data: {
+    bookingId: number;
+    roomId: number;
+    serviceId: number;
+    quantity: number;
+    instructions?: string;
+  }) => {
     const response = await apiClient.post('/service-requests', data);
     return response.data;
   },
@@ -21,7 +27,12 @@ export const serviceApi = {
     return response.data;
   },
 
-  listServiceUsage: async (filters: { bookingId?: number; roomId?: number; serviceId?: number; status?: string }) => {
+  listServiceUsage: async (filters: {
+    bookingId?: number;
+    roomId?: number;
+    serviceId?: number;
+    status?: string;
+  }) => {
     const response = await apiClient.get('/service-requests', { params: filters });
     return response.data;
   },

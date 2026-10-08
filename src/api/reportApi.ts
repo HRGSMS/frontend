@@ -6,12 +6,20 @@ export const reportApi = {
     return response.data;
   },
 
-  getBillingSummaryReport: async (params: { branchId?: number; dateFrom?: string; dateTo?: string }) => {
+  getBillingSummaryReport: async (params: {
+    branchId?: number;
+    dateFrom?: string;
+    dateTo?: string;
+  }) => {
     const response = await apiClient.get('/reports/billing-summary', { params });
     return response.data;
   },
 
-  getServiceUsageReport: async (params: { branchId?: number; dateFrom?: string; dateTo?: string }) => {
+  getServiceUsageReport: async (params: {
+    branchId?: number;
+    dateFrom?: string;
+    dateTo?: string;
+  }) => {
     const response = await apiClient.get('/reports/service-usage', { params });
     return response.data;
   },
@@ -21,10 +29,14 @@ export const reportApi = {
     return response.data;
   },
 
-  exportReport: async (type: string, format: 'pdf' | 'excel' | 'csv', params: { branchId?: number; dateFrom?: string; dateTo?: string } = {}) => {
+  exportReport: async (
+    type: string,
+    format: 'pdf' | 'excel' | 'csv',
+    params: { branchId?: number; dateFrom?: string; dateTo?: string } = {},
+  ) => {
     const response = await apiClient.get(`/reports/${type}/export?format=${format}`, {
       params,
-      responseType: 'blob' // Important for file downloads
+      responseType: 'blob', // Important for file downloads
     });
     return response.data;
   },

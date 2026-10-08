@@ -1,17 +1,31 @@
 import apiClient from './apiClient';
 
 export const reservationApi = {
-  getAvailability: async (params: { branchId?: number; checkIn: string; checkOut: string; roomTypeId?: number }) => {
+  getAvailability: async (params: {
+    branchId?: number;
+    checkIn: string;
+    checkOut: string;
+    roomTypeId?: number;
+  }) => {
     const response = await apiClient.get('/rooms/availability', { params });
     return response.data;
   },
 
-  createBooking: async (data: { guestId: number; roomIds: number[]; checkIn: string; checkOut: string; source: string }) => {
+  createBooking: async (data: {
+    guestId: number;
+    roomIds: number[];
+    checkIn: string;
+    checkOut: string;
+    source: string;
+  }) => {
     const response = await apiClient.post('/bookings', data);
     return response.data;
   },
 
-  updateBooking: async (id: number, data: Partial<{ checkIn: string; checkOut: string; roomIds: number[]; source: string }>) => {
+  updateBooking: async (
+    id: number,
+    data: Partial<{ checkIn: string; checkOut: string; roomIds: number[]; source: string }>,
+  ) => {
     const response = await apiClient.patch(`/bookings/${id}`, data);
     return response.data;
   },
@@ -36,7 +50,13 @@ export const reservationApi = {
     return response.data;
   },
 
-  listBookings: async (filters: { branchId?: number; guestId?: number; status?: string; dateFrom?: string; dateTo?: string }) => {
+  listBookings: async (filters: {
+    branchId?: number;
+    guestId?: number;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) => {
     const response = await apiClient.get('/bookings', { params: filters });
     return response.data;
   },

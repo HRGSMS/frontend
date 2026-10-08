@@ -101,6 +101,21 @@ test('malformed sessions are rejected', async () => {
     );
   }
 });
+test('a session must belong to the user returned by the server', async () => {
+  const mismatched = session();
+  mismatched.session.userId = 'another-user';
+  const { client } = mockClient([{ body: mismatched }]);
+  await assert.rejects(readSession(client), /invalid session/);
+});
+test('invalid token and missing expiry never grant access', async () => {
+  for (const invalid of [
+    { ...session(), session: { ...session().session, token: 123 } },
+    { ...session(), session: { ...session().session, expiresAt: null } },
+  ]) {
+    const { client } = mockClient([{ body: invalid }]);
+    await assert.rejects(readSession(client), /invalid session/);
+  }
+});
 test('logout uses the cookie-authenticated server endpoint', async () => {
   const { client, calls } = mockClient([{ body: { success: true } }]);
   await endSession(client);

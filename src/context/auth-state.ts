@@ -6,7 +6,7 @@ export interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   authError: string | null;
-  signIn: (email: string, password: string) => Promise<{ error?: Error; redirectUrl?: string }>;
+  signIn: (email: string, password: string) => Promise<{ error?: Error }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
 }

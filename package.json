@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\"",
-    "test": "node --test --test-isolation=none tests/*.test.mjs"
+    "typecheck": "tsc -b --force",
+    "test": "npm run typecheck && node --test --test-isolation=none tests/*.test.mjs"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.10.0",

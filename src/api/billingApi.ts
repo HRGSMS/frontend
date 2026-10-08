@@ -11,8 +11,14 @@ export const billingApi = {
     return response.data;
   },
 
-  confirmPayment: async (bookingId: number, data: { gatewayTransactionId: string; amount: number; method: string }) => {
-    const response = await apiClient.post(`/bookings/${bookingId}/payments`, { ...data, bookingId });
+  confirmPayment: async (
+    bookingId: number,
+    data: { gatewayTransactionId: string; amount: number; method: string },
+  ) => {
+    const response = await apiClient.post(`/bookings/${bookingId}/payments`, {
+      ...data,
+      bookingId,
+    });
     return response.data;
   },
 

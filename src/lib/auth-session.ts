@@ -16,8 +16,12 @@ export async function readSession(client: SessionClient): Promise<Session | null
   if (error) throw new Error(error.message || 'Unable to verify your session. Please try again.');
   if (!data) return null;
   if (
-    !data.user?.id ||
-    !data.session?.token ||
+    typeof data.user?.id !== 'string' ||
+    !data.user.id ||
+    typeof data.session?.token !== 'string' ||
+    !data.session.token ||
+    data.session.userId !== data.user.id ||
+    data.session.expiresAt == null ||
     !Number.isFinite(new Date(data.session.expiresAt).getTime())
   ) {
     throw new Error('The server returned an invalid session.');

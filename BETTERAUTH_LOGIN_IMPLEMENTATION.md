@@ -1,6 +1,6 @@
 # Authentication implementation
 
-The frontend uses `better-auth/react` from the installed Better Auth 1.7.7 package, matching the backend. The obsolete `@better-auth/client` alpha dependency has been removed.
+The frontend uses `better-auth/react` from the installed Better Auth 1.7.7 package, matching the backend.
 
 ## Configuration
 
@@ -46,6 +46,6 @@ Password reset email delivery, MFA, failed-attempt lockout and server-enforced i
 
 ## Validation
 
-Run `npm test`, `npm run build`, and `npm run lint`. Tests exercise the actual modern Better Auth client against mocked HTTP responses, credential transport, session restoration/expiry/errors, logout failures, every role's permissions, and safe redirect selection. A live login requires a running backend and initialized MySQL; these mocked checks do not verify database or deployment configuration.
+Run `npm test`, `npm run build`, and `npm run lint`. The test command first checks the application's TypeScript types, including the configured auth client. Tests then exercise the actual modern Better Auth client against mocked HTTP responses, credential transport, session restoration/expiry/errors, logout failures, every role's permissions, and safe redirect selection. A live login requires a running backend and initialized MySQL; these mocked checks do not verify database or deployment configuration.
 
 A live check against the existing local backend verified front-desk, manager and administrator logins with the expected server roles, front-desk session retrieval, and successful sign-out for all three accounts. A subsequent session lookup confirmed the front-desk session was revoked. Temporary test sessions were revoked. No account passwords were changed during verification.
