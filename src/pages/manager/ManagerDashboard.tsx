@@ -79,7 +79,7 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
 }
 
 const roomTypes = [
-  { name: 'Deluxe king', rooms: 40, occupied: 32, available: 6, maintenance: 2 },
+  { name: 'INCOMPLETE WEBPAGE', rooms: 40, occupied: 32, available: 6, maintenance: 2 },
   { name: 'Superior twin', rooms: 40, occupied: 28, available: 9, maintenance: 3 },
   { name: 'Executive suite', rooms: 20, occupied: 15, available: 3, maintenance: 2 },
 ];
@@ -291,39 +291,6 @@ export default function ManagerDashboard() {
                 <Icon name="arrowUp" size={18} />
               </Link>
             ))}
-          </section>
-          <section className="md-panel md-checklist" aria-labelledby="md-checklist-heading">
-            <div className="md-panel-heading">
-              <div>
-                <h2 id="md-checklist-heading">Your daily checklist</h2>
-                <p>A few priorities to keep the day on track.</p>
-              </div>
-              <span className="md-check-count">
-                {completed.length} / {checklist.length}
-              </span>
-            </div>
-            <div className="md-check-items">
-              {checklist.map((item, index) => (
-                <label
-                  key={item}
-                  className={`md-check-item ${completed.includes(index) ? 'is-complete' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={completed.includes(index)}
-                    onChange={() =>
-                      setCompleted((previous) =>
-                        previous.includes(index)
-                          ? previous.filter((id) => id !== index)
-                          : [...previous, index],
-                      )
-                    }
-                  />
-                  <span>{item}</span>
-                </label>
-              ))}
-            </div>
-            <p className="md-check-note">Personal checklist · resets when you leave this page</p>
           </section>
         </div>
         <aside className="md-secondary-column" aria-label="Occupancy and workspace overview">
