@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Outlet } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/auth-state';
 import { getRole, homeForRole, roleLabels } from '../lib/auth-policy';
 
@@ -8,6 +8,8 @@ export function AuthLayout() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const role = getRole(user?.role);
+  const { pathname } = useLocation();
+  const isFrontDeskDashboard = pathname === '/frontdesk/dashboard';
   async function logout() {
     setPending(true);
     setError(null);
@@ -20,7 +22,7 @@ export function AuthLayout() {
     }
   }
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen bg-gray-50 ${isFrontDeskDashboard ? 'fd-auth-shell' : ''}`}>
       <header className="border-b bg-white px-4 py-3 text-gray-700">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
           <Link to={homeForRole(role)} className="font-semibold text-blue-900">
