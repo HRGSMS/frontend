@@ -39,7 +39,7 @@ const navItemsSimple = [
   },
   {
     label: 'Service Requests',
-    href: '/service-requests',
+    href: '/services/request',
     icon: MessageChatCircle,
     badge: 5,
   },

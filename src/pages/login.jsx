@@ -19,7 +19,49 @@ const Login = () => {
   const [showPass, setShowPass] = useState(false);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  const handleLogin = () => alert('Login successful!');
+  const [loading, setLoading] = useState(false);
+const [error, setError] = useState('');
+
+const handleLogin = async () => {
+  if (!form.email.trim() || !form.password) {
+    setError('Please enter both your email and password.');
+    return;
+  }
+
+  setLoading(true);
+  setError('');
+
+  try {
+    const response = await fetch(
+      'http://localhost:4000/api/auth/sign-in/email',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: form.email.trim(),
+          password: form.password,
+        }),
+      },
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(
+        data.message || data.error || 'Login failed. Check your credentials.',
+      );
+    }
+
+    window.location.href = '/dashboard';
+  } catch (err) {
+    setError(err.message || 'Unable to sign in. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="bg-[url('/images/login2.jpg')] bg-cover bg-center min-h-screen flex items-center justify-center px-4 py-4 font-[popins]">
@@ -49,6 +91,11 @@ const Login = () => {
 
           {/* Fields */}
           <div className="flex flex-col gap-4">
+            {error && (
+              <p role="alert" className="text-sm text-red-600">
+                {error}
+              </p>
+            )}
             <div>
               <label className={labelClass}>Email</label>
               <IconInput icon="✉️">
@@ -97,9 +144,10 @@ const Login = () => {
 
             <button
               onClick={handleLogin}
-              className="mt-1 w-full h-10 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold tracking-wide transition"
+              disabled={loading}
+              className="mt-1 w-full h-10 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-semibold tracking-wide transition disabled:opacity-60"
             >
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
 
             <p className="text-center text-xs text-gray-400">

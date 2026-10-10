@@ -13,7 +13,7 @@ const PendingServiceRequestsWidget = ({ requests = mockPendingRequests }) => (
   <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
     <div className="mb-3 flex items-center justify-between">
       <h3 className="text-sm font-semibold text-gray-900">Pending Service Requests</h3>
-      <Link to="/service-requests" className="text-xs font-medium text-blue-600 hover:underline">
+      <Link to="/services/request" className="text-xs font-medium text-blue-600 hover:underline">
         View queue
       </Link>
     </div>
