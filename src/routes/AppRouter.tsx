@@ -26,10 +26,8 @@ function Loading() {
 }
 function ProtectedRoute() {
   const { isLoading, isAuthenticated } = useAuth();
-  const location = useLocation();
   if (isLoading) return <Loading />;
-  if (!isAuthenticated)
-    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <Outlet />;
 }
 function RoleRoute() {
@@ -39,10 +37,8 @@ function RoleRoute() {
 }
 function PublicRoute() {
   const { isLoading, isAuthenticated, user } = useAuth();
-  const location = useLocation();
-  const requested = typeof location.state?.from === 'string' ? location.state.from : undefined;
   if (isLoading) return <Loading />;
-  if (isAuthenticated) return <Navigate to={loginDestination(user?.role, requested)} replace />;
+  if (isAuthenticated) return <Navigate to={loginDestination(user?.role)} replace />;
   return <Login />;
 }
 function Home() {
