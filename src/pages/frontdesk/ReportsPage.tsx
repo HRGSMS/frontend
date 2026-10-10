@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, type ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/auth-state';
 import {
   reportApi,
@@ -134,6 +134,11 @@ function formatDate(dateStr: string | null | undefined): string {
 
 export default function ReportsPage() {
   const { user } = useAuth();
+
+  if (user?.role === 'front_desk') {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
   const [activeTab, setActiveTab] = useState<ReportTab>('occupancy');
 
   // Dates matching sample data in backend
@@ -352,41 +357,36 @@ export default function ReportsPage() {
   return (
     <main className="fd-dashboard">
       {/* Workspace Sidebar Navigation */}
-      <aside className="fd-sidebar" aria-label="Front desk workspace">
-        <Link to="/frontdesk/dashboard" className="fd-brand">
+      <aside className="fd-sidebar" aria-label="Management reports workspace">
+        <Link
+          to={user?.role === 'admin' ? '/admin/dashboard' : '/manager/dashboard'}
+          className="fd-brand"
+        >
           <span className="fd-brand-mark">
-            <Icon name="bed" size={20} />
+            <Icon name="chart" size={20} />
           </span>
           <span>
-            SkyNest Hotels<small>FRONT DESK OPERATIONS</small>
+            SkyNest Hotels
+            <small>{user?.role === 'admin' ? 'ADMINISTRATION REPORTS' : 'MANAGEMENT REPORTS'}</small>
           </span>
         </Link>
-        <nav className="fd-workspace-nav" aria-label="Front desk navigation">
-          <Link to="/frontdesk/dashboard">
-            <Icon name="chart" size={17} />
-            Overview
-          </Link>
-          <Link to="/frontdesk/reservations">
-            <Icon name="calendar" size={17} />
-            Reservations
-          </Link>
-          <Link to="/frontdesk/check-in-out">
-            <Icon name="door" size={17} />
-            Check-in & out
+        <nav className="fd-workspace-nav" aria-label="Reports navigation">
+          <Link to={user?.role === 'admin' ? '/admin/dashboard' : '/manager/dashboard'}>
+            <Icon name="arrow" size={17} />
+            {user?.role === 'admin' ? 'Admin dashboard' : 'Manager dashboard'}
           </Link>
           <span className="is-current" aria-current="page">
             <Icon name="chart" size={17} />
-            Reports
+            Analytics & reports
           </span>
-          <Link to="/frontdesk/service-requests">
-            <Icon name="bell" size={17} />
-            Guest services
-          </Link>
         </nav>
         <div className="fd-sidebar-bottom">
-          <Link to="/frontdesk/reservations/new" className="fd-button">
-            <Icon name="plus" size={16} />
-            New booking
+          <Link
+            to={user?.role === 'admin' ? '/admin/dashboard' : '/manager/dashboard'}
+            className="fd-button"
+          >
+            <Icon name="arrow" size={16} />
+            Return to dashboard
           </Link>
           <Link to="/account" className="fd-sidebar-account">
             <Icon name="shield" size={16} />

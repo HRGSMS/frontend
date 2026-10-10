@@ -234,3 +234,11 @@ test('redirect destinations cannot escape their permitted application area', () 
     assert.equal(loginDestination('front_desk', destination), '/frontdesk/dashboard', destination);
   }
 });
+test('front desk staff cannot access reports pages while managers and admins can', () => {
+  assert.equal(canAccessPath('front_desk', '/frontdesk/reports'), false);
+  assert.equal(canAccessPath('front_desk', '/manager/reports'), false);
+  assert.equal(canAccessPath('front_desk', '/admin/reports'), false);
+  assert.equal(canAccessPath('manager', '/manager/reports'), true);
+  assert.equal(canAccessPath('admin', '/admin/reports'), true);
+  assert.equal(canAccessPath('admin', '/manager/reports'), true);
+});

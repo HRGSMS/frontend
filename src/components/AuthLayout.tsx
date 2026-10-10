@@ -10,7 +10,7 @@ export function AuthLayout() {
   const role = getRole(user?.role);
   const { pathname } = useLocation();
   const isFrontDeskWorkspace =
-    pathname === '/frontdesk/dashboard' || pathname === '/frontdesk/reports';
+    pathname === '/frontdesk/dashboard' || pathname.includes('/reports');
   async function logout() {
     setPending(true);
     setError(null);

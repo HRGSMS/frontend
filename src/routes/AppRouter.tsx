@@ -70,7 +70,7 @@ export function AppRouter() {
             <Route path="/frontdesk/reservations/new" element={<NewReservationPage />} />
             <Route path="/frontdesk/reservations/:id" element={<ReservationDetailPage />} />
             <Route path="/frontdesk/check-in-out" element={<CheckInOutPage />} />
-            <Route path="/frontdesk/reports" element={<ReportsPage />} />
+            <Route path="/frontdesk/reports" element={<Navigate to="/unauthorized" replace />} />
             <Route path="/frontdesk/payment-processing" element={<PaymentProcessingPage />} />
             <Route path="/frontdesk/service-requests" element={<ServiceRequestsQueuePage />} />
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />

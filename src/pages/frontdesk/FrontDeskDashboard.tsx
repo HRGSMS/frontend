@@ -333,10 +333,6 @@ export default function FrontDeskDashboard() {
             <Icon name="door" size={17} />
             Check-in & out
           </Link>
-          <Link to="/frontdesk/reports">
-            <Icon name="chart" size={17} />
-            Reports
-          </Link>
           <Link to="/frontdesk/service-requests">
             <Icon name="bell" size={17} />
             Guest services
