@@ -83,11 +83,6 @@ const roomTypes = [
   { name: 'Superior twin', rooms: 40, occupied: 28, available: 9, maintenance: 3 },
   { name: 'Executive suite', rooms: 20, occupied: 15, available: 3, maintenance: 2 },
 ];
-const checklist = [
-  'Review arrivals and room readiness',
-  'Confirm staffing with department leads',
-  'Review revenue and outstanding balances',
-];
 const shortcuts = [
   {
     title: 'Staff management',
@@ -106,7 +101,6 @@ const shortcuts = [
 export default function ManagerDashboard() {
   const { user } = useAuth();
   const [query, setQuery] = useState('');
-  const [completed, setCompleted] = useState<number[]>([]);
   const totalRooms = roomTypes.reduce((total, room) => total + room.rooms, 0);
   const occupiedRooms = roomTypes.reduce((total, room) => total + room.occupied, 0);
   const availableRooms = roomTypes.reduce((total, room) => total + room.available, 0);
