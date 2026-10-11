@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { bookingStore, type Booking, type BookingStatus } from '../../lib/bookingStore';
+import { formatLKR } from '../../lib/currency';
 
 export default function ReservationsListPage() {
   const navigate = useNavigate();
@@ -216,8 +217,8 @@ export default function ReservationsListPage() {
             <span className="text-xs font-medium text-amber-700 uppercase tracking-wider">
               Total Value
             </span>
-            <p className="mt-1 text-2xl font-bold text-amber-950">
-              ${stats.totalRevenue.toLocaleString()}
+            <p className="mt-1 text-xl font-bold text-amber-950">
+              {formatLKR(stats.totalRevenue, false)}
             </p>
             <span className="text-xs text-amber-600">Active revenue</span>
           </div>
@@ -449,11 +450,11 @@ export default function ReservationsListPage() {
                       <td className="px-5 py-4">
                         <div>
                           <span className="font-bold text-slate-900 block">
-                            ${b.totalCharge.toFixed(2)}
+                            {formatLKR(b.totalCharge)}
                           </span>
                           {b.outstandingAmount > 0 ? (
                             <span className="inline-flex items-center text-[11px] font-semibold text-amber-600 mt-0.5">
-                              Due: ${b.outstandingAmount.toFixed(2)}
+                              Due: {formatLKR(b.outstandingAmount)}
                             </span>
                           ) : (
                             <span className="inline-flex items-center text-[11px] font-medium text-emerald-600 mt-0.5">

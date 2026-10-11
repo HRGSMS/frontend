@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { bookingStore, type Booking } from '../../lib/bookingStore';
+import { formatLKR } from '../../lib/currency';
 
 export default function CheckInOutPage() {
   const [activeTab, setActiveTab] = useState<'arrivals' | 'departures'>('arrivals');
@@ -343,11 +344,11 @@ export default function CheckInOutPage() {
                       <td className="px-5 py-4">
                         <div>
                           <span className="font-semibold text-slate-900 text-xs block">
-                            Total: ${b.totalCharge.toFixed(2)}
+                            Total: {formatLKR(b.totalCharge)}
                           </span>
                           {b.outstandingAmount > 0 ? (
                             <span className="inline-flex items-center text-[11px] font-bold text-amber-600">
-                              Balance due: ${b.outstandingAmount.toFixed(2)}
+                              Balance due: {formatLKR(b.outstandingAmount)}
                             </span>
                           ) : (
                             <span className="inline-flex items-center text-[11px] font-medium text-emerald-600">
@@ -427,7 +428,7 @@ export default function CheckInOutPage() {
                 <div className="flex justify-between">
                   <span className="text-slate-500">Total Charge:</span>
                   <span className="font-semibold text-slate-800">
-                    ${selectedBookingForAction.totalCharge.toFixed(2)}
+                    {formatLKR(selectedBookingForAction.totalCharge)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -435,7 +436,7 @@ export default function CheckInOutPage() {
                   <span
                     className={`font-bold ${selectedBookingForAction.outstandingAmount > 0 ? 'text-amber-600' : 'text-emerald-700'}`}
                   >
-                    ${selectedBookingForAction.outstandingAmount.toFixed(2)}
+                    {formatLKR(selectedBookingForAction.outstandingAmount)}
                   </span>
                 </div>
               </div>

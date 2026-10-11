@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { bookingStore, type Booking, type BookingStatus } from '../../lib/bookingStore';
+import { formatLKR } from '../../lib/currency';
 
 export default function ReservationDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -239,7 +240,7 @@ export default function ReservationDetailPage() {
               <p className="mt-2 text-sm text-slate-500">
                 Outstanding Balance for {booking.guestName}:{' '}
                 <span className="font-bold text-slate-900">
-                  ${booking.outstandingAmount.toFixed(2)}
+                  {formatLKR(booking.outstandingAmount)}
                 </span>
               </p>
               <div className="mt-4 space-y-3">
@@ -264,7 +265,7 @@ export default function ReservationDetailPage() {
                   onClick={handleSettleBalance}
                   className="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
                 >
-                  Confirm Settle ${booking.outstandingAmount.toFixed(2)}
+                  Confirm Settle {formatLKR(booking.outstandingAmount)}
                 </button>
               </div>
             </div>
@@ -429,23 +430,23 @@ export default function ReservationDetailPage() {
                 <div className="flex justify-between text-slate-600">
                   <span>Room Charges ({booking.nights || 1} nights)</span>
                   <span>
-                    ${((booking.totalCharge || 0) - (booking.totalTaxAmount || 0)).toFixed(2)}
+                    {formatLKR((booking.totalCharge || 0) - (booking.totalTaxAmount || 0))}
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-600">
                   <span>Taxes &amp; Service Charge</span>
-                  <span>${(booking.totalTaxAmount || 0).toFixed(2)}</span>
+                  <span>{formatLKR(booking.totalTaxAmount)}</span>
                 </div>
                 <div className="flex justify-between font-bold text-slate-900 border-t border-slate-100 pt-2 text-base">
                   <span>Total Amount</span>
-                  <span>${(booking.totalCharge || 0).toFixed(2)}</span>
+                  <span>{formatLKR(booking.totalCharge)}</span>
                 </div>
 
                 <div className="rounded-lg bg-slate-50 p-3 mt-3 space-y-1.5 border border-slate-100">
                   <div className="flex justify-between text-xs text-slate-500">
                     <span>Amount Paid</span>
                     <span className="font-semibold text-emerald-700">
-                      ${((booking.totalCharge || 0) - (booking.outstandingAmount || 0)).toFixed(2)}
+                      {formatLKR((booking.totalCharge || 0) - (booking.outstandingAmount || 0))}
                     </span>
                   </div>
                   <div className="flex justify-between text-xs text-slate-500">
@@ -453,7 +454,7 @@ export default function ReservationDetailPage() {
                     <span
                       className={`font-bold ${booking.outstandingAmount > 0 ? 'text-amber-600' : 'text-slate-800'}`}
                     >
-                      ${(booking.outstandingAmount || 0).toFixed(2)}
+                      {formatLKR(booking.outstandingAmount)}
                     </span>
                   </div>
                 </div>
@@ -466,7 +467,7 @@ export default function ReservationDetailPage() {
                     onClick={() => setIsProcessingPayment(true)}
                     className="w-full rounded-xl bg-blue-900 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-800 transition-colors"
                   >
-                    Settle Balance (${booking.outstandingAmount.toFixed(2)})
+                    Settle Balance ({formatLKR(booking.outstandingAmount)})
                   </button>
                 </div>
               )}

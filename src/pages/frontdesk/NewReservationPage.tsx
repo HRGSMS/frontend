@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { reservationApi } from '../../api/reservationApi';
 import apiClient from '../../api/apiClient';
 import { bookingStore, type PaymentStatus } from '../../lib/bookingStore';
+import { formatLKR } from '../../lib/currency';
 
 interface BranchOption {
   name: string;
@@ -33,9 +34,9 @@ export default function NewReservationPage() {
     { name: 'Galle Fort Heritage', location_city: 'Galle' },
   ]);
   const [roomTypes, setRoomTypes] = useState<RoomTypeOption[]>([
-    { type_name: 'Deluxe King', daily_rate: 150, capacity: 2 },
-    { type_name: 'Superior Twin', daily_rate: 120, capacity: 2 },
-    { type_name: 'Executive Suite', daily_rate: 280, capacity: 4 },
+    { type_name: 'Deluxe King', daily_rate: 45000, capacity: 2 },
+    { type_name: 'Superior Twin', daily_rate: 32000, capacity: 2 },
+    { type_name: 'Executive Suite', daily_rate: 75000, capacity: 4 },
   ]);
   const [existingGuests, setExistingGuests] = useState<GuestOption[]>([]);
 
@@ -147,7 +148,7 @@ export default function NewReservationPage() {
   );
 
   const currentType = roomTypes.find((r) => r.type_name === selectedRoomType);
-  const dailyRate = Number(currentType?.daily_rate) || 150;
+  const dailyRate = Number(currentType?.daily_rate) || 45000;
   const roomSubtotal = dailyRate * nights;
   const taxAmount = Math.round(roomSubtotal * 0.1);
   const totalAmount = roomSubtotal + taxAmount;
@@ -246,7 +247,7 @@ export default function NewReservationPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500">Total Amount:</span>
-              <span className="font-bold text-blue-900">${totalAmount.toFixed(2)}</span>
+              <span className="font-bold text-blue-900">{formatLKR(totalAmount)}</span>
             </div>
           </div>
 
@@ -515,7 +516,7 @@ export default function NewReservationPage() {
                         <div className="flex justify-between items-start">
                           <h4 className="font-semibold text-slate-900 text-sm">{rt.type_name}</h4>
                           <span className="text-xs font-bold text-blue-950">
-                            ${Number(rt.daily_rate)}/nt
+                            {formatLKR(rt.daily_rate, false)}/nt
                           </span>
                         </div>
                         <p className="mt-1 text-xs text-slate-500">
@@ -577,22 +578,22 @@ export default function NewReservationPage() {
                 <div className="flex justify-between text-slate-600">
                   <span>Duration</span>
                   <span className="font-medium text-slate-800">
-                    {nights} night{nights > 1 ? 's' : ''} (${dailyRate}/nt)
+                    {nights} night{nights > 1 ? 's' : ''} ({formatLKR(dailyRate, false)}/nt)
                   </span>
                 </div>
 
                 <div className="border-t border-slate-100 pt-3 space-y-2">
                   <div className="flex justify-between text-slate-600">
                     <span>Room Subtotal</span>
-                    <span>${roomSubtotal.toFixed(2)}</span>
+                    <span>{formatLKR(roomSubtotal)}</span>
                   </div>
                   <div className="flex justify-between text-slate-600">
                     <span>Taxes &amp; Fees (10%)</span>
-                    <span>${taxAmount.toFixed(2)}</span>
+                    <span>{formatLKR(taxAmount)}</span>
                   </div>
                   <div className="flex justify-between text-base font-bold text-slate-900 border-t border-slate-200 pt-2">
                     <span>Grand Total</span>
-                    <span className="text-blue-900">${totalAmount.toFixed(2)}</span>
+                    <span className="text-blue-900">{formatLKR(totalAmount)}</span>
                   </div>
                 </div>
               </div>
@@ -628,7 +629,7 @@ export default function NewReservationPage() {
                       onChange={() => setInitialPaymentOption('full')}
                       className="text-blue-900"
                     />
-                    <span>Collect Full Payment (${totalAmount.toFixed(2)})</span>
+                    <span>Collect Full Payment ({formatLKR(totalAmount)})</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -638,7 +639,7 @@ export default function NewReservationPage() {
                       onChange={() => setInitialPaymentOption('partial')}
                       className="text-blue-900"
                     />
-                    <span>Collect 50% Deposit (${(totalAmount / 2).toFixed(2)})</span>
+                    <span>Collect 50% Deposit ({formatLKR(totalAmount / 2)})</span>
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
