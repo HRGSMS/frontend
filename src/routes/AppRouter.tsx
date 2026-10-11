@@ -15,6 +15,7 @@ import ReservationDetailPage from '../pages/frontdesk/ReservationDetailPage';
 import CheckInOutPage from '../pages/frontdesk/CheckInOutPage';
 import PaymentProcessingPage from '../pages/frontdesk/PaymentProcessingPage';
 import ServiceRequestsQueuePage from '../pages/frontdesk/ServiceRequestsQueuePage';
+import GuestServiceRequestPage from '../pages/frontdesk/GuestServiceRequestPage';
 
 function Loading() {
   return (
@@ -75,6 +76,10 @@ export function AppRouter() {
             <Route path="/frontdesk/check-in-out" element={<CheckInOutPage />} />
             <Route path="/frontdesk/payment-processing" element={<PaymentProcessingPage />} />
             <Route path="/frontdesk/service-requests" element={<ServiceRequestsQueuePage />} />
+            <Route
+              path="/frontdesk/service-requests/new"
+              element={<GuestServiceRequestPage />}
+            />
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<Placeholder title="User Management" />} />
