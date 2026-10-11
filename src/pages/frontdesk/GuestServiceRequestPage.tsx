@@ -29,6 +29,11 @@ const money = (value: number | string) =>
     maximumFractionDigits: 2,
   }).format(Number(value));
 
+const selectClass =
+  'w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 [color-scheme:light] outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100';
+
+const optionClass = 'bg-white text-slate-900';
+
 export default function GuestServiceRequestPage() {
   const [options, setOptions] = useState<ServiceOption[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -50,7 +55,9 @@ export default function GuestServiceRequestPage() {
 
       try {
         const [optionsResponse, catalogueResponse] = await Promise.all([
-          apiClient.get<ApiResponse<ServiceOption[]>>('/service-request-options'),
+          apiClient.get<ApiResponse<ServiceOption[]>>(
+            '/service-request-options',
+          ),
           serviceApi.getServiceCatalogue({}),
         ]);
 
@@ -70,7 +77,8 @@ export default function GuestServiceRequestPage() {
 
         const responseError =
           typeof err === 'object' && err !== null && 'response' in err
-            ? (err as { response?: { data?: { error?: string } } }).response?.data?.error
+            ? (err as { response?: { data?: { error?: string } } }).response
+                ?.data?.error
             : undefined;
 
         setError(
@@ -103,7 +111,10 @@ export default function GuestServiceRequestPage() {
     const count = Number(quantity);
     const price = Number(selectedService?.current_price ?? 0);
 
-    return Number.isSafeInteger(count) && count > 0 ? count * price : 0;
+    if (!Number.isSafeInteger(count) || count <= 0) return 0;
+    if (!Number.isFinite(price) || price < 0) return 0;
+
+    return count * price;
   }, [quantity, selectedService]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -149,7 +160,8 @@ export default function GuestServiceRequestPage() {
     } catch (err: unknown) {
       const responseError =
         typeof err === 'object' && err !== null && 'response' in err
-          ? (err as { response?: { data?: { error?: string } } }).response?.data?.error
+          ? (err as { response?: { data?: { error?: string } } }).response
+              ?.data?.error
           : undefined;
 
       setError(
@@ -165,11 +177,17 @@ export default function GuestServiceRequestPage() {
     <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <nav className="mb-6 text-sm text-slate-500">
-          <Link to="/frontdesk/dashboard" className="hover:text-slate-900">
+          <Link
+            to="/frontdesk/dashboard"
+            className="hover:text-slate-900"
+          >
             Front Desk
           </Link>
           <span className="mx-2">/</span>
-          <Link to="/frontdesk/service-requests" className="hover:text-slate-900">
+          <Link
+            to="/frontdesk/service-requests"
+            className="hover:text-slate-900"
+          >
             Guest Services
           </Link>
           <span className="mx-2">/</span>
@@ -177,12 +195,22 @@ export default function GuestServiceRequestPage() {
         </nav>
 
         <header className="mb-8">
+          <Link
+            to="/frontdesk/service-requests"
+            className="mb-5 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            <span aria-hidden="true">←</span>
+            Back to Guest Services
+          </Link>
+
           <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-700">
             SKY NEST HOTELS · GUEST SERVICES
           </p>
+
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             New Service Request
           </h1>
+
           <p className="mt-2 text-sm text-slate-600">
             Record a service request for a checked-in guest.
           </p>
@@ -228,24 +256,30 @@ export default function GuestServiceRequestPage() {
                 >
                   Guest booking and room *
                 </label>
+
                 <select
                   id="bookingRoom"
                   value={bookingRoom}
                   onChange={(event) => setBookingRoom(event.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                  className={selectClass}
                 >
-                  <option value="">Select a checked-in guest</option>
+                  <option value="" className={optionClass}>
+                    Select a checked-in guest
+                  </option>
+
                   {options.map((option) => (
                     <option
                       key={`${option.booking_id}:${option.room_id}`}
                       value={`${option.booking_id}:${option.room_id}`}
+                      className={optionClass}
                     >
                       {option.guest_name} — Room {option.room_number} (Booking #
                       {option.booking_id})
                     </option>
                   ))}
                 </select>
+
                 {options.length === 0 && (
                   <p className="mt-2 text-sm text-amber-700">
                     No eligible checked-in bookings are available.
@@ -261,6 +295,7 @@ export default function GuestServiceRequestPage() {
                       {selectedOption.guest_name}
                     </p>
                   </div>
+
                   <div>
                     <p className="text-xs text-slate-500">Room</p>
                     <p className="mt-1 font-semibold text-slate-900">
@@ -277,28 +312,35 @@ export default function GuestServiceRequestPage() {
                 >
                   Service *
                 </label>
+
                 <select
                   id="service"
                   value={serviceId}
                   onChange={(event) => setServiceId(event.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                  className={selectClass}
                 >
-                  <option value="">Select a service</option>
+                  <option value="" className={optionClass}>
+                    Select a service
+                  </option>
+
                   {services.map((service) => (
                     <option
                       key={service.service_id}
-                      value={service.service_id}
+                      value={String(service.service_id)}
+                      className={optionClass}
                     >
                       {service.service_name} — {money(service.current_price)}
                     </option>
                   ))}
                 </select>
+
                 {selectedService?.service_description && (
                   <p className="mt-2 text-sm text-slate-500">
                     {selectedService.service_description}
                   </p>
                 )}
+
                 {services.length === 0 && (
                   <p className="mt-2 text-sm text-amber-700">
                     No services are currently available in the catalogue.
@@ -313,6 +355,7 @@ export default function GuestServiceRequestPage() {
                 >
                   Quantity *
                 </label>
+
                 <input
                   id="quantity"
                   type="number"
@@ -321,7 +364,7 @@ export default function GuestServiceRequestPage() {
                   required
                   value={quantity}
                   onChange={(event) => setQuantity(event.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
                 />
               </div>
 
@@ -332,6 +375,7 @@ export default function GuestServiceRequestPage() {
                 >
                   Special instructions
                 </label>
+
                 <textarea
                   id="instructions"
                   rows={3}
@@ -339,30 +383,39 @@ export default function GuestServiceRequestPage() {
                   value={instructions}
                   onChange={(event) => setInstructions(event.target.value)}
                   placeholder="Optional notes for the service team"
-                  className="w-full resize-y rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+                  className="w-full resize-y rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
                 />
+
                 <p className="mt-1 text-right text-xs text-slate-400">
                   {instructions.length}/500
                 </p>
               </div>
 
-              <div className="rounded-xl border border-blue-100 bg-blue-50 p-5">
+              <div
+                className="rounded-xl border border-blue-100 bg-blue-50 p-5"
+                aria-live="polite"
+              >
                 <p className="text-sm text-blue-800">Estimated total</p>
+
                 <p className="mt-1 text-2xl font-bold text-blue-950">
                   {money(total)}
                 </p>
+
                 <p className="mt-1 text-xs text-blue-700">
-                  Based on the current catalogue price and selected quantity.
+                  {selectedService
+                    ? `${money(selectedService.current_price)} × ${quantity || '0'}`
+                    : 'Select a service to calculate the total.'}
                 </p>
               </div>
 
               <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
                 <Link
                   to="/frontdesk/service-requests"
-                  className="rounded-lg border border-slate-300 px-5 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  className="rounded-lg border border-slate-300 bg-white px-5 py-3 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
                   Cancel
                 </Link>
+
                 <button
                   type="submit"
                   disabled={
