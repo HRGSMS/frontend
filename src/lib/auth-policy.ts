@@ -35,6 +35,9 @@ export function canAccessPath(role: unknown, path: string): boolean {
     case 'account':
       return true;
     case 'frontdesk':
+      if (pathname === '/frontdesk/reports') {
+        return false;
+      }
       return ['admin', 'manager', 'front_desk'].includes(resolved);
     case 'admin':
       return resolved === 'admin';

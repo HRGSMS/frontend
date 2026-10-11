@@ -15,6 +15,7 @@ import ReservationDetailPage from '../pages/frontdesk/ReservationDetailPage';
 import CheckInOutPage from '../pages/frontdesk/CheckInOutPage';
 import PaymentProcessingPage from '../pages/frontdesk/PaymentProcessingPage';
 import ServiceRequestsQueuePage from '../pages/frontdesk/ServiceRequestsQueuePage';
+import ReportsPage from '../pages/frontdesk/ReportsPage';
 
 function Loading() {
   return (
@@ -69,16 +70,17 @@ export function AppRouter() {
             <Route path="/frontdesk/reservations/new" element={<NewReservationPage />} />
             <Route path="/frontdesk/reservations/:id" element={<ReservationDetailPage />} />
             <Route path="/frontdesk/check-in-out" element={<CheckInOutPage />} />
+            <Route path="/frontdesk/reports" element={<Navigate to="/unauthorized" replace />} />
             <Route path="/frontdesk/payment-processing" element={<PaymentProcessingPage />} />
             <Route path="/frontdesk/service-requests" element={<ServiceRequestsQueuePage />} />
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/users" element={<Placeholder title="User Management" />} />
             <Route path="/admin/settings" element={<Placeholder title="System Settings" />} />
-            <Route path="/admin/reports" element={<Placeholder title="System Reports" />} />
+            <Route path="/admin/reports" element={<ReportsPage />} />
             <Route path="/manager" element={<Navigate to="/manager/dashboard" replace />} />
             <Route path="/manager/dashboard" element={<ManagerDashboard />} />
-            <Route path="/manager/reports" element={<Placeholder title="Revenue Reports" />} />
+            <Route path="/manager/reports" element={<ReportsPage />} />
             <Route path="/manager/analytics" element={<Placeholder title="Analytics" />} />
             <Route path="/manager/staff" element={<Placeholder title="Staff Management" />} />
             <Route path="/services" element={<Navigate to="/services/dashboard" replace />} />

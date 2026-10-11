@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useAuth } from '../context/auth-state';
+import './Login.css';
 
 export const Login = () => {
   const { signIn, isLoading, authError, refreshSession } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [branch, setBranch] = useState('Colombo');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -24,138 +26,197 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="mx-auto h-12 w-12 bg-blue-600 rounded-full flex items-center justify-center">
-            <svg
-              className="h-8 w-8 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2z"
-              />
-            </svg>
-          </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">HRGMS</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            SkyNest Hotel Reservation & Guest Services
-          </p>
+    <div className="sn-login-page">
+      {/* Top Navigation Bar */}
+      <header className="sn-login-header">
+        <div className="sn-brand-lockup">
+          <div className="sn-monogram">SN</div>
+          <span className="sn-brand-text">SkyNest Hotels</span>
+        </div>
+        <nav className="sn-nav-links" aria-label="Portal Navigation">
+          <a href="#story" onClick={(e) => e.preventDefault()} className="sn-nav-link">
+            Our Story
+          </a>
+          <a href="#experiences" onClick={(e) => e.preventDefault()} className="sn-nav-link">
+            Experiences
+          </a>
+          <a href="#contact" onClick={(e) => e.preventDefault()} className="sn-nav-link">
+            Contact
+          </a>
+        </nav>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="sn-login-main">
+        {/* Subtle Luxury Background Watermark */}
+        <div className="sn-bg-watermark" aria-hidden="true">
+          HOTEL SKYNEST
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        {/* Frosted Glass Staff Login Modal */}
+        <section className="sn-login-card" aria-labelledby="sn-login-heading">
+          <button
+            type="button"
+            className="sn-card-close"
+            aria-label="Close"
+            onClick={() => {
+              setEmail('');
+              setPassword('');
+              setError(null);
+            }}
+          >
+            ×
+          </button>
+
+          <div className="sn-card-header">
+            <h1 id="sn-login-heading" className="sn-card-title">
+              Staff Login
+            </h1>
+            <p className="sn-card-subtitle">Access the SkyNest Management Portal</p>
+          </div>
+
+          {/* Session / System Auth Error */}
           {authError && (
-            <div role="alert" className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+            <div role="alert" className="sn-alert-warn">
               <p>{authError}</p>
               <button
                 type="button"
                 onClick={() => void refreshSession()}
-                className="mt-2 underline"
+                className="sn-retry-btn"
               >
                 Retry session check
               </button>
             </div>
           )}
+
+          {/* Sign In Validation Error */}
           {error && (
-            <div
-              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
-              role="alert"
-            >
-              {error}
+            <div className="sn-alert-error" role="alert">
+              <span>⚠️</span>
+              <span>{error}</span>
             </div>
           )}
 
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
+          <form onSubmit={handleSubmit} noValidate={false}>
+            {/* Staff ID / Email */}
+            <div className="sn-form-group">
+              <label htmlFor="staff-email" className="sn-label">
+                STAFF ID / EMAIL
               </label>
               <input
-                id="email"
+                id="staff-email"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
+                className="sn-input"
+                placeholder="Enter your ID"
                 disabled={isSubmitting}
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
+            {/* Password */}
+            <div className="sn-form-group">
+              <label htmlFor="staff-password" className="sn-label">
+                PASSWORD
               </label>
               <input
-                id="password"
+                id="staff-password"
                 name="password"
                 type="password"
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                className="sn-input"
+                placeholder="••••••••"
                 disabled={isSubmitting}
               />
             </div>
-          </div>
 
-          <div>
+            {/* Branch Selection */}
+            <div className="sn-form-group">
+              <label htmlFor="branch-select" className="sn-label">
+                BRANCH SELECTION
+              </label>
+              <div className="sn-select-wrap">
+                <select
+                  id="branch-select"
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                  className="sn-select"
+                  disabled={isSubmitting}
+                >
+                  <option value="Colombo">Colombo</option>
+                  <option value="Kandy">Kandy</option>
+                  <option value="Galle">Galle</option>
+                </select>
+                <div className="sn-select-arrow" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="sn-form-meta">
+              <a
+                href="#forgot"
+                onClick={(e) => {
+                  e.preventDefault();
+                  alert('Please contact your hotel system administrator to reset staff credentials.');
+                }}
+                className="sn-forgot-link"
+              >
+                Forgot Password?
+              </a>
+            </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isSubmitting || isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="sn-submit-btn"
             >
               {isSubmitting || isLoading ? (
-                <span className="flex items-center">
+                <>
                   <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
+                    className="animate-spin"
+                    width="14"
+                    height="14"
                     viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
                   >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
+                    <circle cx="12" cy="12" r="10" strokeOpacity="0.25" />
+                    <path d="M12 2a10 10 0 0 1 10 10" />
                   </svg>
-                  Signing in...
-                </span>
+                  <span>Signing in…</span>
+                </>
               ) : (
-                'Sign in'
+                'SIGN IN'
               )}
             </button>
-          </div>
-        </form>
+          </form>
+        </section>
+      </main>
 
-        <p className="text-center text-sm text-gray-500">
-          Use the account provided by your hotel administrator. Contact your administrator if you
-          cannot access your account.
+      {/* Bottom Luxury Curved Section */}
+      <footer className="sn-login-footer">
+        <p className="sn-footer-slogan">
+          DEDICATED TO PROVIDING THE HIGHEST LEVEL OF COMFORT AND SERENITY ACROSS SRI LANKA.
         </p>
-      </div>
+        <div className="sn-branches-row">
+          <span className="sn-branch-pill">COLOMBO</span>
+          <span className="sn-branch-pill">KANDY</span>
+          <span className="sn-branch-pill">GALLE</span>
+        </div>
+      </footer>
     </div>
   );
 };
+
+export default Login;

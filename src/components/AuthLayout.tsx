@@ -9,7 +9,8 @@ export function AuthLayout() {
   const [pending, setPending] = useState(false);
   const role = getRole(user?.role);
   const { pathname } = useLocation();
-  const isFrontDeskDashboard = pathname === '/frontdesk/dashboard';
+  const isFrontDeskWorkspace =
+    pathname === '/frontdesk/dashboard' || pathname.includes('/reports');
   async function logout() {
     setPending(true);
     setError(null);
@@ -22,7 +23,7 @@ export function AuthLayout() {
     }
   }
   return (
-    <div className={`min-h-screen bg-gray-50 ${isFrontDeskDashboard ? 'fd-auth-shell' : ''}`}>
+    <div className={`min-h-screen bg-gray-50 ${isFrontDeskWorkspace ? 'fd-auth-shell' : ''}`}>
       <header className="border-b bg-white px-4 py-3 text-gray-700">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
           <Link to={homeForRole(role)} className="font-semibold text-blue-900">

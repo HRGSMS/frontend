@@ -274,15 +274,9 @@ export default function FrontDeskDashboard() {
   const firstName = user?.name?.split(' ')[0] || 'team';
   const management =
     user?.role === 'admin'
-      ? [
-          { label: 'User management', to: '/admin/users', icon: 'users' as const },
-          { label: 'Reports', to: '/admin/reports', icon: 'chart' as const },
-        ]
+      ? [{ label: 'User management', to: '/admin/users', icon: 'users' as const }]
       : user?.role === 'manager'
-        ? [
-            { label: 'Staff management', to: '/manager/staff', icon: 'users' as const },
-            { label: 'Reports', to: '/manager/reports', icon: 'chart' as const },
-          ]
+        ? [{ label: 'Staff management', to: '/manager/staff', icon: 'users' as const }]
         : [];
   const metrics: {
     label: string;
