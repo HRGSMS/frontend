@@ -343,6 +343,10 @@ export default function FrontDeskDashboard() {
             <Icon name="bell" size={17} />
             Guest services
           </Link>
+          <Link to="/frontdesk/service-catalogue">
+            <Icon name="bed" size={17} />
+            Service Catalogue
+          </Link>
         </nav>
         <div className="fd-sidebar-bottom">
           <Link to="/frontdesk/reservations/new" className="fd-button">

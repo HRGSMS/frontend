@@ -16,6 +16,7 @@ import CheckInOutPage from '../pages/frontdesk/CheckInOutPage';
 import PaymentProcessingPage from '../pages/frontdesk/PaymentProcessingPage';
 import ServiceRequestsQueuePage from '../pages/frontdesk/ServiceRequestsQueuePage';
 import GuestServiceRequestPage from '../pages/frontdesk/GuestServiceRequestPage';
+import ServiceCataloguePage from '../pages/frontdesk/ServiceCataloguePage';
 
 function Loading() {
   return (
@@ -79,6 +80,10 @@ export function AppRouter() {
             <Route
               path="/frontdesk/service-requests/new"
               element={<GuestServiceRequestPage />}
+            />
+            <Route
+              path="/frontdesk/service-catalogue"
+              element={<ServiceCataloguePage />}
             />
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
