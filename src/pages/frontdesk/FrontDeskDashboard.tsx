@@ -221,6 +221,48 @@ export default function FrontDeskDashboard() {
 
   return (
     <main className="fd-dashboard">
+      <aside className="fd-sidebar" aria-label="Front desk workspace">
+        <Link to="/frontdesk/dashboard" className="fd-brand">
+          <span className="fd-brand-mark">
+            <Icon name="bed" size={20} />
+          </span>
+          <span>
+            SkyNest Hotels<small>FRONT DESK OPERATIONS</small>
+          </span>
+        </Link>
+        <nav className="fd-workspace-nav" aria-label="Front desk navigation">
+          <span className="is-current" aria-current="page">
+            <Icon name="chart" size={17} />
+            Overview
+          </span>
+          <Link to="/frontdesk/reservations">
+            <Icon name="calendar" size={17} />
+            Reservations
+          </Link>
+          <Link to="/frontdesk/check-in-out">
+            <Icon name="door" size={17} />
+            Check-in & out
+          </Link>
+          <Link to="/frontdesk/service-requests">
+            <Icon name="bell" size={17} />
+            Guest services
+          </Link>
+          <Link to="/frontdesk/service-catalogue">
+            <Icon name="bed" size={17} />
+            Service Catalogue
+          </Link>
+        </nav>
+        <div className="fd-sidebar-bottom">
+          <Link to="/frontdesk/reservations/new" className="fd-button">
+            <Icon name="plus" size={16} />
+            New booking
+          </Link>
+          <Link to="/account" className="fd-sidebar-account">
+            <Icon name="shield" size={16} />
+            Account security
+          </Link>
+        </div>
+      </aside>
       <div className="fd-content">
         <div className="fd-heading">
           <div>
