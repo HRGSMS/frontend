@@ -1,10 +1,13 @@
 import { Link, NavLink } from 'react-router-dom';
+import { useAuth } from '../context/auth-state';
 import { FrontDeskIcon as Icon } from './FrontDeskIcon';
 import '../pages/frontdesk/FrontDeskDashboard.css';
 
 const navClassName = ({ isActive }: { isActive: boolean }) => (isActive ? 'is-current' : undefined);
 
 export function FrontDeskSidebar() {
+  const { user } = useAuth();
+
   return (
     <aside className="fd-sidebar" aria-label="Front desk workspace">
       <Link to="/frontdesk/dashboard" className="fd-brand">
@@ -16,6 +19,12 @@ export function FrontDeskSidebar() {
         </span>
       </Link>
       <nav className="fd-workspace-nav" aria-label="Front desk navigation">
+        {user?.role === 'admin' && (
+          <NavLink to="/admin/dashboard" className={navClassName}>
+            <Icon name="shield" size={17} />
+            Admin dashboard
+          </NavLink>
+        )}
         <NavLink to="/frontdesk/dashboard" end className={navClassName}>
           <Icon name="chart" size={17} />
           Overview
