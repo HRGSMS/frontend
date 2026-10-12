@@ -99,12 +99,6 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
 
 const shortcuts = [
   {
-    title: 'Hotel analytics & reports',
-    note: 'Inspect live revenue, occupancy and room logs.',
-    to: '/manager/reports',
-    icon: 'chart' as const,
-  },
-  {
     title: 'Staff management',
     note: 'Review team coverage and duty schedules.',
     to: '/manager/staff',
@@ -534,26 +528,6 @@ export default function ManagerDashboard() {
               <Icon name="arrowUp" size={15} />
             </Link>
           </section>
-
-          {/* Workspace Shortcuts */}
-          <section className="md-panel md-management" aria-label="Workspace shortcuts">
-            <h2>Workspace shortcuts</h2>
-            <Link to="/frontdesk/dashboard">
-              <Icon name="door" size={17} />
-              <span>Front desk workspace</span>
-              <Icon name="arrowUp" size={15} />
-            </Link>
-            <Link to="/frontdesk/service-requests">
-              <Icon name="bell" size={17} />
-              <span>Guest service requests</span>
-              <Icon name="arrowUp" size={15} />
-            </Link>
-            <Link to="/manager/reports">
-              <Icon name="chart" size={17} />
-              <span>Financial & revenue reports</span>
-              <Icon name="arrowUp" size={15} />
-            </Link>
-          </section>
         </aside>
       </div>
 
@@ -635,7 +609,7 @@ const dashboardStyles = `
 .md-table-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--md-line);padding:15px 24px;color:#8b958f;font-size:11px}
 .md-empty{display:flex;align-items:center;flex-direction:column;text-align:center;padding:35px 20px;color:#77867d;gap:10px}
 .md-empty h3{font-size:14px;margin:0;color:var(--md-ink)}.md-empty p{font-size:14px;margin:0}
-.md-quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.md-quick-actions{display:grid;grid-template-columns:1fr;gap:16px}
 .md-quick-action{display:flex;gap:13px;align-items:center;border:1px solid var(--md-line);border-radius:10px;padding:19px;background:#fff;color:var(--md-ink);transition:border-color .15s}
 .md-quick-action:hover{border-color:#a5b7ab}
 .md-action-icon{background:#f0f4ed;border:1px solid #e5ebdf;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:10px;color:#6a8270;flex-shrink:0}
@@ -661,6 +635,6 @@ const dashboardStyles = `
 .md-management a:hover{color:var(--md-green)}
 .md-footer{display:flex;justify-content:space-between;gap:20px;margin-top:27px;font-size:11px;color:#98a198;line-height:1.6}
 @media(max-width:1100px){.md-columns{grid-template-columns:minmax(0,1fr) 265px;gap:18px}.md-toolbar{align-items:flex-start;flex-wrap:wrap}.md-search{max-width:none;flex-basis:100%}.md-metric{padding:19px}.md-quick-actions{grid-template-columns:1fr}}
-@media(max-width:850px){.md-columns{grid-template-columns:1fr}.md-secondary-column{grid-template-columns:1fr 1fr}.md-metrics{grid-template-columns:1fr 1fr}.md-quick-actions{grid-template-columns:1fr 1fr}.md-management{grid-column:1/-1}}
+@media(max-width:850px){.md-columns{grid-template-columns:1fr}.md-secondary-column{grid-template-columns:1fr 1fr}.md-metrics{grid-template-columns:1fr 1fr}.md-quick-actions{grid-template-columns:1fr}.md-management{grid-column:1/-1}}
 @media(max-width:560px){.md-dashboard{padding:25px 16px 20px}.md-heading{align-items:flex-start;flex-direction:column;gap:20px}.md-metrics{grid-template-columns:1fr}.md-table{min-width:560px}}
 `;
