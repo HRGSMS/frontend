@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { serviceApi, type ServiceCatalogueItem } from '../../api/serviceApi';
 import { reservationApi, type RoomRecord } from '../../api/reservationApi';
 import { bookingStore, type Booking } from '../../lib/bookingStore';
+import { reportApi } from '../../api/reportApi';
 import { formatLKR } from '../../lib/currency';
 import './ServiceRequestsQueuePage.css';
 
@@ -117,16 +118,17 @@ export default function ServiceRequestsQueuePage() {
     async function loadData() {
       setIsLoading(true);
       try {
-        const [catRes, roomRes, bkgList] = await Promise.all([
-          serviceApi.getServiceCatalogue().catch(() => ({ data: DEFAULT_SERVICES })),
+        const [catRes, roomRes, bkgList, usageRes] = await Promise.all([
+          serviceApi.getServiceCatalogue().catch(() => ({ data: [] })),
           reservationApi.listRooms().catch(() => ({ data: [] })),
           bookingStore.fetchBookings(),
+          reportApi.getServiceUsageReport().catch(() => ({ data: [] })),
         ]);
 
         if (Array.isArray(catRes?.data) && catRes.data.length > 0) {
           setCatalogue(catRes.data);
           setSelectedServiceId(catRes.data[0].public_id);
-        } else {
+        } else if (DEFAULT_SERVICES.length > 0) {
           setSelectedServiceId(DEFAULT_SERVICES[0].public_id);
         }
 
@@ -139,6 +141,28 @@ export default function ServiceRequestsQueuePage() {
         setInHouseBookings(active);
         if (active.length > 0) {
           setSelectedBookingId(String(active[0].id));
+        }
+
+        // Populate queue from real service usage in database
+        if (Array.isArray(usageRes?.data) && usageRes.data.length > 0) {
+          const dbQueue: ServiceRequestItem[] = usageRes.data.map((u: any, idx: number) => {
+            const matchedBkg = bkgList.find(
+              (b) => String(b.publicId) === String(u.booking_public_id) || b.roomNumbers === u.room_number,
+            );
+            return {
+              id: `req-${1000 + idx}`,
+              bookingId: u.booking_public_id || matchedBkg?.id || '',
+              guestName: matchedBkg?.guestName || `Room ${u.room_number} Guest`,
+              roomNumber: u.room_number,
+              serviceName: u.service_name,
+              quantity: Number(u.total_quantity) || 1,
+              unitPrice: (Number(u.total_amount) || 0) / (Number(u.total_quantity) || 1),
+              totalPrice: Number(u.total_amount) || 0,
+              time: 'Recorded in system',
+              status: 'Fulfilled',
+            };
+          });
+          setQueue(dbQueue);
         }
       } catch (err) {
         console.error('Failed to load guest services metadata', err);

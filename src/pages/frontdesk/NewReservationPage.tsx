@@ -1,4 +1,4 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { reservationApi } from '../../api/reservationApi';
 import apiClient from '../../api/apiClient';
@@ -29,15 +29,20 @@ export default function NewReservationPage() {
 
   // Reference data
   const [branches, setBranches] = useState<BranchOption[]>([
-    { name: 'Colombo Grand', location_city: 'Colombo' },
-    { name: 'Kandy Hills Resort', location_city: 'Kandy' },
-    { name: 'Galle Fort Heritage', location_city: 'Galle' },
+    { name: 'SkyNest Colombo', location_city: 'Colombo' },
+    { name: 'SkyNest Kandy', location_city: 'Kandy' },
+    { name: 'SkyNest Galle', location_city: 'Galle' },
   ]);
   const [roomTypes, setRoomTypes] = useState<RoomTypeOption[]>([
-    { type_name: 'Deluxe King', daily_rate: 45000, capacity: 2 },
-    { type_name: 'Superior Twin', daily_rate: 32000, capacity: 2 },
-    { type_name: 'Executive Suite', daily_rate: 75000, capacity: 4 },
+    { type_name: 'Single', daily_rate: 15000, capacity: 1 },
+    { type_name: 'Double', daily_rate: 22000, capacity: 2 },
+    { type_name: 'Deluxe', daily_rate: 30000, capacity: 2 },
+    { type_name: 'Family', daily_rate: 40000, capacity: 4 },
+    { type_name: 'Suite', daily_rate: 55000, capacity: 3 },
   ]);
+  const [allRooms, setAllRooms] = useState<
+    { room_number: string; branch_name: string; type_name: string; public_id: string }[]
+  >([]);
   const [existingGuests, setExistingGuests] = useState<GuestOption[]>([]);
 
   // Form State
@@ -55,12 +60,12 @@ export default function NewReservationPage() {
   const [guestPhone, setGuestPhone] = useState('');
   const [specialRequests, setSpecialRequests] = useState('');
 
-  const [selectedBranch, setSelectedBranch] = useState('Colombo Grand');
+  const [selectedBranch, setSelectedBranch] = useState('SkyNest Colombo');
   const [checkInDate, setCheckInDate] = useState(dates.today);
   const [checkOutDate, setCheckOutDate] = useState(dates.next);
 
-  const [selectedRoomType, setSelectedRoomType] = useState('Deluxe King');
-  const [selectedRoomNumber, setSelectedRoomNumber] = useState('101');
+  const [selectedRoomType, setSelectedRoomType] = useState('Single');
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState('C101');
   const [bookingSource, setBookingSource] = useState('Direct Walk-in');
   const [initialPaymentOption, setInitialPaymentOption] = useState<'full' | 'partial' | 'pending'>(
     'full',
@@ -70,59 +75,69 @@ export default function NewReservationPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successBookingId, setSuccessBookingId] = useState<string | number | null>(null);
 
-  // Available room mock lists based on room type
-  const availableRoomNumbers =
-    selectedRoomType === 'Deluxe King'
-      ? ['101', '102', '104', '201', '205']
-      : selectedRoomType === 'Superior Twin'
-        ? ['105', '108', '202', '203']
-        : ['301', '302', '305'];
+  // Available rooms based on live database rooms
+  const availableRoomNumbers = useMemo<string[]>(() => {
+    const matched = allRooms.filter((r) => {
+      const matchBranch = !selectedBranch || r.branch_name === selectedBranch;
+      const matchType = !selectedRoomType || r.type_name === selectedRoomType;
+      return matchBranch && matchType;
+    });
+    if (matched.length > 0) return matched.map((r) => r.room_number);
+
+    const branchRooms = allRooms.filter((r) => !selectedBranch || r.branch_name === selectedBranch);
+    if (branchRooms.length > 0) return branchRooms.map((r) => r.room_number);
+
+    return selectedBranch === 'SkyNest Kandy'
+      ? ['K201', 'K202', 'K203']
+      : selectedBranch === 'SkyNest Galle'
+        ? ['G301', 'G302', 'G303', 'G304', 'G305']
+        : ['C101', 'C102', 'C103', 'C104'];
+  }, [allRooms, selectedBranch, selectedRoomType]);
+
+  useEffect(() => {
+    if (availableRoomNumbers.length > 0 && !availableRoomNumbers.includes(selectedRoomNumber)) {
+      setSelectedRoomNumber(availableRoomNumbers[0]);
+    }
+  }, [availableRoomNumbers, selectedRoomNumber]);
 
   const handleRoomTypeSelect = (rtName: string) => {
     setSelectedRoomType(rtName);
-    const rooms =
-      rtName === 'Deluxe King'
-        ? ['101', '102', '104', '201', '205']
-        : rtName === 'Superior Twin'
-          ? ['105', '108', '202', '203']
-          : ['301', '302', '305'];
-    setSelectedRoomNumber(rooms[0]);
   };
 
   // Load backend reference data
   useEffect(() => {
     async function fetchMetadata() {
       try {
-        const branchRes = await reservationApi.listBranches();
+        const [branchRes, roomTypeRes, roomRes, guestRes] = await Promise.all([
+          reservationApi.listBranches().catch(() => null),
+          reservationApi.listRoomTypes().catch(() => null),
+          reservationApi.listRooms().catch(() => null),
+          apiClient.get('/guests').catch(() => null),
+        ]);
+
         if (Array.isArray(branchRes?.data) && branchRes.data.length > 0) {
           setBranches(branchRes.data);
           if (branchRes.data[0]?.name) {
             setSelectedBranch(branchRes.data[0].name);
           }
         }
-      } catch {
-        // Fallback to defaults
-      }
 
-      try {
-        const roomTypeRes = await reservationApi.listRoomTypes();
         if (Array.isArray(roomTypeRes?.data) && roomTypeRes.data.length > 0) {
           setRoomTypes(roomTypeRes.data);
           if (roomTypeRes.data[0]?.type_name) {
             setSelectedRoomType(roomTypeRes.data[0].type_name);
           }
         }
-      } catch {
-        // Fallback to defaults
-      }
 
-      try {
-        const guestRes = await apiClient.get('/guests');
-        if (Array.isArray(guestRes.data?.data)) {
+        if (Array.isArray(roomRes?.data) && roomRes.data.length > 0) {
+          setAllRooms(roomRes.data);
+        }
+
+        if (Array.isArray(guestRes?.data?.data)) {
           setExistingGuests(guestRes.data.data);
         }
       } catch {
-        // Optional
+        // Fallback to defaults
       }
     }
     fetchMetadata();

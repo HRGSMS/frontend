@@ -1,113 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/auth-state';
 import { useSocket } from '../../context/socket-state';
 import { FrontDeskIcon as Icon, type IconName } from '../../components/FrontDeskIcon';
+import { bookingStore, type Booking } from '../../lib/bookingStore';
+import { reportApi } from '../../api/reportApi';
 import './FrontDeskDashboard.css';
 
 interface Guest {
-  id: number;
+  id: number | string;
   guestName: string;
   roomNumber: string;
   roomType: string;
   time: string;
   nights: number;
   status: 'Room ready' | 'Confirmed' | 'Paid' | 'Balance due';
+  branchName?: string;
 }
-const sampleArrivals: Guest[] = [
-  {
-    id: 1,
-    guestName: 'John Smith',
-    roomNumber: '101',
-    roomType: 'Deluxe king',
-    time: '14:00',
-    nights: 3,
-    status: 'Room ready',
-  },
-  {
-    id: 2,
-    guestName: 'Jane Doe',
-    roomNumber: '105',
-    roomType: 'Superior twin',
-    time: '14:30',
-    nights: 2,
-    status: 'Confirmed',
-  },
-  {
-    id: 3,
-    guestName: 'Daniel Perera',
-    roomNumber: '201',
-    roomType: 'Deluxe king',
-    time: '15:00',
-    nights: 2,
-    status: 'Room ready',
-  },
-  {
-    id: 4,
-    guestName: 'Sophie Chen',
-    roomNumber: '302',
-    roomType: 'Executive suite',
-    time: '15:30',
-    nights: 5,
-    status: 'Confirmed',
-  },
-  {
-    id: 5,
-    guestName: 'Liam Fernando',
-    roomNumber: '108',
-    roomType: 'Superior twin',
-    time: '16:00',
-    nights: 1,
-    status: 'Room ready',
-  },
-  {
-    id: 6,
-    guestName: 'Isabella Martin',
-    roomNumber: '204',
-    roomType: 'Deluxe king',
-    time: '17:00',
-    nights: 4,
-    status: 'Confirmed',
-  },
-];
-const sampleDepartures: Guest[] = [
-  {
-    id: 7,
-    guestName: 'Bob Johnson',
-    roomNumber: '202',
-    roomType: 'Deluxe king',
-    time: '10:00',
-    nights: 3,
-    status: 'Paid',
-  },
-  {
-    id: 8,
-    guestName: 'Alice Brown',
-    roomNumber: '205',
-    roomType: 'Deluxe king',
-    time: '10:30',
-    nights: 2,
-    status: 'Balance due',
-  },
-  {
-    id: 9,
-    guestName: 'Ethan Clarke',
-    roomNumber: '305',
-    roomType: 'Executive suite',
-    time: '11:00',
-    nights: 4,
-    status: 'Paid',
-  },
-  {
-    id: 10,
-    guestName: 'Maya Silva',
-    roomNumber: '106',
-    roomType: 'Superior twin',
-    time: '11:00',
-    nights: 1,
-    status: 'Balance due',
-  },
-];
+
 const checklist = [
   'Review arrivals and special requests',
   'Confirm room readiness with housekeeping',
@@ -151,12 +61,49 @@ function upsertGuest(guests: Guest[], next: Guest) {
 export default function FrontDeskDashboard() {
   const { user, isLoading } = useAuth();
   const { socket } = useSocket();
-  const [arrivals, setArrivals] = useState(sampleArrivals);
-  const [departures, setDepartures] = useState(sampleDepartures);
-  const [occupancyRate, setOccupancyRate] = useState(75);
+  const [liveBookings, setLiveBookings] = useState<Booking[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<string>('All');
+  const [availableBranches, setAvailableBranches] = useState<string[]>(['All']);
+  const [socketArrivals, setSocketArrivals] = useState<Guest[]>([]);
+  const [socketDepartures, setSocketDepartures] = useState<Guest[]>([]);
+  const [occupancyRate, setOccupancyRate] = useState(25);
   const [view, setView] = useState<'arrivals' | 'departures'>('arrivals');
   const [query, setQuery] = useState('');
   const [completed, setCompleted] = useState<number[]>([]);
+
+  // Load real database data on mount
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [bookings, occRes] = await Promise.all([
+          bookingStore.fetchBookings(),
+          reportApi.getOccupancyReport({ from: '2026-10-01', to: '2026-10-31' }).catch(() => null),
+        ]);
+
+        if (Array.isArray(bookings)) {
+          setLiveBookings(bookings);
+          const bSet = new Set<string>();
+          bookings.forEach((b) => {
+            if (b.branchName) bSet.add(b.branchName);
+          });
+          setAvailableBranches(['All', ...Array.from(bSet)]);
+        }
+
+        if (occRes?.data && Array.isArray(occRes.data) && occRes.data.length > 0) {
+          const total = occRes.data.length;
+          const occupied = occRes.data.filter(
+            (r: any) => r.booking_status === 'Booked' || r.booking_status === 'Checked-In',
+          ).length;
+          setOccupancyRate(total > 0 ? Math.round((occupied / total) * 100) : 0);
+        }
+      } catch (err) {
+        console.error('Failed to load frontdesk live data', err);
+      }
+    }
+
+    void loadData();
+  }, []);
+
   useEffect(() => {
     const onOccupancy = (payload: unknown) => {
       if (!payload || typeof payload !== 'object' || !('occupancyRate' in payload)) return;
@@ -166,11 +113,11 @@ export default function FrontDeskDashboard() {
     };
     const onArrival = (payload: unknown) => {
       const guest = guestFromEvent(payload, 'arrival');
-      if (guest) setArrivals((previous) => upsertGuest(previous, guest));
+      if (guest) setSocketArrivals((previous) => upsertGuest(previous, guest));
     };
     const onDeparture = (payload: unknown) => {
       const guest = guestFromEvent(payload, 'departure');
-      if (guest) setDepartures((previous) => upsertGuest(previous, guest));
+      if (guest) setSocketDepartures((previous) => upsertGuest(previous, guest));
     };
     socket?.on('occupancy-updated', onOccupancy);
     socket?.on('new-arrival', onArrival);
@@ -181,6 +128,44 @@ export default function FrontDeskDashboard() {
       socket?.off('new-departure', onDeparture);
     };
   }, [socket]);
+
+  // Filter bookings by branch
+  const branchBookings = useMemo(() => {
+    if (selectedBranch === 'All') return liveBookings;
+    return liveBookings.filter((b) => b.branchName === selectedBranch);
+  }, [liveBookings, selectedBranch]);
+
+  const arrivals: Guest[] = useMemo(() => {
+    const dbArrivals = branchBookings
+      .filter((b) => b.bookingStatus === 'Booked')
+      .map((b) => ({
+        id: b.id,
+        guestName: b.guestName,
+        roomNumber: b.roomNumbers,
+        roomType: b.roomType || 'Standard',
+        time: b.checkIn || '14:00',
+        nights: b.nights || 1,
+        status: (b.paymentStatus === 'Paid' ? 'Room ready' : 'Confirmed') as Guest['status'],
+        branchName: b.branchName,
+      }));
+    return [...dbArrivals, ...socketArrivals];
+  }, [branchBookings, socketArrivals]);
+
+  const departures: Guest[] = useMemo(() => {
+    const dbDepartures = branchBookings
+      .filter((b) => b.bookingStatus === 'Checked-In')
+      .map((b) => ({
+        id: b.id,
+        guestName: b.guestName,
+        roomNumber: b.roomNumbers,
+        roomType: b.roomType || 'Standard',
+        time: b.checkOut || '11:00',
+        nights: b.nights || 1,
+        status: (b.outstandingAmount > 0 ? 'Balance due' : 'Paid') as Guest['status'],
+        branchName: b.branchName,
+      }));
+    return [...dbDepartures, ...socketDepartures];
+  }, [branchBookings, socketDepartures]);
 
   const source = view === 'arrivals' ? arrivals : departures;
   const filtered = source.filter((guest) =>
@@ -255,10 +240,35 @@ export default function FrontDeskDashboard() {
             <Icon name="calendar" size={15} />
             {date}
           </span>
-          <span className="fd-preview">
-            <span />
-            Sample operational data
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {availableBranches.length > 1 && (
+              <select
+                value={selectedBranch}
+                onChange={(e) => setSelectedBranch(e.target.value)}
+                style={{
+                  fontSize: '12px',
+                  padding: '4px 8px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  background: '#ffffff',
+                  color: '#374151',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+                aria-label="Filter by branch"
+              >
+                {availableBranches.map((b) => (
+                  <option key={b} value={b}>
+                    {b === 'All' ? 'All Properties' : b}
+                  </option>
+                ))}
+              </select>
+            )}
+            <span className="fd-preview" style={{ color: '#047857' }}>
+              <span style={{ background: '#10b981' }} />
+              Live database records
+            </span>
+          </div>
         </div>
         <section className="fd-metrics" aria-label="Daily hotel summary">
           {metrics.map((metric) => (
@@ -364,11 +374,11 @@ export default function FrontDeskDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((guest) => (
+                    {filtered.map((guest, idx) => (
                       <tr key={guest.id}>
                         <td>
                           <div className="fd-guest">
-                            <span className={`fd-avatar fd-avatar-${guest.id % 3}`}>
+                            <span className={`fd-avatar fd-avatar-${idx % 3}`}>
                               {guest.guestName
                                 .split(' ')
                                 .filter(Boolean)

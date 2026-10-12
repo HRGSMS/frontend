@@ -269,7 +269,7 @@ export default function ReportsPage() {
     return billingData.filter((item) => {
       const matchesSearch =
         search === '' ||
-        `${item.guest_name} ${item.booking_status} ${item.payment_status}`
+        `${item.guest_name} ${item.branch_names || ''} ${item.booking_status} ${item.payment_status}`
           .toLowerCase()
           .includes(search.toLowerCase());
 
@@ -794,6 +794,7 @@ export default function ReportsPage() {
                     <thead>
                       <tr>
                         <th scope="col">Guest Name</th>
+                        <th scope="col">Branch</th>
                         <th scope="col">Booking Status</th>
                         <th scope="col">Payment Status</th>
                         <th scope="col" className="rp-num">
@@ -822,6 +823,11 @@ export default function ReportsPage() {
                           <tr key={`${row.guest_name}-${idx}`}>
                             <td>
                               <strong>{row.guest_name}</strong>
+                            </td>
+                            <td>
+                              <span style={{ fontSize: '0.82rem', color: '#475569', fontWeight: 500 }}>
+                                {row.branch_names || 'SkyNest Colombo'}
+                              </span>
                             </td>
                             <td>
                               <span className="rp-badge rp-badge-checked-out">

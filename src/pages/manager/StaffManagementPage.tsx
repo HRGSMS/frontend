@@ -227,6 +227,104 @@ const DEFAULT_STAFF: StaffMember[] = [
     email: 'ruwan.d@skynesthotels.com',
     phone: '+94 77 567 8052',
   },
+  // SkyNest Kandy Staff
+  {
+    id: 'SN-K101',
+    name: 'Kusal Perera',
+    role: 'Front Office Supervisor',
+    department: 'Front Desk',
+    branch: 'SkyNest Kandy',
+    shift: 'Morning',
+    shiftTime: '07:00 - 15:30',
+    status: 'On Duty',
+    email: 'kusal.p@skynesthotels.com',
+    phone: '+94 81 223 4001',
+  },
+  {
+    id: 'SN-K102',
+    name: 'Nilani Bandara',
+    role: 'Guest Relations Executive',
+    department: 'Front Desk',
+    branch: 'SkyNest Kandy',
+    shift: 'Evening',
+    shiftTime: '15:00 - 23:30',
+    status: 'Scheduled',
+    email: 'nilani.b@skynesthotels.com',
+    phone: '+94 81 223 4002',
+  },
+  {
+    id: 'SN-K201',
+    name: 'Rohan Senanayake',
+    role: 'Housekeeping Lead',
+    department: 'Housekeeping',
+    branch: 'SkyNest Kandy',
+    shift: 'Morning',
+    shiftTime: '07:00 - 15:30',
+    status: 'On Duty',
+    email: 'rohan.s@skynesthotels.com',
+    phone: '+94 81 223 5001',
+  },
+  {
+    id: 'SN-K401',
+    name: 'Ajith Kumara',
+    role: 'Maintenance Technician',
+    department: 'Maintenance',
+    branch: 'SkyNest Kandy',
+    shift: 'Morning',
+    shiftTime: '07:00 - 15:30',
+    status: 'On Duty',
+    email: 'ajith.k@skynesthotels.com',
+    phone: '+94 81 223 6001',
+  },
+  // SkyNest Galle Staff
+  {
+    id: 'SN-G101',
+    name: 'Tharindu De Silva',
+    role: 'Front Office Supervisor',
+    department: 'Front Desk',
+    branch: 'SkyNest Galle',
+    shift: 'Morning',
+    shiftTime: '07:00 - 15:30',
+    status: 'On Duty',
+    email: 'tharindu.d@skynesthotels.com',
+    phone: '+94 91 224 4001',
+  },
+  {
+    id: 'SN-G102',
+    name: 'Nadeeka Abeyratne',
+    role: 'Senior Receptionist',
+    department: 'Front Desk',
+    branch: 'SkyNest Galle',
+    shift: 'Evening',
+    shiftTime: '15:00 - 23:30',
+    status: 'Scheduled',
+    email: 'nadeeka.a@skynesthotels.com',
+    phone: '+94 91 224 4002',
+  },
+  {
+    id: 'SN-G201',
+    name: 'Sunethra Gamage',
+    role: 'Executive Housekeeper',
+    department: 'Housekeeping',
+    branch: 'SkyNest Galle',
+    shift: 'Morning',
+    shiftTime: '07:00 - 15:30',
+    status: 'On Duty',
+    email: 'sunethra.g@skynesthotels.com',
+    phone: '+94 91 224 5001',
+  },
+  {
+    id: 'SN-G501',
+    name: 'Mahela Wickrama',
+    role: 'Security Lead',
+    department: 'Security',
+    branch: 'SkyNest Galle',
+    shift: 'Morning',
+    shiftTime: '07:00 - 15:30',
+    status: 'On Duty',
+    email: 'mahela.w@skynesthotels.com',
+    phone: '+94 91 224 6001',
+  },
 ];
 
 const DEFAULT_HANDOVER_NOTES: HandoverNote[] = [
@@ -337,6 +435,7 @@ export default function StaffManagementPage() {
 
   // Filtering states
   const [search, setSearch] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState<string>('All');
   const [selectedDept, setSelectedDept] = useState<string>('All');
   const [selectedShift, setSelectedShift] = useState<string>('All');
   const [selectedStatus, setSelectedStatus] = useState<string>('All');
@@ -458,13 +557,14 @@ export default function StaffManagementPage() {
         s.role.toLowerCase().includes(q) ||
         s.email.toLowerCase().includes(q);
 
+      const matchesBranch = selectedBranch === 'All' || s.branch === selectedBranch;
       const matchesDept = selectedDept === 'All' || s.department === selectedDept;
       const matchesShift = selectedShift === 'All' || s.shift === selectedShift;
       const matchesStatus = selectedStatus === 'All' || s.status === selectedStatus;
 
-      return matchesSearch && matchesDept && matchesShift && matchesStatus;
+      return matchesSearch && matchesBranch && matchesDept && matchesShift && matchesStatus;
     });
-  }, [staffList, search, selectedDept, selectedShift, selectedStatus]);
+  }, [staffList, search, selectedBranch, selectedDept, selectedShift, selectedStatus]);
 
   // Statistics
   const totalStaff = staffList.length;
@@ -613,6 +713,17 @@ export default function StaffManagementPage() {
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </label>
+
+                <select
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  className="sm-select"
+                >
+                  <option value="All">All Branches</option>
+                  <option value="SkyNest Colombo">SkyNest Colombo</option>
+                  <option value="SkyNest Kandy">SkyNest Kandy</option>
+                  <option value="SkyNest Galle">SkyNest Galle</option>
+                </select>
 
                 <select
                   value={selectedShift}

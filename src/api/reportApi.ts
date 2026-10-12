@@ -11,6 +11,7 @@ export interface OccupancyRecord {
 
 export interface BillingRecord {
   guest_name: string;
+  branch_names?: string;
   booking_status: string;
   payment_status: string;
   total_charge: string | number;
@@ -39,7 +40,7 @@ export interface TopServiceRecord {
 }
 
 export const reportApi = {
-  getOccupancyReport: async (params: { from: string; to: string }) => {
+  getOccupancyReport: async (params: { from: string; to: string; branch_name?: string }) => {
     const response = await apiClient.get<{
       data: OccupancyRecord[];
       from: string;
@@ -48,14 +49,14 @@ export const reportApi = {
     return response.data;
   },
 
-  getBillingReport: async () => {
-    const response = await apiClient.get<{ data: BillingRecord[] }>('/reports/billing');
+  getBillingReport: async (params?: { branch_name?: string }) => {
+    const response = await apiClient.get<{ data: BillingRecord[] }>('/reports/billing', { params });
     return response.data;
   },
 
   // Backwards compatibility alias
-  getBillingSummaryReport: async () => {
-    const response = await apiClient.get<{ data: BillingRecord[] }>('/reports/billing');
+  getBillingSummaryReport: async (params?: { branch_name?: string }) => {
+    const response = await apiClient.get<{ data: BillingRecord[] }>('/reports/billing', { params });
     return response.data;
   },
 
