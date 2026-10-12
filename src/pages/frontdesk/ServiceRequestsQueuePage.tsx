@@ -8,9 +8,12 @@ interface ServiceRequest {
   room_id: number;
   service_id: number;
   service_name: string;
+  guest_name: string;
+  room_number: string;
   usage_time: string;
   quantity: number;
   price_at_usage: number | string;
+  status: 'Pending' | 'Completed';
 }
 
 interface ApiResponse {
@@ -29,6 +32,8 @@ const ServiceRequestsQueuePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Completed'>('All');
+  const [completingId, setCompletingId] = useState<number | null>(null);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -58,6 +63,26 @@ const ServiceRequestsQueuePage = () => {
     }
   }, []);
 
+  const markCompleted = async (usageId: number) => {
+    setCompletingId(usageId);
+    setError('');
+    try {
+      await serviceApi.completeService(usageId);
+      await loadRequests();
+    } catch (err: unknown) {
+      const message =
+        typeof err === 'object' && err !== null && 'response' in err
+          ? String(
+              (err as { response?: { data?: { error?: string } } }).response?.data?.error ??
+                'Unable to complete this request.',
+            )
+          : 'Unable to complete this request.';
+      setError(message);
+    } finally {
+      setCompletingId(null);
+    }
+  };
+
   useEffect(() => {
     void loadRequests();
   }, [loadRequests]);
@@ -65,21 +90,25 @@ const ServiceRequestsQueuePage = () => {
   const filteredRequests = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    if (!query) return requests;
-
-    return requests.filter((request) =>
-      [
-        request.usage_id,
-        request.booking_id,
-        request.room_id,
-        request.service_id,
-        request.service_name,
-      ]
-        .join(' ')
-        .toLowerCase()
-        .includes(query),
-    );
-  }, [requests, search]);
+    return requests.filter((request) => {
+      const matchesStatus = statusFilter === 'All' || request.status === statusFilter;
+      const matchesSearch =
+        !query ||
+        [
+          request.usage_id,
+          request.booking_id,
+          request.room_number,
+          request.guest_name,
+          request.service_id,
+          request.service_name,
+          request.status,
+        ]
+          .join(' ')
+          .toLowerCase()
+          .includes(query);
+      return matchesStatus && matchesSearch;
+    });
+  }, [requests, search, statusFilter]);
 
   const totalValue = requests.reduce(
     (sum, request) =>
@@ -169,7 +198,7 @@ const ServiceRequestsQueuePage = () => {
         </section>
 
         <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="grid grid-cols-1 gap-4 border-b border-slate-200 p-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(16rem,22rem)] md:items-center">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">
                 Request queue
@@ -179,7 +208,20 @@ const ServiceRequestsQueuePage = () => {
               </p>
             </div>
 
-            <label className="w-full sm:max-w-sm">
+            <label className="w-full md:w-40">
+              <span className="sr-only">Filter requests by status</span>
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as 'All' | 'Pending' | 'Completed')}
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="All">All statuses</option>
+                <option value="Pending">Pending</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </label>
+
+            <label className="w-full">
               <span className="sr-only">
                 Search requests by service, booking, room or request number
               </span>
@@ -236,7 +278,7 @@ const ServiceRequestsQueuePage = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[850px] text-left text-sm">
+              <table className="w-full min-w-[1100px] text-left text-sm">
                 <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="px-5 py-4">Request</th>
@@ -245,7 +287,9 @@ const ServiceRequestsQueuePage = () => {
                     <th className="px-5 py-4">Quantity</th>
                     <th className="px-5 py-4">Unit price</th>
                     <th className="px-5 py-4">Total</th>
+                    <th className="px-5 py-4">Status</th>
                     <th className="px-5 py-4">Requested at</th>
+                    <th className="px-5 py-4">Action</th>
                   </tr>
                 </thead>
 
@@ -269,7 +313,10 @@ const ServiceRequestsQueuePage = () => {
                       <td className="whitespace-nowrap px-5 py-4 text-slate-700">
                         <p>Booking #{request.booking_id}</p>
                         <p className="mt-1 text-xs text-slate-500">
-                          Room #{request.room_id}
+                          Room {request.room_number}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {request.guest_name}
                         </p>
                       </td>
                       <td className="px-5 py-4 text-slate-700">
@@ -284,12 +331,35 @@ const ServiceRequestsQueuePage = () => {
                             Number(request.quantity),
                         )}
                       </td>
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          request.status === 'Completed'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {request.status}
+                        </span>
+                      </td>
                       <td className="whitespace-nowrap px-5 py-4 text-slate-600">
                         {new Date(request.usage_time).toLocaleString('en-LK', {
                           dateStyle: 'medium',
                           timeStyle: 'short',
                           timeZone: 'Asia/Colombo',
                         })}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4">
+                        {request.status === 'Completed' ? (
+                          <span className="text-sm text-emerald-700">Done</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => void markCompleted(request.usage_id)}
+                            disabled={completingId !== null}
+                            className="rounded-md bg-blue-950 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {completingId === request.usage_id ? 'Saving…' : 'Mark completed'}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
