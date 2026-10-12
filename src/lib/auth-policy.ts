@@ -35,6 +35,9 @@ export function canAccessPath(role: unknown, path: string): boolean {
     case 'account':
       return true;
     case 'frontdesk':
+      if (pathname === '/frontdesk/reports') {
+        return false;
+      }
       return ['admin', 'manager', 'front_desk'].includes(resolved);
     case 'admin':
       return resolved === 'admin';
@@ -48,8 +51,8 @@ export function canAccessPath(role: unknown, path: string): boolean {
       return false;
   }
 }
-export function loginDestination(role: unknown, requested?: string): string {
-  return requested && canAccessPath(role, requested) ? requested : homeForRole(role);
+export function loginDestination(role: unknown): string {
+  return homeForRole(role);
 }
 export const roleLabels: Record<Role, string> = {
   admin: 'System Administrator',

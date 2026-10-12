@@ -26,13 +26,14 @@ const currency = new Intl.NumberFormat('en-LK', {
   maximumFractionDigits: 2,
 });
 
-const ServiceRequestsQueuePage = () => {
+export default function ServiceRequestsQueuePage() {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Completed'>('All');
+  const [statusFilter, setStatusFilter] =
+    useState<'All' | 'Pending' | 'Completed'>('All');
   const [completingId, setCompletingId] = useState<string | null>(null);
 
   const loadRequests = useCallback(async () => {
@@ -52,7 +53,8 @@ const ServiceRequestsQueuePage = () => {
       const message =
         typeof err === 'object' && err !== null && 'response' in err
           ? String(
-              (err as { response?: { data?: { error?: string } } }).response?.data?.error ??
+              (err as { response?: { data?: { error?: string } } }).response
+                ?.data?.error ??
                 'Unable to load service requests. Check that the backend is running.',
             )
           : 'Unable to load service requests. Check that the backend is running.';
@@ -66,6 +68,7 @@ const ServiceRequestsQueuePage = () => {
   const markCompleted = async (publicId: string) => {
     setCompletingId(publicId);
     setError('');
+
     try {
       await serviceApi.completeService(publicId);
       await loadRequests();
@@ -73,10 +76,11 @@ const ServiceRequestsQueuePage = () => {
       const message =
         typeof err === 'object' && err !== null && 'response' in err
           ? String(
-              (err as { response?: { data?: { error?: string } } }).response?.data?.error ??
-                'Unable to complete this request.',
+              (err as { response?: { data?: { error?: string } } }).response
+                ?.data?.error ?? 'Unable to complete this request.',
             )
           : 'Unable to complete this request.';
+
       setError(message);
     } finally {
       setCompletingId(null);
@@ -91,7 +95,9 @@ const ServiceRequestsQueuePage = () => {
     const query = search.trim().toLowerCase();
 
     return requests.filter((request) => {
-      const matchesStatus = statusFilter === 'All' || request.status === statusFilter;
+      const matchesStatus =
+        statusFilter === 'All' || request.status === statusFilter;
+
       const matchesSearch =
         !query ||
         [
@@ -106,6 +112,7 @@ const ServiceRequestsQueuePage = () => {
           .join(' ')
           .toLowerCase()
           .includes(query);
+
       return matchesStatus && matchesSearch;
     });
   }, [requests, search, statusFilter]);
@@ -115,6 +122,19 @@ const ServiceRequestsQueuePage = () => {
       sum + Number(request.price_at_usage) * Number(request.quantity),
     0,
   );
+
+  const totalQuantity = requests.reduce(
+    (sum, request) => sum + Number(request.quantity),
+    0,
+  );
+
+  const pendingCount = requests.filter(
+    (request) => request.status === 'Pending',
+  ).length;
+
+  const completedCount = requests.filter(
+    (request) => request.status === 'Completed',
+  ).length;
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
@@ -139,50 +159,46 @@ const ServiceRequestsQueuePage = () => {
               Service Requests
             </h1>
             <p className="mt-2 text-sm text-slate-600">
-              View and search guest service requests recorded by the hotel.
+              View, search, and manage guest service requests recorded by the
+              hotel.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Link
-              to="/frontdesk/service-requests/new"
-              className="rounded-lg bg-blue-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-900"
-            >
-              + New Request
-            </Link>
-
-            <button
-              type="button"
-              onClick={() => void loadRequests()}
-              disabled={loading}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {loading ? 'Refreshing…' : 'Refresh'}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => void loadRequests()}
+            disabled={loading}
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? 'Refreshing…' : 'Refresh'}
+          </button>
         </header>
 
-        <section className="mb-6 grid gap-4 sm:grid-cols-3">
+        <section
+          className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          aria-label="Service request summary"
+        >
           <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Total requests</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">
               {requests.length}
             </p>
-            <p className="mt-1 text-xs text-slate-500">
-              All recorded service usage
+          </article>
+
+          <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm text-slate-500">Pending requests</p>
+            <p className="mt-2 text-3xl font-bold text-amber-700">
+              {pendingCount}
             </p>
           </article>
 
           <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm text-slate-500">Units requested</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">
-              {requests.reduce(
-                (sum, request) => sum + Number(request.quantity),
-                0,
-              )}
+            <p className="text-sm text-slate-500">Completed requests</p>
+            <p className="mt-2 text-3xl font-bold text-emerald-700">
+              {completedCount}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              Combined requested quantities
+              {totalQuantity} total units requested
             </p>
           </article>
 
@@ -190,9 +206,6 @@ const ServiceRequestsQueuePage = () => {
             <p className="text-sm text-slate-500">Recorded value</p>
             <p className="mt-2 break-words text-2xl font-bold text-slate-900">
               {currency.format(totalValue)}
-            </p>
-            <p className="mt-1 text-xs text-slate-500">
-              Quantity × recorded unit price
             </p>
           </article>
         </section>
@@ -204,7 +217,7 @@ const ServiceRequestsQueuePage = () => {
                 Request queue
               </h2>
               <p className="mt-1 text-sm text-slate-500">
-                {filteredRequests.length} of {requests.length} requests
+                Showing {filteredRequests.length} of {requests.length} requests
               </p>
             </div>
 
@@ -212,7 +225,11 @@ const ServiceRequestsQueuePage = () => {
               <span className="sr-only">Filter requests by status</span>
               <select
                 value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value as 'All' | 'Pending' | 'Completed')}
+                onChange={(event) =>
+                  setStatusFilter(
+                    event.target.value as 'All' | 'Pending' | 'Completed',
+                  )
+                }
                 className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
               >
                 <option value="All">All statuses</option>
@@ -229,7 +246,7 @@ const ServiceRequestsQueuePage = () => {
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search service, booking or room…"
+                placeholder="Search service, guest, booking or room…"
                 className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
               />
             </label>
@@ -259,20 +276,25 @@ const ServiceRequestsQueuePage = () => {
           ) : !error && filteredRequests.length === 0 ? (
             <div className="p-12 text-center">
               <h3 className="font-semibold text-slate-900">
-                {search ? 'No matching requests' : 'No service requests yet'}
+                {search || statusFilter !== 'All'
+                  ? 'No matching requests'
+                  : 'No service requests yet'}
               </h3>
               <p className="mt-2 text-sm text-slate-500">
-                {search
-                  ? 'Try a different search term.'
+                {search || statusFilter !== 'All'
+                  ? 'Try changing your search or status filter.'
                   : 'Requests recorded by the hotel will appear here.'}
               </p>
-              {search && (
+              {(search || statusFilter !== 'All') && (
                 <button
                   type="button"
-                  onClick={() => setSearch('')}
+                  onClick={() => {
+                    setSearch('');
+                    setStatusFilter('All');
+                  }}
                   className="mt-4 text-sm font-semibold text-blue-800 hover:underline"
                 >
-                  Clear search
+                  Clear filters
                 </button>
               )}
             </div>
@@ -302,6 +324,7 @@ const ServiceRequestsQueuePage = () => {
                       <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-900">
                         #{request.public_id.slice(0, 8)}
                       </td>
+
                       <td className="px-5 py-4">
                         <p className="font-semibold text-slate-900">
                           {request.service_name}
@@ -310,8 +333,11 @@ const ServiceRequestsQueuePage = () => {
                           Service #{request.service_public_id.slice(0, 8)}
                         </p>
                       </td>
+
                       <td className="whitespace-nowrap px-5 py-4 text-slate-700">
-                        <p>Booking #{request.booking_public_id.slice(0, 8)}</p>
+                        <p>
+                          Booking #{request.booking_public_id.slice(0, 8)}
+                        </p>
                         <p className="mt-1 text-xs text-slate-500">
                           Room {request.room_number}
                         </p>
@@ -319,27 +345,34 @@ const ServiceRequestsQueuePage = () => {
                           {request.guest_name}
                         </p>
                       </td>
+
                       <td className="px-5 py-4 text-slate-700">
                         {request.quantity}
                       </td>
+
                       <td className="whitespace-nowrap px-5 py-4 text-slate-700">
                         {currency.format(Number(request.price_at_usage))}
                       </td>
+
                       <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-900">
                         {currency.format(
                           Number(request.price_at_usage) *
                             Number(request.quantity),
                         )}
                       </td>
+
                       <td className="whitespace-nowrap px-5 py-4">
-                        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          request.status === 'Completed'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                            request.status === 'Completed'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
                           {request.status}
                         </span>
                       </td>
+
                       <td className="whitespace-nowrap px-5 py-4 text-slate-600">
                         {new Date(request.usage_time).toLocaleString('en-LK', {
                           dateStyle: 'medium',
@@ -347,17 +380,24 @@ const ServiceRequestsQueuePage = () => {
                           timeZone: 'Asia/Colombo',
                         })}
                       </td>
+
                       <td className="whitespace-nowrap px-5 py-4">
                         {request.status === 'Completed' ? (
-                          <span className="text-sm text-emerald-700">Done</span>
+                          <span className="text-sm text-emerald-700">
+                            Done
+                          </span>
                         ) : (
                           <button
                             type="button"
-                            onClick={() => void markCompleted(request.public_id)}
+                            onClick={() =>
+                              void markCompleted(request.public_id)
+                            }
                             disabled={completingId !== null}
                             className="rounded-md bg-blue-950 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            {completingId === request.public_id ? 'Saving…' : 'Mark completed'}
+                            {completingId === request.public_id
+                              ? 'Saving…'
+                              : 'Mark completed'}
                           </button>
                         )}
                       </td>
@@ -381,6 +421,4 @@ const ServiceRequestsQueuePage = () => {
       </div>
     </main>
   );
-};
-
-export default ServiceRequestsQueuePage;
+}

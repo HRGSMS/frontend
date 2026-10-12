@@ -192,16 +192,33 @@ test('missing, unknown and combined roles fail closed', () => {
     assert.equal(canAccessPath(role, '/frontdesk/payment-processing'), false);
   }
 });
-test('login preserves a permitted deep link and otherwise selects the assigned dashboard', () => {
+test('login always selects the assigned dashboard, including after a permitted deep link', () => {
   assert.equal(
     loginDestination('front_desk', '/frontdesk/reservations/123?tab=bill'),
-    '/frontdesk/reservations/123?tab=bill',
+    '/frontdesk/dashboard',
   );
   assert.equal(loginDestination('guest', '/admin/users'), '/guest/dashboard');
   assert.equal(
     loginDestination('service_staff', '/frontdesk/payment-processing'),
     '/services/dashboard',
   );
+});
+test('each staff role has a distinct login URL even when another workspace was requested', () => {
+  const destinations = {
+    admin: '/admin/dashboard',
+    manager: '/manager/dashboard',
+    front_desk: '/frontdesk/dashboard',
+  };
+  for (const [role, expected] of Object.entries(destinations)) {
+    for (const requested of [
+      '/frontdesk/dashboard',
+      '/manager/dashboard',
+      '/admin/dashboard',
+      '/account',
+    ]) {
+      assert.equal(loginDestination(role, requested), expected);
+    }
+  }
 });
 test('redirect destinations cannot escape their permitted application area', () => {
   for (const destination of [
@@ -216,4 +233,12 @@ test('redirect destinations cannot escape their permitted application area', () 
   ]) {
     assert.equal(loginDestination('front_desk', destination), '/frontdesk/dashboard', destination);
   }
+});
+test('front desk staff cannot access reports pages while managers and admins can', () => {
+  assert.equal(canAccessPath('front_desk', '/frontdesk/reports'), false);
+  assert.equal(canAccessPath('front_desk', '/manager/reports'), false);
+  assert.equal(canAccessPath('front_desk', '/admin/reports'), false);
+  assert.equal(canAccessPath('manager', '/manager/reports'), true);
+  assert.equal(canAccessPath('admin', '/admin/reports'), true);
+  assert.equal(canAccessPath('admin', '/manager/reports'), true);
 });

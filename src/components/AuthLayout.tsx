@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { FrontDeskSidebar } from './FrontDeskSidebar';
 import { useAuth } from '../context/auth-state';
 import { getRole, homeForRole, roleLabels } from '../lib/auth-policy';
 
@@ -9,7 +10,11 @@ export function AuthLayout() {
   const [pending, setPending] = useState(false);
   const role = getRole(user?.role);
   const { pathname } = useLocation();
-  const isFrontDeskDashboard = pathname === '/frontdesk/dashboard';
+  const isFrontDeskWorkspace =
+    pathname === '/frontdesk' ||
+    pathname.startsWith('/frontdesk/') ||
+    (role === 'front_desk' && pathname === '/account');
+  const hasWorkspaceHeader = isFrontDeskWorkspace || pathname.includes('/reports');
   async function logout() {
     setPending(true);
     setError(null);
@@ -22,7 +27,8 @@ export function AuthLayout() {
     }
   }
   return (
-    <div className={`min-h-screen bg-gray-50 ${isFrontDeskDashboard ? 'fd-auth-shell' : ''}`}>
+    <div className={`min-h-screen bg-gray-50 ${hasWorkspaceHeader ? 'fd-auth-shell' : ''}`}>
+      {isFrontDeskWorkspace && <FrontDeskSidebar />}
       <header className="border-b bg-white px-4 py-3 text-gray-700">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
           <Link to={homeForRole(role)} className="font-semibold text-blue-900">
@@ -63,12 +69,14 @@ export function AuthLayout() {
           </div>
         </div>
       </header>
-      {(error || authError) && (
-        <p role="alert" className="mx-auto max-w-7xl p-4 text-red-700">
-          {error || authError}
-        </p>
-      )}
-      <Outlet />
+      <div className={isFrontDeskWorkspace ? 'fd-workspace-body' : undefined}>
+        {(error || authError) && (
+          <p role="alert" className="mx-auto max-w-7xl p-4 text-red-700">
+            {error || authError}
+          </p>
+        )}
+        <Outlet />
+      </div>
     </div>
   );
 }
