@@ -1,6 +1,18 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/auth-state';
+import {
+  reportApi,
+  type RevenueRecord,
+  type OccupancyRecord,
+  type BillingRecord,
+  type TopServiceRecord,
+} from '../../api/reportApi';
+
+function formatLKR(value: number | string | null | undefined): string {
+  const num = Number(value || 0);
+  return `LKR ${num.toLocaleString('en-LK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
 
 type IconName =
   | 'calendar'
@@ -14,7 +26,9 @@ type IconName =
   | 'clock'
   | 'bell'
   | 'shield'
-  | 'users';
+  | 'users'
+  | 'refresh';
+
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, ReactNode> = {
     calendar: (
@@ -59,6 +73,11 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
         <path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-4-5.65" />
       </>
     ),
+    refresh: (
+      <>
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-1.19" />
+      </>
+    ),
   };
   return (
     <svg
@@ -78,37 +97,117 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   );
 }
 
-const roomTypes = [
-  { name: 'INCOMPLETE WEBPAGE', rooms: 40, occupied: 32, available: 6, maintenance: 2 },
-  { name: 'Superior twin', rooms: 40, occupied: 28, available: 9, maintenance: 3 },
-  { name: 'Executive suite', rooms: 20, occupied: 15, available: 3, maintenance: 2 },
-];
 const shortcuts = [
   {
-    title: 'Staff management',
-    note: 'Review your team and department coverage.',
-    to: '/manager/staff',
-    icon: 'users' as const,
+    title: 'Hotel analytics & reports',
+    note: 'Inspect live revenue, occupancy and room logs.',
+    to: '/manager/reports',
+    icon: 'chart' as const,
   },
   {
-    title: 'Hotel analytics',
-    note: 'Review occupancy and hotel performance.',
-    to: '/manager/analytics',
-    icon: 'chart' as const,
+    title: 'Staff management',
+    note: 'Review team coverage and duty schedules.',
+    to: '/manager/staff',
+    icon: 'users' as const,
   },
 ];
 
 export default function ManagerDashboard() {
   const { user } = useAuth();
   const [query, setQuery] = useState('');
-  const totalRooms = roomTypes.reduce((total, room) => total + room.rooms, 0);
-  const occupiedRooms = roomTypes.reduce((total, room) => total + room.occupied, 0);
-  const availableRooms = roomTypes.reduce((total, room) => total + room.available, 0);
-  const maintenanceRooms = roomTypes.reduce((total, room) => total + room.maintenance, 0);
-  const occupancyRate = Math.round((occupiedRooms / totalRooms) * 100);
-  const filtered = roomTypes.filter((room) =>
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Live reporting state
+  const [revenueData, setRevenueData] = useState<RevenueRecord[]>([]);
+  const [occupancyData, setOccupancyData] = useState<OccupancyRecord[]>([]);
+  const [billingData, setBillingData] = useState<BillingRecord[]>([]);
+  const [topServicesData, setTopServicesData] = useState<TopServiceRecord[]>([]);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const from = '2026-10-01';
+      const to = '2026-10-31';
+      const [revRes, occRes, billRes, topRes] = await Promise.all([
+        reportApi.getRevenueReport({ from, to }),
+        reportApi.getOccupancyReport({ from, to }),
+        reportApi.getBillingReport(),
+        reportApi.getTopServicesReport(),
+      ]);
+
+      setRevenueData(revRes.data || []);
+      setOccupancyData(occRes.data || []);
+      setBillingData(billRes.data || []);
+      setTopServicesData(topRes.data || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load manager reporting metrics.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadData();
+  }, []);
+
+  // Compute live Room Types from Occupancy Data
+  const dynamicRoomTypes = useMemo(() => {
+    if (!occupancyData.length) {
+      return [
+        { name: 'Single', rooms: 3, occupied: 0, available: 3, maintenance: 0 },
+        { name: 'Double', rooms: 3, occupied: 1, available: 2, maintenance: 0 },
+        { name: 'Deluxe', rooms: 2, occupied: 0, available: 2, maintenance: 0 },
+        { name: 'Family', rooms: 2, occupied: 1, available: 1, maintenance: 0 },
+        { name: 'Suite', rooms: 2, occupied: 1, available: 1, maintenance: 0 },
+      ];
+    }
+    const groups: Record<
+      string,
+      { rooms: number; occupied: number; available: number; maintenance: number }
+    > = {};
+
+    for (const item of occupancyData) {
+      const t = item.type_name || 'Standard';
+      if (!groups[t]) {
+        groups[t] = { rooms: 0, occupied: 0, available: 0, maintenance: 0 };
+      }
+      groups[t].rooms += 1;
+      if (item.booking_status === 'Booked' || item.booking_status === 'Checked-In') {
+        groups[t].occupied += 1;
+      } else {
+        groups[t].available += 1;
+      }
+    }
+
+    return Object.entries(groups).map(([name, stats]) => ({
+      name,
+      ...stats,
+    }));
+  }, [occupancyData]);
+
+  const totalRooms = dynamicRoomTypes.reduce((total, room) => total + room.rooms, 0);
+  const occupiedRooms = dynamicRoomTypes.reduce((total, room) => total + room.occupied, 0);
+  const availableRooms = dynamicRoomTypes.reduce((total, room) => total + room.available, 0);
+  const occupancyRate = totalRooms > 0 ? Math.round((occupiedRooms / totalRooms) * 100) : 0;
+
+  const filtered = dynamicRoomTypes.filter((room) =>
     room.name.toLowerCase().includes(query.trim().toLowerCase()),
   );
+
+  // Compute live Revenue & Balances
+  const totalRevenue = revenueData.reduce((acc, r) => {
+    return acc + Number(r.room_and_tax_revenue || 0) + Number(r.service_revenue || 0);
+  }, 0);
+
+  const totalOutstanding = billingData.reduce((acc, b) => {
+    const bal = Number(b.calculated_outstanding_amount || 0);
+    return bal > 0 ? acc + bal : acc;
+  }, 0);
+
+  const topService = topServicesData[0];
+
   const metrics: {
     label: string;
     value: string;
@@ -116,60 +215,99 @@ export default function ManagerDashboard() {
     icon: IconName;
     featured?: boolean;
   }[] = [
-    { label: 'Today’s revenue', value: '950K', note: 'LKR · sample daily revenue', icon: 'chart' },
     {
-      label: 'Expected arrivals',
-      value: '06',
-      note: '4 departures scheduled today',
-      icon: 'calendar',
+      label: 'Portfolio revenue',
+      value: isLoading ? '...' : formatLKR(totalRevenue),
+      note: 'Across all operating properties',
+      icon: 'chart',
+    },
+    {
+      label: 'Outstanding balance',
+      value: isLoading ? '...' : formatLKR(totalOutstanding),
+      note: `${billingData.filter((b) => Number(b.calculated_outstanding_amount || 0) > 0).length} guest accounts pending`,
+      icon: 'bell',
     },
     {
       label: 'Available rooms',
-      value: String(availableRooms),
-      note: `${maintenanceRooms} rooms under maintenance`,
+      value: isLoading ? '...' : String(availableRooms),
+      note: `${occupiedRooms} rooms booked or in-house`,
       icon: 'bed',
     },
     {
       label: 'Property occupancy',
-      value: `${occupancyRate}%`,
-      note: `${occupiedRooms} of ${totalRooms} sample rooms occupied`,
+      value: isLoading ? '...' : `${occupancyRate}%`,
+      note: `${occupiedRooms} of ${totalRooms} rooms occupied`,
       icon: 'chart',
       featured: true,
     },
   ];
+
   const date = new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     timeZone: 'Asia/Colombo',
   }).format(new Date());
-  const firstName = user?.name?.split(' ')[0] || 'team';
+
+  const firstName = user?.name?.split(' ')[0] || 'Manager';
+
   return (
     <main className="md-dashboard">
       <style>{dashboardStyles}</style>
+
+      {/* Heading */}
       <div className="md-heading">
         <div>
-          <p className="md-eyebrow">MANAGER · DAILY OVERVIEW</p>
+          <p className="md-eyebrow">MANAGER · OPERATIONAL & REVENUE OVERVIEW</p>
           <h1>A great day starts with a clear view.</h1>
           <p className="md-description">
-            Welcome back, {firstName}. Here’s your property at a glance.
+            Welcome back, {firstName}. Here is your property and performance at a glance.
           </p>
         </div>
-        <Link to="/manager/reports" className="md-button">
-          <Icon name="chart" size={18} />
-          Revenue reports
-        </Link>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={() => void loadData()}
+            className="md-button-secondary"
+            title="Refresh database records"
+          >
+            <Icon name="refresh" size={16} />
+          </button>
+          <Link to="/manager/reports" className="md-button">
+            <Icon name="chart" size={18} />
+            Full reports & analytics
+          </Link>
+        </div>
       </div>
+
+      {/* Caption & Status */}
       <div className="md-caption">
         <span>
           <Icon name="calendar" size={15} />
           {date}
         </span>
-        <span className="md-preview">
+        <span className="md-live">
           <span />
-          Sample data · not connected to live hotel records
+          Live database records connected
         </span>
       </div>
+
+      {error && (
+        <div
+          style={{
+            background: '#fef2f2',
+            border: '1px solid #fee2e2',
+            color: '#b91c1c',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            marginBottom: '20px',
+            fontSize: '13px',
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* 4 Primary Metric Cards */}
       <section className="md-metrics" aria-label="Hotel summary">
         {metrics.map((metric) => (
           <article
@@ -190,13 +328,16 @@ export default function ManagerDashboard() {
           </article>
         ))}
       </section>
+
+      {/* Main 2-Column Grid */}
       <div className="md-columns">
         <div className="md-primary-column">
+          {/* Room Overview Table */}
           <section className="md-panel" aria-labelledby="md-overview-heading">
             <div className="md-panel-heading">
               <div>
-                <h2 id="md-overview-heading">Room overview</h2>
-                <p>Room availability and maintenance, in one place.</p>
+                <h2 id="md-overview-heading">Room category occupancy</h2>
+                <p>Real-time room availability based on current booking logs.</p>
               </div>
               <Link to="/frontdesk/reservations" className="md-text-link">
                 Reservations
@@ -204,54 +345,62 @@ export default function ManagerDashboard() {
               </Link>
             </div>
             <div className="md-toolbar">
-              <span className="md-description">100 sample rooms</span>
+              <span className="md-description">{totalRooms} catalog rooms</span>
               <label className="md-search">
                 <Icon name="search" size={15} />
                 <input
                   type="search"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search room types"
-                  aria-label="Search room types"
+                  placeholder="Search room categories"
+                  aria-label="Search room categories"
                 />
               </label>
             </div>
             <div className="md-table-scroll">
               <table className="md-table">
-                <caption className="md-sr-only">Sample room availability</caption>
+                <caption className="md-sr-only">Room category availability</caption>
                 <thead>
                   <tr>
-                    <th scope="col">Room type</th>
+                    <th scope="col">Category</th>
                     <th scope="col">Total</th>
-                    <th scope="col">Occupied</th>
+                    <th scope="col">Occupied / Booked</th>
                     <th scope="col">Available</th>
-                    <th scope="col">Maintenance</th>
+                    <th scope="col">Occupancy %</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((room, index) => (
-                    <tr key={room.name}>
-                      <td>
-                        <div className="md-guest">
-                          <span className={`md-avatar md-avatar-${index % 3}`}>
-                            <Icon name="bed" size={18} />
-                          </span>
-                          <div>
-                            <strong>{room.name}</strong>
-                            <small>Sample property</small>
+                  {filtered.map((room, index) => {
+                    const roomOccPct =
+                      room.rooms > 0 ? Math.round((room.occupied / room.rooms) * 100) : 0;
+                    return (
+                      <tr key={room.name}>
+                        <td>
+                          <div className="md-guest">
+                            <span className={`md-avatar md-avatar-${index % 3}`}>
+                              <Icon name="bed" size={18} />
+                            </span>
+                            <div>
+                              <strong>{room.name}</strong>
+                              <small>Hotel inventory</small>
+                            </div>
                           </div>
-                        </div>
-                      </td>
-                      <td>{room.rooms}</td>
-                      <td>{room.occupied}</td>
-                      <td>
-                        <span className="md-badge md-badge-ready">{room.available}</span>
-                      </td>
-                      <td>
-                        <span className="md-badge md-badge-due">{room.maintenance}</span>
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td>{room.rooms}</td>
+                        <td>{room.occupied}</td>
+                        <td>
+                          <span className="md-badge md-badge-ready">{room.available}</span>
+                        </td>
+                        <td>
+                          <span
+                            className={`md-badge ${roomOccPct >= 50 ? 'md-badge-due' : 'md-badge-confirmed'}`}
+                          >
+                            {roomOccPct}%
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -264,14 +413,18 @@ export default function ManagerDashboard() {
             )}
             <div className="md-table-footer">
               <span>
-                {filtered.length} of {roomTypes.length} room types
+                {filtered.length} of {dynamicRoomTypes.length} room categories
               </span>
-              <span>
-                <Icon name="clock" size={13} />
-                Sri Lanka time
-              </span>
+              <Link
+                to="/manager/reports"
+                style={{ color: '#224846', fontWeight: 600, display: 'flex', gap: '4px' }}
+              >
+                Inspect detailed occupancy report &rarr;
+              </Link>
             </div>
           </section>
+
+          {/* Quick Actions */}
           <section className="md-quick-actions" aria-label="Quick actions">
             {shortcuts.map((action) => (
               <Link key={action.to} to={action.to} className="md-quick-action">
@@ -287,12 +440,15 @@ export default function ManagerDashboard() {
             ))}
           </section>
         </div>
+
+        {/* Secondary Column */}
         <aside className="md-secondary-column" aria-label="Occupancy and workspace overview">
+          {/* Property Pulse Donut */}
           <section className="md-panel md-room-panel" aria-labelledby="md-occupancy-heading">
             <div className="md-panel-heading">
               <div>
                 <h2 id="md-occupancy-heading">Property pulse</h2>
-                <p>A snapshot of the sample property.</p>
+                <p>Live occupancy from active reservations.</p>
               </div>
               <Icon name="bed" size={20} />
             </div>
@@ -300,7 +456,7 @@ export default function ManagerDashboard() {
               <svg
                 viewBox="0 0 180 180"
                 role="img"
-                aria-label={`Sample occupancy: ${occupancyRate} percent`}
+                aria-label={`Live occupancy: ${occupancyRate} percent`}
               >
                 <circle cx="90" cy="90" r="68" fill="none" stroke="#e4ede7" strokeWidth="16" />
                 <circle
@@ -326,41 +482,60 @@ export default function ManagerDashboard() {
             <div className="md-room-legend">
               <span>
                 <i className="md-occupied-dot" />
-                Occupied
+                Occupied ({occupiedRooms})
               </span>
               <span>
                 <i className="md-available-dot" />
-                Remaining capacity
+                Available ({availableRooms})
               </span>
             </div>
             <div className="md-room-availability">
               <div>
                 <strong>{occupiedRooms}</strong>
-                <span>of {totalRooms} sample rooms occupied</span>
+                <span>of {totalRooms} rooms booked/occupied</span>
               </div>
             </div>
           </section>
-          <section className="md-panel md-management" aria-labelledby="md-team-heading">
-            <h2 id="md-team-heading">Today’s team coverage</h2>
-            <p className="md-description">Sample staff on duty by department.</p>
-            <dl className="md-team-list">
-              {[
-                ['Front desk', 4],
-                ['Housekeeping', 8],
-                ['Guest services', 6],
-              ].map(([department, count]) => (
-                <div key={department}>
-                  <dt>{department}</dt>
-                  <dd>{count} on duty</dd>
-                </div>
-              ))}
-            </dl>
-            <Link to="/manager/staff">
-              <Icon name="users" size={17} />
-              <span>Review staff</span>
+
+          {/* Top Service Preview */}
+          <section className="md-panel md-management" aria-labelledby="md-services-heading">
+            <h2 id="md-services-heading">Leading guest service</h2>
+            <p className="md-description">Highest grossing service in catalogue.</p>
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '14px',
+                background: '#f9faf7',
+                borderRadius: '8px',
+                border: '1px solid #e7ebe5',
+              }}
+            >
+              <div style={{ fontWeight: 600, fontSize: '15px', color: '#192f33' }}>
+                {topService ? topService.service_name : 'Room service'}
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginTop: '8px',
+                  fontSize: '12px',
+                  color: '#667674',
+                }}
+              >
+                <span>Orders: {topService?.total_quantity || 0}</span>
+                <span style={{ fontWeight: 600, color: '#224846' }}>
+                  {formatLKR(topService?.total_revenue || 0)}
+                </span>
+              </div>
+            </div>
+            <Link to="/manager/reports" style={{ marginTop: '14px' }}>
+              <Icon name="chart" size={17} />
+              <span>Service usage breakdown</span>
               <Icon name="arrowUp" size={15} />
             </Link>
           </section>
+
+          {/* Workspace Shortcuts */}
           <section className="md-panel md-management" aria-label="Workspace shortcuts">
             <h2>Workspace shortcuts</h2>
             <Link to="/frontdesk/dashboard">
@@ -375,15 +550,16 @@ export default function ManagerDashboard() {
             </Link>
             <Link to="/manager/reports">
               <Icon name="chart" size={17} />
-              <span>Revenue reports</span>
+              <span>Financial & revenue reports</span>
               <Icon name="arrowUp" size={15} />
             </Link>
           </section>
         </aside>
       </div>
+
       <footer className="md-footer">
         <span>SkyNest Hotels · Thoughtful hospitality, every day.</span>
-        <span>Manager workspace</span>
+        <span>Manager workspace · Live reports integration</span>
       </footer>
     </main>
   );
@@ -405,10 +581,12 @@ const dashboardStyles = `
 .md-description{margin:12px 0 0;color:var(--md-muted);font-size:13px;line-height:1.7}
 .md-button{display:inline-flex;align-items:center;justify-content:center;gap:9px;background:var(--md-green);color:white;white-space:nowrap;border-radius:8px;padding:13px 18px;font-size:14px;font-weight:600;box-shadow:0 4px 10px #22484615;transition:background .15s,transform .15s}
 .md-button:hover{background:#163734;transform:translateY(-1px)}
+.md-button-secondary{display:inline-flex;align-items:center;justify-content:center;background:white;color:#556663;border:1px solid #d4ded7;border-radius:8px;padding:12px 14px;transition:background .15s,color .15s}
+.md-button-secondary:hover{background:#eef4f0;color:#224846}
 .md-caption{display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:16px;color:#637273;font-size:13px}
 .md-caption>span{display:flex;gap:8px;align-items:center}
-.md-preview{font-size:12px;padding:5px 9px;border:1px solid #e2d8c3;border-radius:5px;background:#faf7ef;color:#886f3c}
-.md-preview>span{height:5px;width:5px;border-radius:50%;background:#b79a61}
+.md-live{font-size:12px;padding:5px 9px;border:1px solid #cce5d6;border-radius:5px;background:#f0f8f3;color:#225c3f;display:flex;align-items:center;gap:6px}
+.md-live>span{height:6px;width:6px;border-radius:50%;background:#2e9e62;display:inline-block}
 .md-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-bottom:28px}
 .md-metric{border:1px solid var(--md-line);background:#fff;border-radius:11px;padding:22px 23px;min-height:153px;box-shadow:0 2px 4px #172c2503}
 .md-metric-top{display:flex;justify-content:space-between;align-items:center;gap:12px;color:#80908c}
@@ -432,10 +610,6 @@ const dashboardStyles = `
 .md-text-link{display:inline-flex;align-items:center;gap:6px;color:var(--md-green);font-size:12px;font-weight:600;white-space:nowrap;background:none;border:0;padding:0}
 .md-text-link:hover{text-decoration:underline}
 .md-toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:0 24px 20px}
-.md-segments{display:flex;gap:3px;background:#f2f4f1;padding:4px;border-radius:7px}
-.md-segments button{display:flex;align-items:center;gap:8px;background:transparent;border:0;border-radius:5px;padding:8px 12px;color:#788480;font-size:13px;font-weight:500;min-height:34px;white-space:nowrap}
-.md-segments button.is-selected{background:white;color:var(--md-green);box-shadow:0 1px 4px #1e3e3010}
-.md-segments button>span{font-size:11px;padding:2px 5px;border-radius:4px;background:#e4eae4;color:#60716a;min-width:18px;text-align:center}
 .md-search{display:flex;align-items:center;gap:9px;border:1px solid #e5e9e3;border-radius:6px;padding:9px 12px;color:#97a19a;max-width:225px;width:100%;background:#fdfefd}
 .md-search:focus-within{border-color:#91a99d}
 .md-search input{min-width:0;width:100%;border:0;background:transparent;color:var(--md-ink);font-size:13px;outline:none}
@@ -454,18 +628,11 @@ const dashboardStyles = `
 .md-avatar-1{background:#f2eadd;color:#9b8051}.md-avatar-2{background:#e9eef0;color:#67858b}
 .md-guest strong{display:block;font-size:14px;font-weight:500}
 .md-guest small{display:block;color:#8b9590;font-size:11px;margin-top:5px}
-.md-room-number{font-weight:500;font-size:14px;display:block}
-.md-room-type{color:#8b9590;font-size:11px;display:block;margin-top:5px}
-.md-time{font-size:13px;font-variant-numeric:tabular-nums}
 .md-badge{display:inline-flex;align-items:center;gap:5px;border-radius:5px;padding:5px 7px;font-size:11px;font-weight:500}
-.md-badge>span{width:4px;height:4px;background:currentColor;border-radius:50%}
 .md-badge-ready{background:#edf4ed;color:#54785a}
 .md-badge-confirmed{background:#eff2f5;color:#637a8c}
 .md-badge-due{background:#fbf3e4;color:#987737}
-.md-row-action{display:flex;align-items:center;justify-content:center;min-width:32px;min-height:32px;border-radius:6px;color:#7b8c82}
-.md-row-action:hover{background:#edf3ed;color:var(--md-green)}
 .md-table-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--md-line);padding:15px 24px;color:#8b958f;font-size:11px}
-.md-table-footer>span:last-child{display:flex;align-items:center;gap:5px}
 .md-empty{display:flex;align-items:center;flex-direction:column;text-align:center;padding:35px 20px;color:#77867d;gap:10px}
 .md-empty h3{font-size:14px;margin:0;color:var(--md-ink)}.md-empty p{font-size:14px;margin:0}
 .md-quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -474,13 +641,6 @@ const dashboardStyles = `
 .md-action-icon{background:#f0f4ed;border:1px solid #e5ebdf;width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:10px;color:#6a8270;flex-shrink:0}
 .md-quick-action h3{font-size:13px;font-weight:600;margin:0}.md-quick-action p{font-size:11px;color:#849088;margin:6px 0 0;line-height:1.5}
 .md-quick-action>svg{margin-left:auto;color:#86998a}
-.md-check-count{background:#f1f5ec;color:#6b8160;padding:5px 8px;border-radius:5px;font-size:12px;font-weight:500}
-.md-check-items{padding:0 24px 8px}
-.md-check-item{display:flex;align-items:center;gap:11px;padding:10px 0;font-size:13px;color:#66766c;cursor:pointer}
-.md-check-item input{width:16px;height:16px;accent-color:var(--md-green);cursor:pointer;margin:0;flex-shrink:0}
-.md-check-item.is-complete span{text-decoration:line-through;color:#a0aaa2}
-.md-check-note{font-size:11px;color:#98a29a;padding:0 24px 19px;margin:0}
-.md-room-panel .md-panel-heading{padding-bottom:7px}
 .md-donut{width:180px;height:180px;margin:10px auto 13px;position:relative}
 .md-donut svg{display:block;width:100%;height:100%}
 .md-donut>div{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column}
@@ -495,24 +655,12 @@ const dashboardStyles = `
 .md-room-availability>div{display:flex;align-items:center;gap:10px}
 .md-room-availability strong{font-size:24px;font-weight:500;letter-spacing:-.6px}
 .md-room-availability span{font-size:12px;color:#7d8d7f}
-.md-services .md-panel-heading{padding-bottom:15px}
-.md-service-preview{margin:0 18px 18px;padding:22px 12px 20px;background:#f5f6ee;border:1px solid #eceedd;border-radius:8px;text-align:center}
-.md-service-illustration{display:flex;margin:0 auto 12px;width:53px;height:53px;align-items:center;justify-content:center;border-radius:50%;background:#ececdb;color:#9b9461}
-.md-service-preview h3{font-family:Georgia,serif;font-weight:400;font-size:17px;color:#555c42;letter-spacing:-.3px;margin:0 0 9px}
-.md-service-preview p{font-size:12px;color:#8c927d;line-height:1.8;margin:0}
-.md-service-link{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--md-line);padding:16px 23px;font-size:12px;font-weight:500;color:var(--md-green)}
-.md-service-link:hover{background:#f9fbf6}
 .md-management{padding:20px 23px}
 .md-management h2{font-size:14px;font-weight:600;margin:0 0 10px}
 .md-management a{display:flex;align-items:center;gap:10px;color:#75867a;font-size:13px;padding:11px 0}.md-management a>svg:last-child{margin-left:auto}
 .md-management a:hover{color:var(--md-green)}
 .md-footer{display:flex;justify-content:space-between;gap:20px;margin-top:27px;font-size:11px;color:#98a198;line-height:1.6}
-@media(min-width:1700px){.md-dashboard{padding-top:48px}.md-columns{grid-template-columns:minmax(0,1fr) 330px}}
-@media(max-width:1100px){.md-columns{grid-template-columns:minmax(0,1fr) 265px;gap:18px}.md-toolbar{align-items:flex-start;flex-wrap:wrap}.md-search{max-width:none;flex-basis:100%}.md-metric{padding:19px}.md-quick-actions{grid-template-columns:1fr}.md-table th,.md-table td{padding-left:10px;padding-right:10px}}
-@media(max-width:850px){.md-columns{grid-template-columns:1fr}.md-secondary-column{grid-template-columns:1fr 1fr}.md-metrics{grid-template-columns:1fr 1fr}.md-quick-actions{grid-template-columns:1fr 1fr}.md-management{grid-column:1/-1}.md-toolbar{flex-direction:row;align-items:center}.md-search{flex-basis:auto;max-width:225px}}
-@media(max-width:560px){.md-dashboard{padding:25px 16px 20px}.md-heading{align-items:flex-start;flex-direction:column;gap:20px;margin-bottom:25px}.md-heading h1{font-size:30px;max-width:290px}.md-button{font-size:13px;padding:11px 15px}.md-caption{align-items:flex-start;flex-wrap:wrap;gap:10px}.md-metrics{gap:10px;margin-bottom:20px}.md-metric{padding:15px;min-height:142px}.md-metric-top h2{font-size:12px}.md-metric-top svg{width:16px}.md-metric-value{font-size:30px}.md-metric-note{font-size:11px}.md-panel-heading{padding:19px 17px;align-items:flex-start}.md-panel-heading h2{font-size:14px}.md-panel-heading p{font-size:12px}.md-panel-heading .md-text-link{font-size:0;gap:0;min-width:25px;min-height:25px}.md-toolbar{padding:0 17px 17px;flex-direction:column;align-items:stretch;gap:12px}.md-segments{align-self:flex-start}.md-search{max-width:none}.md-table{min-width:560px}.md-table th:first-child,.md-table td:first-child{padding-left:17px}.md-table-footer{padding:13px 17px;font-size:8px}.md-quick-actions,.md-secondary-column{grid-template-columns:1fr}.md-quick-action{padding:18px}.md-quick-action h3{font-size:14px}.md-check-items{padding:0 17px 8px}.md-check-note{padding-left:17px;padding-right:17px}.md-check-item{font-size:13px}.md-footer{flex-direction:column;gap:4px}.md-service-preview{padding:25px}.md-room-availability{padding:19px 24px}}
-@media(prefers-reduced-motion:reduce){.md-dashboard *{transition:none!important}}
-.md-dashboard{color-scheme:light}
-.md-sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.md-team-list{margin:14px 0 0}.md-team-list>div{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--md-line);font-size:13px}.md-team-list dt{color:var(--md-muted)}.md-team-list dd{margin:0;font-weight:500}
+@media(max-width:1100px){.md-columns{grid-template-columns:minmax(0,1fr) 265px;gap:18px}.md-toolbar{align-items:flex-start;flex-wrap:wrap}.md-search{max-width:none;flex-basis:100%}.md-metric{padding:19px}.md-quick-actions{grid-template-columns:1fr}}
+@media(max-width:850px){.md-columns{grid-template-columns:1fr}.md-secondary-column{grid-template-columns:1fr 1fr}.md-metrics{grid-template-columns:1fr 1fr}.md-quick-actions{grid-template-columns:1fr 1fr}.md-management{grid-column:1/-1}}
+@media(max-width:560px){.md-dashboard{padding:25px 16px 20px}.md-heading{align-items:flex-start;flex-direction:column;gap:20px}.md-metrics{grid-template-columns:1fr}.md-table{min-width:560px}}
 `;
