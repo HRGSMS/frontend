@@ -6,34 +6,49 @@ export const serviceApi = {
     return response.data;
   },
 
-  updateServicePrice: async (id: number, price: number) => {
+  updateServicePrice: async (id: string, price: number) => {
     const response = await apiClient.patch(`/services/${id}/price`, { price });
     return response.data;
   },
 
   requestService: async (data: {
-    bookingId: number;
-    roomId: number;
-    serviceId: number;
+    bookingPublicId: string;
+    roomPublicId: string;
+    servicePublicId: string;
     quantity: number;
-    instructions?: string;
   }) => {
-    const response = await apiClient.post('/service-requests', data);
+    const { bookingPublicId, ...body } = data;
+    const response = await apiClient.post(
+      `/bookings/${bookingPublicId}/services`,
+      {
+        service_public_id: body.servicePublicId,
+        room_public_id: body.roomPublicId,
+        quantity: body.quantity,
+      },
+    );
     return response.data;
   },
 
-  completeService: async (id: number) => {
-    const response = await apiClient.patch(`/service-requests/${id}/complete`);
+  completeService: async (publicId: string) => {
+    const response = await apiClient.patch(
+      `/service-requests/${publicId}/complete`,
+    );
     return response.data;
   },
 
   listServiceUsage: async (filters: {
-    bookingId?: number;
-    roomId?: number;
-    serviceId?: number;
+    bookingPublicId?: string;
+    roomPublicId?: string;
+    servicePublicId?: string;
     status?: string;
   }) => {
-    const response = await apiClient.get('/service-requests', { params: filters });
+    const params = {
+      booking_public_id: filters.bookingPublicId,
+      room_public_id: filters.roomPublicId,
+      service_public_id: filters.servicePublicId,
+      status: filters.status,
+    };
+    const response = await apiClient.get('/service-requests', { params });
     return response.data;
   },
 };

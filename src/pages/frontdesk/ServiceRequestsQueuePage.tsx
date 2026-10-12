@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { serviceApi } from '../../api/serviceApi';
 
 interface ServiceRequest {
-  usage_id: number;
-  booking_id: number;
-  room_id: number;
-  service_id: number;
+  public_id: string;
+  booking_public_id: string;
+  room_public_id: string;
+  service_public_id: string;
   service_name: string;
   guest_name: string;
   room_number: string;
@@ -33,7 +33,7 @@ const ServiceRequestsQueuePage = () => {
   const [error, setError] = useState('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Completed'>('All');
-  const [completingId, setCompletingId] = useState<number | null>(null);
+  const [completingId, setCompletingId] = useState<string | null>(null);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -63,11 +63,11 @@ const ServiceRequestsQueuePage = () => {
     }
   }, []);
 
-  const markCompleted = async (usageId: number) => {
-    setCompletingId(usageId);
+  const markCompleted = async (publicId: string) => {
+    setCompletingId(publicId);
     setError('');
     try {
-      await serviceApi.completeService(usageId);
+      await serviceApi.completeService(publicId);
       await loadRequests();
     } catch (err: unknown) {
       const message =
@@ -95,11 +95,11 @@ const ServiceRequestsQueuePage = () => {
       const matchesSearch =
         !query ||
         [
-          request.usage_id,
-          request.booking_id,
+          request.public_id,
+          request.booking_public_id,
           request.room_number,
           request.guest_name,
-          request.service_id,
+          request.service_public_id,
           request.service_name,
           request.status,
         ]
@@ -296,22 +296,22 @@ const ServiceRequestsQueuePage = () => {
                 <tbody className="divide-y divide-slate-100">
                   {filteredRequests.map((request) => (
                     <tr
-                      key={request.usage_id}
+                      key={request.public_id}
                       className="hover:bg-slate-50"
                     >
                       <td className="whitespace-nowrap px-5 py-4 font-semibold text-slate-900">
-                        #{request.usage_id}
+                        #{request.public_id.slice(0, 8)}
                       </td>
                       <td className="px-5 py-4">
                         <p className="font-semibold text-slate-900">
                           {request.service_name}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
-                          Service #{request.service_id}
+                          Service #{request.service_public_id.slice(0, 8)}
                         </p>
                       </td>
                       <td className="whitespace-nowrap px-5 py-4 text-slate-700">
-                        <p>Booking #{request.booking_id}</p>
+                        <p>Booking #{request.booking_public_id.slice(0, 8)}</p>
                         <p className="mt-1 text-xs text-slate-500">
                           Room {request.room_number}
                         </p>
@@ -353,11 +353,11 @@ const ServiceRequestsQueuePage = () => {
                         ) : (
                           <button
                             type="button"
-                            onClick={() => void markCompleted(request.usage_id)}
+                            onClick={() => void markCompleted(request.public_id)}
                             disabled={completingId !== null}
                             className="rounded-md bg-blue-950 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-900 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            {completingId === request.usage_id ? 'Saving…' : 'Mark completed'}
+                            {completingId === request.public_id ? 'Saving…' : 'Mark completed'}
                           </button>
                         )}
                       </td>

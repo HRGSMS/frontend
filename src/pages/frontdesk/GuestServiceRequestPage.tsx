@@ -1,18 +1,19 @@
+
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../../api/apiClient';
 import { serviceApi } from '../../api/serviceApi';
 
 interface ServiceOption {
-  booking_id: number;
+  booking_public_id: string;
   guest_name: string;
-  room_id: number;
+  room_public_id: string;
   room_number: string | number;
   booking_status: string;
 }
 
 interface Service {
-  service_id: number;
+  public_id: string;
   service_name: string;
   service_description?: string;
   current_price: number | string;
@@ -40,7 +41,6 @@ export default function GuestServiceRequestPage() {
   const [bookingRoom, setBookingRoom] = useState('');
   const [serviceId, setServiceId] = useState('');
   const [quantity, setQuantity] = useState('1');
-  const [instructions, setInstructions] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -100,11 +100,12 @@ export default function GuestServiceRequestPage() {
   }, []);
 
   const selectedOption = options.find(
-    (option) => `${option.booking_id}:${option.room_id}` === bookingRoom,
+    (option) =>
+      `${option.booking_public_id}:${option.room_public_id}` === bookingRoom,
   );
 
   const selectedService = services.find(
-    (service) => String(service.service_id) === serviceId,
+    (service) => service.public_id === serviceId,
   );
 
   const total = useMemo(() => {
@@ -143,20 +144,19 @@ export default function GuestServiceRequestPage() {
 
     try {
       await serviceApi.requestService({
-        bookingId: selectedOption.booking_id,
-        roomId: selectedOption.room_id,
-        serviceId: selectedService.service_id,
+        bookingPublicId: selectedOption.booking_public_id,
+        roomPublicId: selectedOption.room_public_id,
+        servicePublicId: selectedService.public_id,
         quantity: count,
-        instructions: instructions.trim() || undefined,
       });
 
       setSuccess(
         `Request submitted successfully for ${selectedOption.guest_name}, room ${selectedOption.room_number}.`,
       );
+
       setBookingRoom('');
       setServiceId('');
       setQuantity('1');
-      setInstructions('');
     } catch (err: unknown) {
       const responseError =
         typeof err === 'object' && err !== null && 'response' in err
@@ -270,12 +270,12 @@ export default function GuestServiceRequestPage() {
 
                   {options.map((option) => (
                     <option
-                      key={`${option.booking_id}:${option.room_id}`}
-                      value={`${option.booking_id}:${option.room_id}`}
+                      key={`${option.booking_public_id}:${option.room_public_id}`}
+                      value={`${option.booking_public_id}:${option.room_public_id}`}
                       className={optionClass}
                     >
                       {option.guest_name} — Room {option.room_number} (Booking #
-                      {option.booking_id})
+                      {option.booking_public_id.slice(0, 8)})
                     </option>
                   ))}
                 </select>
@@ -326,8 +326,8 @@ export default function GuestServiceRequestPage() {
 
                   {services.map((service) => (
                     <option
-                      key={service.service_id}
-                      value={String(service.service_id)}
+                      key={service.public_id}
+                      value={service.public_id}
                       className={optionClass}
                     >
                       {service.service_name} — {money(service.current_price)}
@@ -366,29 +366,6 @@ export default function GuestServiceRequestPage() {
                   onChange={(event) => setQuantity(event.target.value)}
                   className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
                 />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="instructions"
-                  className="mb-2 block text-sm font-semibold text-slate-800"
-                >
-                  Special instructions
-                </label>
-
-                <textarea
-                  id="instructions"
-                  rows={3}
-                  maxLength={500}
-                  value={instructions}
-                  onChange={(event) => setInstructions(event.target.value)}
-                  placeholder="Optional notes for the service team"
-                  className="w-full resize-y rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100"
-                />
-
-                <p className="mt-1 text-right text-xs text-slate-400">
-                  {instructions.length}/500
-                </p>
               </div>
 
               <div
