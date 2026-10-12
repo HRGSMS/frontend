@@ -8,8 +8,6 @@ import {
   type BillingRecord,
   type TopServiceRecord,
 } from '../../api/reportApi';
-import '../frontdesk/FrontDeskDashboard.css';
-import '../reports/ReportsPage.css';
 import './ManagerDashboard.css';
 
 function formatLKR(value: number | string | null | undefined): string {
@@ -217,7 +215,7 @@ export default function ManagerDashboard() {
       value: isLoading ? '...' : formatLKR(totalRevenue),
       note: 'Across all operating properties',
       icon: 'chart',
-      featured: true, // Matching the featured total revenue card in Reports
+      featured: true, // Featured card in executive reports navy gradient
     },
     {
       label: 'Outstanding balance',
@@ -249,430 +247,288 @@ export default function ManagerDashboard() {
   const firstName = user?.name?.split(' ')[0] || 'Manager';
 
   return (
-    <main className="fd-dashboard">
-      {/* Workspace Sidebar Navigation (Matches /manager/reports rail) */}
-      <aside className="fd-sidebar" aria-label="Management workspace rail">
-        <Link to="/manager/dashboard" className="fd-brand">
-          <span className="fd-brand-mark">
-            <Icon name="chart" size={20} />
-          </span>
-          <span>
-            SkyNest Hotels
-            <small>MANAGEMENT WORKSPACE</small>
-          </span>
-        </Link>
-        <nav className="fd-workspace-nav" aria-label="Manager workspace navigation">
-          <span className="is-current" aria-current="page">
-            <Icon name="arrow" size={17} />
-            Manager dashboard
-          </span>
-          <Link to="/manager/reports">
-            <Icon name="chart" size={17} />
-            Analytics & reports
-          </Link>
-          <Link to="/manager/staff">
-            <Icon name="users" size={17} />
-            Staff management
-          </Link>
-        </nav>
-        <div className="fd-sidebar-bottom">
-          <Link to="/manager/reports" className="fd-button">
-            <Icon name="chart" size={16} />
-            Full reports
-          </Link>
-          <Link to="/account" className="fd-sidebar-account">
-            <Icon name="shield" size={16} />
-            Account security
+    <main className="md-dashboard">
+      {/* Heading (Original placement preserved) */}
+      <div className="md-heading">
+        <div>
+          <p className="md-eyebrow">MANAGER · OPERATIONAL &amp; REVENUE OVERVIEW</p>
+          <h1>A great day starts with a clear view.</h1>
+          <p className="md-description">
+            Welcome back, {firstName}. Here is your property and performance at a glance.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={() => void loadData()}
+            disabled={isLoading}
+            className="md-button-secondary"
+            title="Refresh database records"
+          >
+            <Icon name="refresh" size={16} />
+          </button>
+          <Link to="/manager/reports" className="md-button">
+            <Icon name="chart" size={18} />
+            Full reports &amp; analytics
           </Link>
         </div>
-      </aside>
+      </div>
 
-      {/* Main Content Area (Matches /manager/reports container) */}
-      <div className="fd-content rp-container md-container">
-        {/* Header */}
-        <header className="rp-header">
-          <p className="rp-eyebrow">HRGMS · OPERATIONAL &amp; REVENUE OVERVIEW</p>
-          <div className="rp-title-row">
-            <div>
-              <h1>A great day starts with a clear view.</h1>
-              <p className="rp-subtitle">
-                Welcome back, {firstName}. Here is your property and performance at a glance.
-              </p>
+      {/* Caption & Status (Original placement preserved) */}
+      <div className="md-caption">
+        <span>
+          <Icon name="calendar" size={15} />
+          {date}
+        </span>
+        <span className="md-live">
+          <span />
+          Live database records connected
+        </span>
+      </div>
+
+      {error && (
+        <div
+          style={{
+            background: '#fef2f2',
+            border: '1px solid #fee2e2',
+            color: '#b91c1c',
+            padding: '12px 16px',
+            borderRadius: '10px',
+            marginBottom: '20px',
+            fontSize: '13px',
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {/* 4 Primary Metric Cards (Original placement preserved) */}
+      <section className="md-metrics" aria-label="Hotel summary">
+        {metrics.map((metric) => (
+          <article
+            key={metric.label}
+            className={`md-metric ${metric.featured ? 'md-featured' : ''}`}
+          >
+            <div className="md-metric-top">
+              <h2>{metric.label}</h2>
+              <div className="md-metric-icon">
+                <Icon name={metric.icon} size={18} />
+              </div>
             </div>
-            <div className="rp-actions-row">
-              <button
-                type="button"
-                onClick={() => void loadData()}
-                disabled={isLoading}
-                className="rp-export-btn"
-                title="Refresh database records"
-              >
-                <Icon name="refresh" size={16} />
-                {isLoading ? 'Refreshing…' : 'Refresh'}
-              </button>
-              <Link to="/manager/reports" className="rp-filter-btn">
-                <Icon name="chart" size={16} />
-                Full reports &amp; analytics
+            <p className="md-metric-value">{metric.value}</p>
+            {metric.label === 'Property occupancy' && (
+              <div className="md-progress" aria-hidden="true">
+                <span style={{ width: `${occupancyRate}%` }} />
+              </div>
+            )}
+            <p className="md-metric-note">{metric.note}</p>
+          </article>
+        ))}
+      </section>
+
+      {/* Main 2-Column Grid (Original placement preserved) */}
+      <div className="md-columns">
+        <div className="md-primary-column">
+          {/* Room Overview Table (Original placement preserved) */}
+          <section className="md-panel" aria-labelledby="md-overview-heading">
+            <div className="md-panel-heading">
+              <div>
+                <h2 id="md-overview-heading">Room category occupancy</h2>
+                <p>Real-time room availability based on current booking logs.</p>
+              </div>
+              <Link to="/frontdesk/reservations" className="md-text-link">
+                Reservations
+                <Icon name="arrowUp" size={15} />
               </Link>
             </div>
-          </div>
-        </header>
-
-        {/* Date & Live Sync Bar */}
-        <div className="md-caption-bar">
-          <span className="md-caption-date">
-            <Icon name="calendar" size={16} />
-            {date}
-          </span>
-          <span className="md-live-pill">
-            <span className="md-live-dot" />
-            Live database records connected
-          </span>
-        </div>
-
-        {error && (
-          <div className="rp-error-banner" role="alert" style={{ marginBottom: '20px' }}>
-            <span>
-              <strong>Error loading metrics:</strong> {error}
-            </span>
-            <button type="button" className="rp-retry-btn" onClick={() => void loadData()}>
-              Retry
-            </button>
-          </div>
-        )}
-
-        {/* 4 Metric Summary Cards */}
-        <section className="rp-metrics-grid" aria-label="Hotel summary metrics">
-          {metrics.map((metric) => (
-            <article
-              key={metric.label}
-              className={`rp-metric-card ${metric.featured ? 'rp-featured' : ''}`}
-            >
-              <div className="rp-metric-top">
-                <h2 className="rp-metric-label">{metric.label}</h2>
-                <div className="rp-metric-icon">
-                  <Icon name={metric.icon} size={18} />
-                </div>
-              </div>
-              <p className="rp-metric-value">{metric.value}</p>
-              {metric.label === 'Property occupancy' && (
-                <div className="md-metric-progress" aria-hidden="true">
-                  <span style={{ width: `${occupancyRate}%` }} />
-                </div>
-              )}
-              <p className="rp-metric-sub">{metric.note}</p>
-            </article>
-          ))}
-        </section>
-
-        {/* Main 2-Column Content */}
-        <div className="md-columns">
-          <div className="md-primary-column">
-            {/* Room Overview Table Panel */}
-            <section className="rp-panel" aria-labelledby="md-overview-heading">
-              <div className="rp-panel-header">
-                <div>
-                  <h2 id="md-overview-heading">Room category occupancy</h2>
-                  <p>Real-time room availability based on current booking logs.</p>
-                </div>
-                <Link
-                  to="/frontdesk/reservations"
-                  style={{
-                    color: '#00152f',
-                    fontWeight: 600,
-                    fontSize: '13px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    textDecoration: 'none',
-                  }}
-                >
-                  Reservations
-                  <Icon name="arrowUp" size={15} />
-                </Link>
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '16px 24px 12px',
-                  borderBottom: '1px solid #e9ecf5',
-                }}
-              >
-                <span style={{ fontSize: '13px', color: '#626978' }}>
-                  {totalRooms} catalog rooms
-                </span>
-                <label className="rp-search-box">
-                  <Icon name="search" size={15} />
-                  <input
-                    type="search"
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search room categories"
-                    aria-label="Search room categories"
-                  />
-                </label>
-              </div>
-
-              <div className="rp-table-scroll">
-                <table className="rp-table">
-                  <caption style={{ display: 'none' }}>Room category availability</caption>
-                  <thead>
-                    <tr>
-                      <th scope="col">Category</th>
-                      <th scope="col">Total</th>
-                      <th scope="col">Occupied / Booked</th>
-                      <th scope="col">Available</th>
-                      <th scope="col">Occupancy %</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((room) => {
-                      const roomOccPct =
-                        room.rooms > 0 ? Math.round((room.occupied / room.rooms) * 100) : 0;
-                      return (
-                        <tr key={room.name}>
-                          <td>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <span
-                                style={{
-                                  width: '32px',
-                                  height: '32px',
-                                  borderRadius: '50%',
-                                  background: '#f0f3ff',
-                                  color: '#00152f',
-                                  display: 'grid',
-                                  placeItems: 'center',
-                                  flexShrink: 0,
-                                }}
-                              >
-                                <Icon name="bed" size={16} />
-                              </span>
-                              <div>
-                                <strong style={{ display: 'block', color: '#00152f', fontSize: '14px' }}>
-                                  {room.name}
-                                </strong>
-                                <small style={{ color: '#626978', fontSize: '11px' }}>
-                                  Hotel inventory
-                                </small>
-                              </div>
+            <div className="md-toolbar">
+              <span className="md-description" style={{ margin: 0 }}>
+                {totalRooms} catalog rooms
+              </span>
+              <label className="md-search">
+                <Icon name="search" size={15} />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search room categories"
+                  aria-label="Search room categories"
+                />
+              </label>
+            </div>
+            <div className="md-table-scroll">
+              <table className="md-table">
+                <caption style={{ display: 'none' }}>Room category availability</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Category</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Occupied / Booked</th>
+                    <th scope="col">Available</th>
+                    <th scope="col">Occupancy %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((room) => {
+                    const roomOccPct =
+                      room.rooms > 0 ? Math.round((room.occupied / room.rooms) * 100) : 0;
+                    return (
+                      <tr key={room.name}>
+                        <td>
+                          <div className="md-guest">
+                            <span className="md-avatar">
+                              <Icon name="bed" size={16} />
+                            </span>
+                            <div>
+                              <strong>{room.name}</strong>
+                              <small>Hotel inventory</small>
                             </div>
-                          </td>
-                          <td style={{ fontVariantNumeric: 'tabular-nums' }}>{room.rooms}</td>
-                          <td style={{ fontVariantNumeric: 'tabular-nums' }}>{room.occupied}</td>
-                          <td>
-                            <span
-                              style={{
-                                background: '#f0fdf4',
-                                color: '#166534',
-                                border: '1px solid #bbf7d0',
-                                padding: '3px 9px',
-                                borderRadius: '12px',
-                                fontSize: '11px',
-                                fontWeight: 600,
-                              }}
-                            >
-                              {room.available} ready
-                            </span>
-                          </td>
-                          <td>
-                            <span
-                              style={{
-                                background: roomOccPct >= 50 ? '#fffbeb' : '#f0f3ff',
-                                color: roomOccPct >= 50 ? '#b45309' : '#00152f',
-                                border: `1px solid ${roomOccPct >= 50 ? '#fde68a' : '#d0ddf5'}`,
-                                padding: '3px 9px',
-                                borderRadius: '12px',
-                                fontSize: '11px',
-                                fontWeight: 600,
-                              }}
-                            >
-                              {roomOccPct}%
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          </div>
+                        </td>
+                        <td>{room.rooms}</td>
+                        <td>{room.occupied}</td>
+                        <td>
+                          <span className="md-badge md-badge-ready">{room.available}</span>
+                        </td>
+                        <td>
+                          <span
+                            className={`md-badge ${roomOccPct >= 50 ? 'md-badge-due' : 'md-badge-confirmed'}`}
+                          >
+                            {roomOccPct}%
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {filtered.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '36px', color: '#626978' }} role="status">
+                <Icon name="search" size={24} />
+                <h3 style={{ margin: '8px 0 4px', color: '#00152f', fontSize: '14px' }}>
+                  No matching results
+                </h3>
+                <p style={{ margin: 0, fontSize: '13px' }}>Try a different search term.</p>
               </div>
+            )}
 
-              {filtered.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '36px', color: '#626978' }} role="status">
-                  <Icon name="search" size={24} />
-                  <h3 style={{ margin: '8px 0 4px', color: '#00152f', fontSize: '14px' }}>
-                    No matching results
-                  </h3>
-                  <p style={{ margin: 0, fontSize: '13px' }}>Try a different search term.</p>
-                </div>
-              )}
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                  borderTop: '1px solid #e9ecf5',
-                  padding: '14px 24px',
-                  color: '#626978',
-                  fontSize: '12px',
-                }}
-              >
-                <span>
-                  {filtered.length} of {dynamicRoomTypes.length} room categories
-                </span>
-                <Link
-                  to="/manager/reports"
-                  style={{ color: '#00152f', fontWeight: 600, display: 'flex', gap: '4px', textDecoration: 'none' }}
-                >
-                  Inspect detailed occupancy report &rarr;
-                </Link>
-              </div>
-            </section>
-
-            {/* Quick Actions (Staff Management) */}
-            <section aria-label="Quick actions">
-              {shortcuts.map((action) => (
-                <Link key={action.to} to={action.to} className="md-quick-action">
-                  <div className="md-action-icon">
-                    <Icon name={action.icon} size={22} />
-                  </div>
-                  <div>
-                    <h3>{action.title}</h3>
-                    <p>{action.note}</p>
-                  </div>
-                  <Icon name="arrowUp" size={18} />
-                </Link>
-              ))}
-            </section>
-          </div>
-
-          {/* Secondary Column: Property Pulse & Leading Service */}
-          <aside className="md-secondary-column" aria-label="Occupancy and workspace overview">
-            {/* Property Pulse Donut */}
-            <section className="rp-panel" aria-labelledby="md-occupancy-heading">
-              <div className="rp-panel-header">
-                <div>
-                  <h2 id="md-occupancy-heading">Property pulse</h2>
-                  <p>Live occupancy from active reservations.</p>
-                </div>
-                <Icon name="bed" size={18} />
-              </div>
-
-              <div className="md-donut-box">
-                <svg
-                  viewBox="0 0 180 180"
-                  role="img"
-                  aria-label={`Live occupancy: ${occupancyRate} percent`}
-                >
-                  <circle cx="90" cy="90" r="68" fill="none" stroke="#e9ecf5" strokeWidth="16" />
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="68"
-                    fill="none"
-                    stroke="#00152f"
-                    strokeWidth="16"
-                    strokeLinecap="round"
-                    strokeDasharray={`${(occupancyRate / 100) * 2 * Math.PI * 68} ${2 * Math.PI * 68}`}
-                    transform="rotate(-90 90 90)"
-                  />
-                </svg>
-                <div>
-                  <strong>
-                    {occupancyRate}
-                    <span>%</span>
-                  </strong>
-                  <small>Occupancy</small>
-                </div>
-              </div>
-
-              <div className="md-donut-legend">
-                <span>
-                  <i className="md-occupied-dot" />
-                  Occupied ({occupiedRooms})
-                </span>
-                <span>
-                  <i className="md-available-dot" />
-                  Available ({availableRooms})
-                </span>
-              </div>
-
-              <div className="md-donut-footer">
-                <div>
-                  <strong>{occupiedRooms}</strong>
-                  <span style={{ color: '#626978', marginLeft: '6px' }}>
-                    of {totalRooms} rooms booked
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            {/* Leading Guest Service */}
-            <section className="rp-panel" aria-labelledby="md-services-heading" style={{ padding: '20px 22px' }}>
-              <h2 id="md-services-heading" style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 6px', color: '#00152f' }}>
-                Leading guest service
-              </h2>
-              <p style={{ fontSize: '13px', color: '#626978', margin: '0 0 16px' }}>
-                Highest grossing service in catalogue.
-              </p>
-
-              <div
-                style={{
-                  padding: '14px 16px',
-                  background: '#f9f9ff',
-                  borderRadius: '10px',
-                  border: '1px solid #e9ecf5',
-                }}
-              >
-                <div style={{ fontWeight: 600, fontSize: '14px', color: '#00152f' }}>
-                  {topService ? topService.service_name : 'Room service'}
-                </div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginTop: '8px',
-                    fontSize: '12px',
-                    color: '#626978',
-                  }}
-                >
-                  <span>Orders: {topService?.total_quantity || 0}</span>
-                  <span style={{ fontWeight: 700, color: '#00152f' }}>
-                    {formatLKR(topService?.total_revenue || 0)}
-                  </span>
-                </div>
-              </div>
-
+            <div className="md-table-footer">
+              <span>
+                {filtered.length} of {dynamicRoomTypes.length} room categories
+              </span>
               <Link
                 to="/manager/reports"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  color: '#00152f',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  marginTop: '16px',
-                  textDecoration: 'none',
-                }}
+                className="md-footer-link"
               >
-                <Icon name="chart" size={16} />
-                <span>Service usage breakdown</span>
-                <span style={{ marginLeft: 'auto' }}>&rarr;</span>
+                Inspect detailed occupancy report &rarr;
               </Link>
-            </section>
-          </aside>
+            </div>
+          </section>
+
+          {/* Quick Actions (Original placement preserved) */}
+          <section className="md-quick-actions" aria-label="Quick actions">
+            {shortcuts.map((action) => (
+              <Link key={action.to} to={action.to} className="md-quick-action">
+                <span className="md-action-icon">
+                  <Icon name={action.icon} size={22} />
+                </span>
+                <div>
+                  <h3>{action.title}</h3>
+                  <p>{action.note}</p>
+                </div>
+                <Icon name="arrowUp" size={18} />
+              </Link>
+            ))}
+          </section>
         </div>
 
-        <footer className="md-footer">
-          <span>SkyNest Hotels · Thoughtful hospitality, every day.</span>
-          <span>Manager workspace · Live reports integration</span>
-        </footer>
+        {/* Secondary Column (Original placement preserved) */}
+        <aside className="md-secondary-column" aria-label="Occupancy and workspace overview">
+          {/* Property Pulse Donut (Original placement preserved) */}
+          <section className="md-panel md-room-panel" aria-labelledby="md-occupancy-heading">
+            <div className="md-panel-heading">
+              <div>
+                <h2 id="md-occupancy-heading">Property pulse</h2>
+                <p>Live occupancy from active reservations.</p>
+              </div>
+              <Icon name="bed" size={18} />
+            </div>
+            <div className="md-donut">
+              <svg
+                viewBox="0 0 180 180"
+                role="img"
+                aria-label={`Live occupancy: ${occupancyRate} percent`}
+              >
+                <circle cx="90" cy="90" r="68" fill="none" stroke="#e9ecf5" strokeWidth="16" />
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="68"
+                  fill="none"
+                  stroke="#00152f"
+                  strokeWidth="16"
+                  strokeLinecap="round"
+                  strokeDasharray={`${(occupancyRate / 100) * 2 * Math.PI * 68} ${2 * Math.PI * 68}`}
+                  transform="rotate(-90 90 90)"
+                />
+              </svg>
+              <div>
+                <strong>
+                  {occupancyRate}
+                  <span>%</span>
+                </strong>
+                <small>Occupancy</small>
+              </div>
+            </div>
+            <div className="md-room-legend">
+              <span>
+                <i className="md-occupied-dot" />
+                Occupied ({occupiedRooms})
+              </span>
+              <span>
+                <i className="md-available-dot" />
+                Available ({availableRooms})
+              </span>
+            </div>
+            <div className="md-room-availability">
+              <div>
+                <strong>{occupiedRooms}</strong>
+                <span>of {totalRooms} rooms booked/occupied</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Top Service Preview (Original placement preserved) */}
+          <section className="md-panel md-management" aria-labelledby="md-services-heading">
+            <h2 id="md-services-heading">Leading guest service</h2>
+            <p className="md-description" style={{ margin: 0 }}>
+              Highest grossing service in catalogue.
+            </p>
+            <div className="md-service-box">
+              <div className="md-service-title">
+                {topService ? topService.service_name : 'Room service'}
+              </div>
+              <div className="md-service-meta">
+                <span>Orders: {topService?.total_quantity || 0}</span>
+                <span className="md-service-rev">
+                  {formatLKR(topService?.total_revenue || 0)}
+                </span>
+              </div>
+            </div>
+            <Link to="/manager/reports" className="md-service-link">
+              <Icon name="chart" size={17} />
+              <span>Service usage breakdown</span>
+              <Icon name="arrowUp" size={15} />
+            </Link>
+          </section>
+        </aside>
       </div>
+
+      <footer className="md-footer">
+        <span>SkyNest Hotels · Thoughtful hospitality, every day.</span>
+        <span>Manager workspace · Live reports integration</span>
+      </footer>
     </main>
   );
 }
