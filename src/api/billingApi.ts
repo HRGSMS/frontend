@@ -1,29 +1,44 @@
 import apiClient from './apiClient';
 
+export interface PaymentPayload {
+  amount: number;
+  payment_method: string;
+}
+
 export const billingApi = {
-  getItemizedBill: async (bookingId: number) => {
-    const response = await apiClient.get(`/bookings/${bookingId}/bill`);
+  // Record payment for a booking - runs stored procedure sp_calculate_bill
+  recordPayment: async (bookingPublicId: string, payload: PaymentPayload) => {
+    const response = await apiClient.post(`/bookings/${bookingPublicId}/payments`, payload);
     return response.data;
   },
 
-  createPaymentIntent: async (bookingId: number, amount: number) => {
-    const response = await apiClient.post(`/bookings/${bookingId}/payment-intent`, { amount });
-    return response.data;
-  },
-
-  confirmPayment: async (
-    bookingId: number,
-    data: { gatewayTransactionId: string; amount: number; method: string },
-  ) => {
-    const response = await apiClient.post(`/bookings/${bookingId}/payments`, {
-      ...data,
-      bookingId,
+  // Recalculate bill using sp_calculate_bill
+  calculateBill: async (bookingPublicId: string) => {
+    const response = await apiClient.post('/calculate-bill', {
+      booking_public_id: bookingPublicId,
     });
     return response.data;
   },
 
-  getOutstandingBalances: async (filters: { branchId?: number }) => {
-    const response = await apiClient.get('/payments/outstanding', { params: filters });
+  // Get outstanding billing list from database report view
+  getBillingReport: async () => {
+    const response = await apiClient.get('/reports/billing');
     return response.data;
+  },
+
+  // Compatibility wrappers
+  confirmPayment: async (
+    bookingId: string | number,
+    data: { amount: number; method?: string; payment_method?: string },
+  ) => {
+    const response = await apiClient.post(`/bookings/${bookingId}/payments`, {
+      amount: data.amount,
+      payment_method: data.payment_method || data.method || 'Credit Card',
+    });
+    return response.data;
+  },
+
+  getItemizedBill: async (bookingId: string | number) => {
+    return billingApi.calculateBill(String(bookingId));
   },
 };

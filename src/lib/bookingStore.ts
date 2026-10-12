@@ -1,10 +1,14 @@
 import { reservationApi } from '../api/reservationApi';
+import { billingApi } from '../api/billingApi';
+import { serviceApi } from '../api/serviceApi';
 
 export type BookingStatus = 'Booked' | 'Checked-In' | 'Checked-Out' | 'Cancelled';
-export type PaymentStatus = 'Paid' | 'Partially Paid' | 'Pending' | 'Refunded';
+export type PaymentStatus = 'Paid' | 'Partially Paid' | 'Pending' | 'Refunded' | 'Unpaid';
 
 export interface Booking {
   id: number | string;
+  publicId?: string;
+  bookingReference?: string;
   guestName: string;
   guestEmail: string;
   guestPhone?: string;
@@ -29,12 +33,14 @@ const LOCAL_STORAGE_KEY = 'hrgms_frontdesk_bookings_v2';
 
 export const sampleBookings: Booking[] = [
   {
-    id: 1001,
+    id: 'bkg-1001',
+    publicId: 'bkg-1001',
+    bookingReference: 'REF-COL-1001',
     guestName: 'John Smith',
     guestEmail: 'john.smith@example.com',
     guestPhone: '+94 77 123 4567',
-    branchName: 'Colombo Grand',
-    roomNumbers: '101',
+    branchName: 'SkyNest Colombo',
+    roomNumbers: 'C101',
     roomType: 'Deluxe King',
     bookingTime: new Date(Date.now() - 86400000 * 3).toISOString(),
     checkIn: new Date().toISOString().split('T')[0],
@@ -49,12 +55,14 @@ export const sampleBookings: Booking[] = [
     specialRequests: 'High floor preferred, airport pickup requested.',
   },
   {
-    id: 1002,
+    id: 'bkg-1002',
+    publicId: 'bkg-1002',
+    bookingReference: 'REF-COL-1002',
     guestName: 'Jane Doe',
     guestEmail: 'jane.doe@example.com',
     guestPhone: '+94 71 987 6543',
-    branchName: 'Colombo Grand',
-    roomNumbers: '105',
+    branchName: 'SkyNest Colombo',
+    roomNumbers: 'C104',
     roomType: 'Superior Twin',
     bookingTime: new Date(Date.now() - 86400000 * 4).toISOString(),
     checkIn: new Date().toISOString().split('T')[0],
@@ -69,12 +77,14 @@ export const sampleBookings: Booking[] = [
     specialRequests: 'Late arrival expected at 18:00.',
   },
   {
-    id: 1003,
+    id: 'bkg-1003',
+    publicId: 'bkg-1003',
+    bookingReference: 'REF-KAN-1003',
     guestName: 'Daniel Perera',
     guestEmail: 'daniel.p@example.com',
     guestPhone: '+94 76 555 1212',
-    branchName: 'Kandy Hills Resort',
-    roomNumbers: '201',
+    branchName: 'SkyNest Kandy',
+    roomNumbers: 'K201',
     roomType: 'Deluxe King',
     bookingTime: new Date(Date.now() - 86400000 * 5).toISOString(),
     checkIn: new Date(Date.now() - 86400000 * 1).toISOString().split('T')[0],
@@ -89,12 +99,14 @@ export const sampleBookings: Booking[] = [
     specialRequests: 'Extra pillows requested upon check-in.',
   },
   {
-    id: 1004,
+    id: 'bkg-1004',
+    publicId: 'bkg-1004',
+    bookingReference: 'REF-GAL-1004',
     guestName: 'Sophie Chen',
     guestEmail: 'sophie.chen@example.com',
     guestPhone: '+65 9123 4567',
-    branchName: 'Galle Fort Heritage',
-    roomNumbers: '302',
+    branchName: 'SkyNest Galle',
+    roomNumbers: 'G302',
     roomType: 'Executive Suite',
     bookingTime: new Date(Date.now() - 86400000 * 7).toISOString(),
     checkIn: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
@@ -109,12 +121,14 @@ export const sampleBookings: Booking[] = [
     specialRequests: 'Express check-out requested.',
   },
   {
-    id: 1005,
+    id: 'bkg-1005',
+    publicId: 'bkg-1005',
+    bookingReference: 'REF-COL-1005',
     guestName: 'Liam Fernando',
     guestEmail: 'liam.f@example.com',
     guestPhone: '+94 70 333 4444',
-    branchName: 'Colombo Grand',
-    roomNumbers: '108',
+    branchName: 'SkyNest Colombo',
+    roomNumbers: 'C108',
     roomType: 'Superior Twin',
     bookingTime: new Date(Date.now() - 86400000 * 2).toISOString(),
     checkIn: new Date().toISOString().split('T')[0],
@@ -128,12 +142,14 @@ export const sampleBookings: Booking[] = [
     nights: 1,
   },
   {
-    id: 1006,
+    id: 'bkg-1006',
+    publicId: 'bkg-1006',
+    bookingReference: 'REF-KAN-1006',
     guestName: 'Isabella Martin',
     guestEmail: 'isabella.m@example.com',
     guestPhone: '+44 20 7946 0991',
-    branchName: 'Kandy Hills Resort',
-    roomNumbers: '204',
+    branchName: 'SkyNest Kandy',
+    roomNumbers: 'K204',
     roomType: 'Deluxe King',
     bookingTime: new Date(Date.now() - 86400000 * 10).toISOString(),
     checkIn: new Date(Date.now() - 86400000 * 5).toISOString().split('T')[0],
@@ -147,12 +163,14 @@ export const sampleBookings: Booking[] = [
     nights: 3,
   },
   {
-    id: 1007,
+    id: 'bkg-1007',
+    publicId: 'bkg-1007',
+    bookingReference: 'REF-COL-1007',
     guestName: 'Marcus Vance',
     guestEmail: 'marcus.vance@example.com',
     guestPhone: '+1 415 555 2671',
-    branchName: 'Colombo Grand',
-    roomNumbers: '112',
+    branchName: 'SkyNest Colombo',
+    roomNumbers: 'C112',
     roomType: 'Deluxe King',
     bookingTime: new Date(Date.now() - 86400000 * 12).toISOString(),
     checkIn: new Date(Date.now() - 86400000 * 4).toISOString().split('T')[0],
@@ -188,11 +206,12 @@ function saveLocalBookings(bookings: Booking[]): void {
 }
 
 export const bookingStore = {
+  // Fetches bookings from Vidath's GET /api/bookings and syncs with store
   async fetchBookings(filters?: { status?: string; branchId?: number }): Promise<Booking[]> {
     const local = getStoredLocalBookings();
 
     try {
-      const apiResponse = await reservationApi.listBookings(filters || {});
+      const apiResponse = await reservationApi.listBookings(filters?.status ? { status: filters.status } : {});
       const backendRows = apiResponse?.data;
 
       if (Array.isArray(backendRows) && backendRows.length > 0) {
@@ -209,11 +228,14 @@ export const bookingStore = {
                 )
               : 1;
 
+          const key = row.public_id || `BK-${2000 + idx}`;
           return {
-            id: row.booking_id || `BK-${2000 + idx}`,
+            id: key,
+            publicId: row.public_id,
+            bookingReference: row.booking_reference,
             guestName: row.guest_name || 'Guest',
             guestEmail: row.guest_email || 'guest@example.com',
-            branchName: row.branch_names || 'Colombo Grand',
+            branchName: row.branch_names || 'SkyNest Colombo',
             roomNumbers: row.room_numbers || 'Unassigned',
             roomType: 'Standard Room',
             bookingTime: row.booking_time || new Date().toISOString(),
@@ -234,7 +256,9 @@ export const bookingStore = {
           mergedMap.set(String(item.id), item);
         }
         for (const item of local) {
-          mergedMap.set(String(item.id), item);
+          if (!mergedMap.has(String(item.id))) {
+            mergedMap.set(String(item.id), item);
+          }
         }
 
         const merged = Array.from(mergedMap.values());
@@ -242,7 +266,7 @@ export const bookingStore = {
         return merged;
       }
     } catch {
-      // Backend not running or offline, return local store
+      // Backend not responding or offline, use store
     }
 
     return local;
@@ -250,42 +274,80 @@ export const bookingStore = {
 
   async getBookingById(id: string | number): Promise<Booking | null> {
     const all = await this.fetchBookings();
-    const found = all.find((b) => String(b.id) === String(id));
+    const found = all.find((b) => String(b.id) === String(id) || String(b.publicId) === String(id));
     return found || null;
   },
 
+  // Calls Vidath's POST /api/bookings with resolved guest_public_id and room_public_ids
   async createBooking(bookingData: Omit<Booking, 'id' | 'bookingTime'>): Promise<Booking> {
     const local = getStoredLocalBookings();
-    const newId = 1000 + local.length + 1;
+    const newId = `bkg-${Date.now()}`;
     const now = new Date().toISOString();
 
     const created: Booking = {
       ...bookingData,
       id: newId,
+      publicId: newId,
       bookingTime: now,
     };
 
-    const updated = [created, ...local];
-    saveLocalBookings(updated);
-
     try {
-      await reservationApi.createBooking({
-        guestId: 1,
-        roomIds: [1],
-        checkIn: created.checkIn,
-        checkOut: created.checkOut,
-        source: created.source || 'Front Desk',
-      });
-    } catch {
-      // Backend endpoint optional
+      // 1. Resolve or create guest
+      let guestPublicId: string | undefined;
+      const guestsRes = await reservationApi.listGuests();
+      const existing = guestsRes?.data?.find((g: any) => g.email === bookingData.guestEmail);
+
+      if (existing?.public_id) {
+        guestPublicId = existing.public_id;
+      } else {
+        const parts = bookingData.guestName.trim().split(' ');
+        const firstName = parts[0] || 'Guest';
+        const lastName = parts.slice(1).join(' ') || 'Customer';
+
+        const createdGuest = await reservationApi.createGuest({
+          first_name: firstName,
+          last_name: lastName,
+          email: bookingData.guestEmail,
+          phone_number: bookingData.guestPhone || '+94 77 123 4567',
+        });
+        guestPublicId = createdGuest?.data?.public_id;
+      }
+
+      // 2. Resolve room public_id
+      const roomsRes = await reservationApi.listRooms();
+      const targetRoom = roomsRes?.data?.find(
+        (r: any) => r.room_number === bookingData.roomNumbers,
+      );
+      const roomPublicId = targetRoom?.public_id || roomsRes?.data?.[0]?.public_id;
+
+      if (guestPublicId && roomPublicId) {
+        const res = await reservationApi.createBooking({
+          guest_public_id: guestPublicId,
+          room_public_ids: [roomPublicId],
+          check_in_time: `${bookingData.checkIn}T14:00:00`,
+          check_out_time: `${bookingData.checkOut}T11:00:00`,
+          booking_status: bookingData.bookingStatus === 'Checked-In' ? 'Checked-In' : 'Booked',
+        });
+
+        if (res?.data?.public_id) {
+          created.id = res.data.public_id;
+          created.publicId = res.data.public_id;
+          created.bookingReference = res.data.booking_reference;
+        }
+      }
+    } catch (err) {
+      console.warn('Backend booking creation completed with local persistence', err);
     }
 
+    const updated = [created, ...local];
+    saveLocalBookings(updated);
     return created;
   },
 
+  // Calls Vidath's PATCH /api/bookings/:publicId for Check-In, Check-Out, Cancellation
   async updateBookingStatus(id: string | number, status: BookingStatus): Promise<Booking | null> {
     const local = getStoredLocalBookings();
-    const idx = local.findIndex((b) => String(b.id) === String(id));
+    const idx = local.findIndex((b) => String(b.id) === String(id) || String(b.publicId) === String(id));
     if (idx === -1) return null;
 
     const existing = local[idx];
@@ -300,16 +362,80 @@ export const bookingStore = {
     saveLocalBookings(local);
 
     try {
-      const numericId = Number(id);
-      if (!Number.isNaN(numericId)) {
-        if (status === 'Checked-In') await reservationApi.checkIn(numericId);
-        else if (status === 'Checked-Out') await reservationApi.checkOut(numericId);
-        else if (status === 'Cancelled') await reservationApi.cancelBooking(numericId);
+      const publicId = String(existing.publicId || id);
+      if (status === 'Checked-In') {
+        await reservationApi.checkIn(publicId);
+      } else if (status === 'Checked-Out') {
+        await reservationApi.checkOut(publicId);
+      } else if (status === 'Cancelled') {
+        await reservationApi.cancelBooking(publicId);
+      } else {
+        await reservationApi.updateBooking(publicId, { booking_status: status });
       }
-    } catch {
-      // Backend endpoint optional
+    } catch (err) {
+      console.warn('Backend status update fallback to local state', err);
     }
 
     return updatedBooking;
+  },
+
+  // Calls Vidath's POST /api/bookings/:publicId/payments (sp_calculate_bill)
+  async recordPayment(
+    id: string | number,
+    amount: number,
+    paymentMethod: string = 'Credit Card',
+  ): Promise<Booking | null> {
+    const local = getStoredLocalBookings();
+    const idx = local.findIndex((b) => String(b.id) === String(id) || String(b.publicId) === String(id));
+    if (idx === -1) return null;
+
+    const existing = local[idx];
+    const newOutstanding = Math.max(0, existing.outstandingAmount - amount);
+    const newPaymentStatus: PaymentStatus =
+      newOutstanding === 0 ? 'Paid' : newOutstanding < existing.totalCharge ? 'Partially Paid' : 'Pending';
+
+    const updatedBooking: Booking = {
+      ...existing,
+      outstandingAmount: newOutstanding,
+      paymentStatus: newPaymentStatus,
+    };
+
+    local[idx] = updatedBooking;
+    saveLocalBookings(local);
+
+    try {
+      const publicId = String(existing.publicId || id);
+      await billingApi.recordPayment(publicId, {
+        amount,
+        payment_method: paymentMethod,
+      });
+    } catch (err) {
+      console.warn('Backend payment record fallback to local state', err);
+    }
+
+    return updatedBooking;
+  },
+
+  // Calls Vidath's POST /api/bookings/:publicId/services (sp_calculate_bill)
+  async recordServiceUsage(
+    id: string | number,
+    servicePublicId: string,
+    roomPublicId: string,
+    quantity: number,
+  ) {
+    try {
+      const local = getStoredLocalBookings();
+      const existing = local.find((b) => String(b.id) === String(id) || String(b.publicId) === String(id));
+      const publicId = String(existing?.publicId || id);
+
+      return await serviceApi.orderService(publicId, {
+        service_public_id: servicePublicId,
+        room_public_id: roomPublicId,
+        quantity,
+      });
+    } catch (err) {
+      console.warn('Backend service consumption error', err);
+      throw err;
+    }
   },
 };
