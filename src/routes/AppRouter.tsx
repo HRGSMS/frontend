@@ -16,6 +16,7 @@ import CheckInOutPage from '../pages/frontdesk/CheckInOutPage';
 import PaymentProcessingPage from '../pages/frontdesk/PaymentProcessingPage';
 import ServiceRequestsQueuePage from '../pages/frontdesk/ServiceRequestsQueuePage';
 import ReportsPage from '../pages/reports/ReportsPage';
+import StaffManagementPage from '../pages/manager/StaffManagementPage';
 
 function Loading() {
   return (
@@ -82,7 +83,7 @@ export function AppRouter() {
             <Route path="/manager/dashboard" element={<ManagerDashboard />} />
             <Route path="/manager/reports" element={<ReportsPage />} />
             <Route path="/manager/analytics" element={<ReportsPage />} />
-            <Route path="/manager/staff" element={<Placeholder title="Staff Management" />} />
+            <Route path="/manager/staff" element={<StaffManagementPage />} />
             <Route path="/services" element={<Navigate to="/services/dashboard" replace />} />
             <Route path="/services/dashboard" element={<RoleDashboard />} />
             <Route path="/services/requests" element={<ServiceRequestsQueuePage />} />
