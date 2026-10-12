@@ -41,6 +41,10 @@ export function FrontDeskSidebar() {
           <Icon name="bell" size={17} />
           Guest services
         </NavLink>
+        <NavLink to="/frontdesk/service-catalogue" className={navClassName}>
+          <Icon name="bed" size={17} />
+          Service Catalogue
+        </NavLink>
       </nav>
       <div className="fd-sidebar-bottom">
         <Link to="/frontdesk/reservations/new" className="fd-button">

@@ -150,19 +150,44 @@ export default function ServiceRequestsQueuePage() {
           <span className="text-slate-900">Guest Services</span>
         </nav>
 
-        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-700">
-              SKY NEST HOTELS · OPERATIONS
-            </p>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Service Requests
-            </h1>
-            <p className="mt-2 text-sm text-slate-600">
-              View, search, and manage guest service requests recorded by the
-              hotel.
-            </p>
-          </div>
+
+      <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <Link
+            to="/frontdesk/dashboard"
+            className="mb-4 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            <span aria-hidden="true">←</span>
+            Back to Dashboard
+          </Link>
+
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-700">
+            SKY NEST HOTELS · OPERATIONS
+          </p>
+
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            Service Requests
+          </h1>
+
+          <p className="mt-2 text-sm text-slate-600">
+            View, search, and manage guest service requests recorded by the hotel.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/frontdesk/service-catalogue"
+            className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+          >
+            Service Catalogue
+          </Link>
+
+          <Link
+            to="/frontdesk/service-requests/new"
+            className="rounded-lg bg-blue-950 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-900"
+          >
+            + New Service Request
+          </Link>
 
           <button
             type="button"
@@ -172,7 +197,9 @@ export default function ServiceRequestsQueuePage() {
           >
             {loading ? 'Refreshing…' : 'Refresh'}
           </button>
-        </header>
+        </div>
+      </header>
+
 
         <section
           className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
