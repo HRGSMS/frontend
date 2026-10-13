@@ -13,6 +13,7 @@ import NewReservationPage from '../pages/frontdesk/NewReservationPage';
 import ReservationDetailPage from '../pages/frontdesk/ReservationDetailPage';
 import CheckInOutPage from '../pages/frontdesk/CheckInOutPage';
 import PaymentProcessingPage from '../pages/frontdesk/PaymentProcessingPage';
+import CardPaymentPage from '../pages/frontdesk/CardPaymentPage';
 import ServiceRequestsQueuePage from '../pages/frontdesk/ServiceRequestsQueuePage';
 import GuestServiceRequestPage from '../pages/frontdesk/GuestServiceRequestPage';
 import ServiceCataloguePage from '../pages/frontdesk/ServiceCataloguePage';
@@ -110,6 +111,7 @@ export function AppRouter() {
             <Route path="/frontdesk/check-in-out" element={<CheckInOutPage />} />
             <Route path="/frontdesk/reports" element={<Navigate to="/unauthorized" replace />} />
             <Route path="/frontdesk/payment-processing" element={<PaymentProcessingPage />} />
+            <Route path="/frontdesk/card-payment" element={<CardPaymentPage />} />
 
             {/* Guest Services */}
             <Route path="/frontdesk/service-requests" element={<ServiceRequestsQueuePage />} />

@@ -113,7 +113,10 @@ export const bookingStore = {
   },
 
   // Calls Vidath's POST /api/bookings with resolved guest_public_id and room_public_ids
-  async createBooking(bookingData: Omit<Booking, 'id' | 'bookingTime'>): Promise<Booking> {
+  async createBooking(
+    bookingData: Omit<Booking, 'id' | 'bookingTime'>,
+    initialPayment?: { amount: number; paymentMethod: string },
+  ): Promise<Booking> {
     const local = getStoredLocalBookings();
     const newId = `bkg-${Date.now()}`;
     const now = new Date().toISOString();
@@ -167,6 +170,18 @@ export const bookingStore = {
           created.id = res.data.public_id;
           created.publicId = res.data.public_id;
           created.bookingReference = res.data.booking_reference;
+
+          // 3. If there is an upfront/deposit payment, post it to backend
+          if (initialPayment && initialPayment.amount > 0) {
+            try {
+              await billingApi.recordPayment(res.data.public_id, {
+                amount: initialPayment.amount,
+                payment_method: initialPayment.paymentMethod || 'Credit Card',
+              });
+            } catch (payErr) {
+              console.warn('Initial payment failed to record on backend', payErr);
+            }
+          }
         }
       }
     } catch (err) {

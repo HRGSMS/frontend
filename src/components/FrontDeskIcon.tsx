@@ -12,7 +12,8 @@ export type IconName =
   | 'clock'
   | 'bell'
   | 'shield'
-  | 'users';
+  | 'users'
+  | 'creditCard';
 export function FrontDeskIcon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, ReactNode> = {
     calendar: (
@@ -55,6 +56,12 @@ export function FrontDeskIcon({ name, size = 20 }: { name: IconName; size?: numb
       <>
         <circle cx="9" cy="7" r="3" />
         <path d="M3 21v-3a6 6 0 0 1 12 0v3M16 4a3 3 0 0 1 0 6M21 21v-3a6 6 0 0 0-4-5.65" />
+      </>
+    ),
+    creditCard: (
+      <>
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <line x1="2" y1="10" x2="22" y2="10" />
       </>
     ),
   };

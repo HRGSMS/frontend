@@ -11,6 +11,13 @@ export default function ReservationDetailPage() {
   const [notification, setNotification] = useState<string | null>(null);
   const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [settlePaymentMethod, setSettlePaymentMethod] = useState('Credit Card');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardHolder, setCardHolder] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvc, setCardCvc] = useState('');
+  const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchBookingDetails() {
@@ -42,17 +49,37 @@ export default function ReservationDetailPage() {
     }
   };
 
-  const handleSettleBalance = () => {
+  const handleSettleBalance = async () => {
     if (!booking) return;
-    const updated: Booking = {
-      ...booking,
-      outstandingAmount: 0,
-      paymentStatus: 'Paid',
-    };
-    setBooking(updated);
-    setIsProcessingPayment(false);
-    setNotification('Outstanding balance successfully settled.');
-    setTimeout(() => setNotification(null), 4000);
+    setIsSubmittingPayment(true);
+    setPaymentError(null);
+    try {
+      const updated = await bookingStore.recordPayment(
+        booking.id,
+        booking.outstandingAmount,
+        settlePaymentMethod,
+      );
+      if (updated) {
+        setBooking(updated);
+        setIsProcessingPayment(false);
+        setNotification(`Outstanding balance of ${formatLKR(booking.outstandingAmount)} successfully settled via ${settlePaymentMethod}.`);
+        setTimeout(() => setNotification(null), 4000);
+      } else {
+        const fallback: Booking = {
+          ...booking,
+          outstandingAmount: 0,
+          paymentStatus: 'Paid',
+        };
+        setBooking(fallback);
+        setIsProcessingPayment(false);
+        setNotification('Outstanding balance successfully settled.');
+        setTimeout(() => setNotification(null), 4000);
+      }
+    } catch (err: any) {
+      setPaymentError(err?.message || 'Failed to process payment settlement.');
+    } finally {
+      setIsSubmittingPayment(false);
+    }
   };
 
   if (isLoading) {
@@ -243,29 +270,124 @@ export default function ReservationDetailPage() {
                   {formatLKR(booking.outstandingAmount)}
                 </span>
               </p>
+              {paymentError && (
+                <div className="mt-3 rounded-lg bg-rose-50 border border-rose-200 p-3 text-xs text-rose-800">
+                  {paymentError}
+                </div>
+              )}
               <div className="mt-4 space-y-3">
-                <label className="block text-xs font-semibold text-slate-700">Payment Method</label>
-                <select className="block w-full rounded-lg border border-slate-200 p-2 text-sm">
-                  <option>Credit Card (POS Terminal)</option>
-                  <option>Cash (Front Desk Till)</option>
-                  <option>Direct Bank Transfer</option>
-                  <option>Room Bill Master</option>
+                <label className="block text-xs font-semibold text-slate-700">Payment Method *</label>
+                <select
+                  value={settlePaymentMethod}
+                  onChange={(e) => setSettlePaymentMethod(e.target.value)}
+                  className="block w-full rounded-lg border border-slate-200 p-2 text-sm bg-white focus:outline-hidden focus:border-blue-900"
+                >
+                  <option value="Credit Card">Credit Card (POS Terminal / Online)</option>
+                  <option value="Debit Card">Debit Card</option>
+                  <option value="Cash">Cash (Front Desk Till)</option>
+                  <option value="Bank Transfer">Direct Bank Transfer</option>
                 </select>
+
+                {/* Card Payment Form UI */}
+                {(settlePaymentMethod === 'Credit Card' || settlePaymentMethod === 'Debit Card') && (
+                  <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/50 to-slate-50 p-3.5 space-y-3 mt-3">
+                    <div className="flex items-center justify-between text-xs font-semibold text-blue-950 pb-2 border-b border-blue-100">
+                      <span className="flex items-center gap-1.5">
+                        <svg className="w-4 h-4 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <rect x="2" y="5" width="20" height="14" rx="2" strokeWidth="2" />
+                          <line x1="2" y1="10" x2="22" y2="10" strokeWidth="2" />
+                        </svg>
+                        Card Payment Gateway
+                      </span>
+                      <span className="text-[10px] text-blue-700 uppercase tracking-wider font-bold">
+                        VISA &bull; MC &bull; AMEX
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Card Number *
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={19}
+                        value={cardNumber}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+                          setCardNumber(val);
+                        }}
+                        placeholder="4532 •••• •••• 8892"
+                        className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-900 focus:border-blue-900 focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                        Cardholder Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={cardHolder || (booking ? booking.guestName : '')}
+                        onChange={(e) => setCardHolder(e.target.value)}
+                        placeholder="JOHN SMITH"
+                        className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs uppercase text-slate-900 focus:border-blue-900 focus:outline-hidden"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Expiry (MM/YY) *
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={5}
+                          value={cardExpiry}
+                          onChange={(e) => {
+                            let val = e.target.value.replace(/\D/g, '');
+                            if (val.length > 2) val = `${val.slice(0, 2)}/${val.slice(2, 4)}`;
+                            setCardExpiry(val);
+                          }}
+                          placeholder="12/28"
+                          className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-900 focus:border-blue-900 focus:outline-hidden"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          CVC / CVV *
+                        </label>
+                        <input
+                          type="password"
+                          maxLength={4}
+                          value={cardCvc}
+                          onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, ''))}
+                          placeholder="123"
+                          className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-mono text-slate-900 focus:border-blue-900 focus:outline-hidden"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setIsProcessingPayment(false)}
+                  disabled={isSubmittingPayment}
+                  onClick={() => {
+                    setIsProcessingPayment(false);
+                    setPaymentError(null);
+                  }}
                   className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
+                  disabled={isSubmittingPayment}
                   onClick={handleSettleBalance}
-                  className="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
+                  className="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-50 transition-colors"
                 >
-                  Confirm Settle {formatLKR(booking.outstandingAmount)}
+                  {isSubmittingPayment ? 'Processing...' : `Confirm Settle ${formatLKR(booking.outstandingAmount)}`}
                 </button>
               </div>
             </div>
@@ -461,13 +583,29 @@ export default function ReservationDetailPage() {
               </div>
 
               {booking.outstandingAmount > 0 && (
-                <div className="mt-5">
+                <div className="mt-5 space-y-2">
+                  <Link
+                    to="/frontdesk/card-payment"
+                    state={{
+                      bookingId: booking.id,
+                      booking,
+                      amount: booking.outstandingAmount,
+                      returnUrl: `/frontdesk/reservations/${booking.id}`,
+                    }}
+                    className="w-full rounded-xl bg-blue-900 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-800 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <rect x="2" y="5" width="20" height="14" rx="2" strokeWidth="2" />
+                      <line x1="2" y1="10" x2="22" y2="10" strokeWidth="2" />
+                    </svg>
+                    Pay via Card Gateway ({formatLKR(booking.outstandingAmount)})
+                  </Link>
                   <button
                     type="button"
                     onClick={() => setIsProcessingPayment(true)}
-                    className="w-full rounded-xl bg-blue-900 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-800 transition-colors"
+                    className="w-full rounded-xl border border-slate-200 bg-white py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                   >
-                    Settle Balance ({formatLKR(booking.outstandingAmount)})
+                    Other Payment Methods (Cash / Wire)
                   </button>
                 </div>
               )}
