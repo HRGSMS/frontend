@@ -182,12 +182,6 @@ export default function FrontDeskDashboard() {
     timeZone: 'Asia/Colombo',
   }).format(new Date());
   const firstName = user?.name?.split(' ')[0] || 'team';
-  const management =
-    user?.role === 'admin'
-      ? [{ label: 'User management', to: '/admin/users', icon: 'users' as const }]
-      : user?.role === 'manager'
-        ? [{ label: 'Staff management', to: '/manager/staff', icon: 'users' as const }]
-        : [];
   const metrics: {
     label: string;
     value: string;
@@ -649,18 +643,6 @@ export default function FrontDeskDashboard() {
                 <Icon name="arrow" size={16} />
               </Link>
             </section>
-            {management.length > 0 && (
-              <section className="fd-panel fd-management" aria-label="Management shortcuts">
-                <h2>Management workspace</h2>
-                {management.map((item) => (
-                  <Link key={item.to} to={item.to}>
-                    <Icon name={item.icon} size={17} />
-                    <span>{item.label}</span>
-                    <Icon name="arrowUp" size={15} />
-                  </Link>
-                ))}
-              </section>
-            )}
           </aside>
         </div>
         <footer className="fd-footer">
