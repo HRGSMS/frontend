@@ -27,7 +27,7 @@ export function AuthLayout() {
     }
   }
   return (
-    <div className={`min-h-screen bg-gray-50 ${hasWorkspaceHeader ? 'fd-auth-shell' : ''}`}>
+    <div className={`sn-auth-shell min-h-screen bg-gray-50 ${hasWorkspaceHeader ? 'fd-auth-shell' : ''}`}>
       {isFrontDeskWorkspace && <FrontDeskSidebar />}
       <header className="border-b bg-white px-4 py-3 text-gray-700">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">

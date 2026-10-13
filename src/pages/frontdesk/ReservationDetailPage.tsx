@@ -57,7 +57,7 @@ export default function ReservationDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50/70 p-6 flex items-center justify-center">
+      <div className="sn-workspace-page min-h-screen bg-slate-50/70 p-6 flex items-center justify-center">
         <div className="flex items-center gap-3 text-slate-600">
           <svg className="h-6 w-6 animate-spin text-blue-900" fill="none" viewBox="0 0 24 24">
             <circle
@@ -78,7 +78,7 @@ export default function ReservationDetailPage() {
 
   if (!booking) {
     return (
-      <div className="min-h-screen bg-slate-50/70 p-6">
+      <div className="sn-workspace-page min-h-screen bg-slate-50/70 p-6">
         <div className="mx-auto max-w-2xl py-16 text-center">
           <h2 className="text-xl font-bold text-slate-900">Reservation Not Found</h2>
           <p className="mt-2 text-sm text-slate-500">
@@ -98,7 +98,7 @@ export default function ReservationDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/70 p-6">
+    <div className="sn-workspace-page min-h-screen bg-slate-50/70 p-6">
       <div className="mx-auto max-w-5xl">
         {/* Top Header & Breadcrumbs */}
         <div className="border-b border-slate-200 pb-5">
@@ -202,7 +202,7 @@ export default function ReservationDetailPage() {
         {/* Cancellation Confirmation Modal */}
         {isConfirmingCancel && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100">
+            <div className="sn-workspace-card w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100">
               <h3 className="text-lg font-bold text-slate-900">Cancel this Reservation?</h3>
               <p className="mt-2 text-sm text-slate-500">
                 Are you sure you want to cancel booking #{booking.id} for{' '}
@@ -235,7 +235,7 @@ export default function ReservationDetailPage() {
         {/* Payment Settlement Modal */}
         {isProcessingPayment && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100">
+            <div className="sn-workspace-card w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-100">
               <h3 className="text-lg font-bold text-slate-900">Settle Outstanding Balance</h3>
               <p className="mt-2 text-sm text-slate-500">
                 Outstanding Balance for {booking.guestName}:{' '}
@@ -273,7 +273,7 @@ export default function ReservationDetailPage() {
         )}
 
         {/* Status Lifecycle Indicator */}
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+        <div className="sn-workspace-card mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">
             Reservation Journey
           </h3>
@@ -329,7 +329,7 @@ export default function ReservationDetailPage() {
           {/* Guest & Stay Profile */}
           <div className="space-y-6 lg:col-span-2">
             {/* Guest Details */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <div className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
               <h3 className="text-base font-semibold text-slate-900 pb-3 border-b border-slate-100">
                 Guest Profile
               </h3>
@@ -366,7 +366,7 @@ export default function ReservationDetailPage() {
             </div>
 
             {/* Stay & Room Details */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <div className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
               <h3 className="text-base font-semibold text-slate-900 pb-3 border-b border-slate-100">
                 Accommodation &amp; Stay
               </h3>
@@ -408,7 +408,7 @@ export default function ReservationDetailPage() {
 
           {/* Folio & Billing Card */}
           <div className="space-y-6">
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <div className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h3 className="text-base font-semibold text-slate-900">Billing &amp; Folio</h3>
                 {booking.paymentStatus === 'Paid' ? (
@@ -474,7 +474,7 @@ export default function ReservationDetailPage() {
             </div>
 
             {/* Quick Actions Nav */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs text-xs space-y-2">
+            <div className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-4 shadow-xs text-xs space-y-2">
               <Link
                 to="/frontdesk/check-in-out"
                 className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-50 font-medium text-slate-700"

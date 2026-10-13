@@ -1,0 +1,274 @@
+/* Operational pages use the same glass surfaces as their dashboard. */
+.sn-auth-shell {
+  :is(.sn-workspace-page, .pp-page, .sr-page, .management-page, .account-page),
+  .fd-dashboard:has(.rp-container) {
+    background: transparent;
+    color: var(--sn-navy);
+    font-family: inherit;
+  }
+
+  :is(.sn-workspace-page, .pp-page, .sr-page, .management-page, .account-page) {
+    padding: 36px clamp(20px, 3vw, 48px) 40px;
+    min-width: 0;
+  }
+
+  .management-page {
+    max-width: 1408px;
+  }
+
+  :is(.pp-page, .sr-page, .rp-container) {
+    --pp-muted: var(--sn-muted);
+    --sr-muted: var(--sn-muted);
+    --rp-muted: var(--sn-muted);
+    --pp-line: var(--sn-line);
+    --sr-line: var(--sn-line);
+    --rp-line: var(--sn-line);
+    font-family: inherit;
+  }
+
+  :is(.sn-workspace-page, .management-page, .account-page, .pp-page, .sr-page, .rp-container) h1 {
+    color: var(--sn-navy);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(30px, 3vw, 40px);
+    font-weight: 400;
+    letter-spacing: -1px;
+    line-height: 1.2;
+  }
+
+  :is(.management-eyebrow, .account-eyebrow, .pp-eyebrow, .sr-eyebrow, .rp-eyebrow) {
+    color: var(--sn-muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    margin-bottom: 12px;
+  }
+
+  :is(
+    .sn-workspace-card,
+    .management-card,
+    .account-profile,
+    .account-form,
+    .pp-panel,
+    .pp-form-panel,
+    .pp-metric-card,
+    .sr-panel,
+    .sr-form-panel,
+    .sr-metric-card,
+    .rp-panel,
+    .rp-filter-bar,
+    .rp-metric-card
+  ) {
+    background: var(--sn-glass);
+    border: 1px solid rgba(255, 255, 255, 0.92);
+    border-radius: 22px;
+    box-shadow: var(--sn-shadow);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    min-width: 0;
+  }
+
+  :is(.pp-metric-card.featured, .sr-metric-card.featured, .rp-metric-card.rp-featured) {
+    background: linear-gradient(130deg, rgba(0, 21, 47, 0.96), rgba(30, 58, 88, 0.92));
+    border-color: rgba(255, 255, 255, 0.3);
+    color: white;
+  }
+
+  :is(.pp-metric-value, .sr-metric-value, .rp-metric-value, .management-metric) {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+
+  :is(
+      .sn-workspace-card,
+      .management-card,
+      .account-form,
+      .pp-panel-header,
+      .pp-form-panel,
+      .sr-panel-header,
+      .sr-form-panel,
+      .rp-panel-header
+    )
+    h2 {
+    color: var(--sn-navy);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 21px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+  }
+
+  :is(.sn-workspace-page, .management-page, .account-page, .pp-page, .sr-page, .rp-container) {
+    :is(
+      input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']),
+      select,
+      textarea
+    ) {
+      background: rgba(235, 240, 245, 0.85);
+      border: 1px solid #d8e0e8;
+      border-radius: 12px;
+      color: var(--sn-navy);
+      min-height: 44px;
+      max-width: 100%;
+      color-scheme: light;
+    }
+
+    :is(input, textarea)::placeholder {
+      color: #687a8e;
+    }
+
+    :is(input, select, textarea):focus {
+      border-color: #54789e;
+    }
+
+    :focus-visible {
+      outline: 3px solid #54789e;
+      outline-offset: 3px;
+    }
+
+    :is(input[type='checkbox'], input[type='radio'], progress) {
+      accent-color: var(--sn-navy);
+    }
+
+    option {
+      background: #f6f8fa;
+      color: var(--sn-navy);
+    }
+
+    :is(button, input, select, textarea):disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  /* Search fields retain their icon spacing and single outer border. */
+  :is(.pp-search-box, .sr-search-box, .rp-search-box) {
+    background: rgba(235, 240, 245, 0.85);
+    border: 1px solid #d8e0e8;
+    border-radius: 12px;
+    min-height: 44px;
+  }
+
+  :is(.pp-search-box, .sr-search-box, .rp-search-box) input {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    min-height: 28px;
+  }
+
+  :is(.pp-search-box, .sr-search-box, .rp-search-box):focus-within {
+    outline: 2px solid #54789e;
+    outline-offset: 2px;
+  }
+
+  :is(.pp-btn, .sr-btn, .rp-filter-btn, .account-submit),
+  .management-page button:not(.secondary),
+  .sn-workspace-page :is(a, button):is(.bg-blue-900, .bg-blue-950) {
+    background: var(--sn-navy);
+    color: white;
+    border-radius: 999px;
+    min-height: 44px;
+    box-shadow: 0 6px 16px -8px rgba(0, 21, 47, 0.4);
+  }
+
+  :is(.pp-btn, .sr-btn, .rp-filter-btn, .account-submit):hover:not(:disabled),
+  .management-page button:not(.secondary):hover:not(:disabled),
+  .sn-workspace-page :is(a, button):is(.bg-blue-900, .bg-blue-950):hover:not(:disabled) {
+    background: #163858;
+  }
+
+  :is(.pp-btn-secondary, .sr-btn-secondary, .rp-export-btn),
+  .management-page button.secondary,
+  .sn-workspace-page :is(a, button).bg-white {
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--sn-line);
+    border-radius: 999px;
+    min-height: 44px;
+  }
+
+  .management-page button.secondary {
+    color: var(--sn-navy);
+  }
+
+  .management-page a {
+    color: #294e75;
+    text-underline-offset: 4px;
+  }
+
+  .management-heading > a {
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid var(--sn-line);
+    border-radius: 999px;
+    text-decoration: none;
+    font-size: 13px;
+  }
+
+  :is(.management-heading p, .management-card > p, .management-muted) {
+    color: var(--sn-muted);
+    line-height: 1.7;
+  }
+
+  :is(.sn-workspace-page, .management-page, .pp-page, .sr-page, .rp-container) th {
+    background: rgba(231, 237, 244, 0.7);
+    color: var(--sn-muted);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+  }
+
+  :is(.sn-workspace-page, .management-page, .pp-page, .sr-page, .rp-container) :is(td, th) {
+    border-color: var(--sn-line);
+  }
+
+  .sn-workspace-page :is(tbody, thead).bg-white {
+    background: transparent;
+  }
+
+  :is(.pp-folio-summary, .sr-bill-preview, .account-heading-icon, .rp-tabs-nav) {
+    background: rgba(231, 237, 244, 0.7);
+    border-color: var(--sn-line);
+  }
+
+  :is(.pp-header-actions, .sr-header-actions, .rp-panel-toolbar) {
+    flex-wrap: wrap;
+  }
+
+  /* Keep long guest details and action groups within narrow screens. */
+  .sn-workspace-page :is(header, nav) {
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 760px) {
+    :is(.sn-workspace-page, .pp-page, .sr-page, .management-page, .account-page) {
+      padding: 24px 16px 32px;
+    }
+
+    :is(
+      .sn-workspace-card,
+      .management-card,
+      .account-profile,
+      .account-form,
+      .pp-form-panel,
+      .sr-form-panel
+    ) {
+      border-radius: 18px;
+    }
+
+    .management-form {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :is(.sn-workspace-page, .pp-page, .sr-page, .management-page, .account-page, .rp-container) * {
+      animation: none;
+      transition: none;
+      scroll-behavior: auto;
+    }
+
+    :is(.pp-btn, .sr-btn, .pp-metric-card, .sr-metric-card, .rp-metric-card):hover {
+      transform: none;
+    }
+  }
+}

@@ -104,7 +104,7 @@ export default function CheckInOutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/70 p-6">
+    <div className="sn-workspace-page min-h-screen bg-slate-50/70 p-6">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
@@ -229,7 +229,7 @@ export default function CheckInOutPage() {
         </div>
 
         {/* Main List Table */}
-        <div className="mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+        <div className="sn-workspace-card mt-5 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
           {isLoading ? (
             <div className="py-20 text-center text-sm text-slate-500">
               Loading operational queue...
@@ -397,7 +397,7 @@ export default function CheckInOutPage() {
         {/* Operational Modal */}
         {selectedBookingForAction && actionType && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
-            <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl border border-slate-100 animate-fadeIn">
+            <div className="sn-workspace-card w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl border border-slate-100 animate-fadeIn">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h3 className="text-lg font-bold text-slate-900">
                   {actionType === 'check-in' ? 'Process Guest Check-In' : 'Process Guest Check-Out'}

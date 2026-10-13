@@ -95,7 +95,7 @@ export default function ReservationsListPage() {
   }, [bookings]);
 
   return (
-    <div className="min-h-screen bg-slate-50/70 p-6">
+    <div className="sn-workspace-page min-h-screen bg-slate-50/70 p-6">
       <div className="mx-auto max-w-7xl">
         {/* Top Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-6">
@@ -178,7 +178,7 @@ export default function ReservationsListPage() {
 
         {/* Metric Cards */}
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+          <div className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
             <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">
               Total
             </span>
@@ -225,7 +225,7 @@ export default function ReservationsListPage() {
         </div>
 
         {/* Filter Controls */}
-        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col md:flex-row gap-4 justify-between items-center">
+        <div className="sn-workspace-card mt-6 rounded-xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col md:flex-row gap-4 justify-between items-center">
           {/* Search Bar */}
           <div className="relative w-full md:w-80">
             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -284,7 +284,7 @@ export default function ReservationsListPage() {
         </div>
 
         {/* Data Table */}
-        <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+        <div className="sn-workspace-card mt-4 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
           {isLoading ? (
             <div className="flex h-64 items-center justify-center text-slate-500">
               <svg

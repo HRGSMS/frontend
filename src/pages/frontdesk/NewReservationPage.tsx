@@ -224,8 +224,8 @@ export default function NewReservationPage() {
 
   if (successBookingId) {
     return (
-      <div className="min-h-screen bg-slate-50/70 p-6 flex items-center justify-center">
-        <div className="max-w-md w-full rounded-2xl bg-white p-8 text-center shadow-lg border border-slate-100">
+      <div className="sn-workspace-page min-h-screen bg-slate-50/70 p-6 flex items-center justify-center">
+        <div className="sn-workspace-card max-w-md w-full rounded-2xl bg-white p-8 text-center shadow-lg border border-slate-100">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 mb-5">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -301,7 +301,7 @@ export default function NewReservationPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/70 p-6">
+    <div className="sn-workspace-page min-h-screen bg-slate-50/70 p-6">
       <div className="mx-auto max-w-5xl">
         {/* Breadcrumb Header */}
         <div className="border-b border-slate-200 pb-5">
@@ -346,7 +346,7 @@ export default function NewReservationPage() {
           {/* Main Form Fields (Left 2 cols) */}
           <div className="space-y-6 lg:col-span-2">
             {/* Step 1: Guest Information */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <div className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
               <div className="flex items-center justify-between pb-4 border-b border-slate-100">
                 <div className="flex items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-900 text-xs font-bold text-white">
@@ -438,7 +438,7 @@ export default function NewReservationPage() {
             </div>
 
             {/* Step 2: Stay Dates & Branch */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <div className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
               <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-900 text-xs font-bold text-white">
                   2
@@ -501,7 +501,7 @@ export default function NewReservationPage() {
             </div>
 
             {/* Step 3: Room Selection */}
-            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <div className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
               <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-900 text-xs font-bold text-white">
                   3
@@ -570,7 +570,7 @@ export default function NewReservationPage() {
 
           {/* Right Column: Pricing Summary & Confirm Card */}
           <div className="space-y-6">
-            <div className="sticky top-6 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+            <div className="sn-workspace-card sticky top-6 rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
               <h3 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">
                 Reservation Summary
               </h3>

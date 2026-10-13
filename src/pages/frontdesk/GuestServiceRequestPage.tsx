@@ -174,7 +174,7 @@ export default function GuestServiceRequestPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="sn-workspace-page min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
         <nav className="mb-6 text-sm text-slate-500">
           <Link
@@ -216,7 +216,7 @@ export default function GuestServiceRequestPage() {
           </p>
         </header>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <section className="sn-workspace-card rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           {loading ? (
             <p role="status" className="py-10 text-center text-slate-500">
               Loading eligible bookings and services…

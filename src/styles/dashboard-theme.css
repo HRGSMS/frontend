@@ -1,0 +1,566 @@
+/* Shared workspace presentation, drawn from the SkyNest login palette.
+   Page layouts, status colours, and application behaviour remain page-owned. */
+.sn-auth-shell:has(
+  .fd-dashboard,
+  .md-dashboard,
+  .sn-admin-dashboard,
+  .sn-workspace-page,
+  .pp-page,
+  .sr-page,
+  .management-page,
+  .account-page
+) {
+  --sn-navy: #00152f;
+  --sn-muted: #58697d;
+  --sn-line: rgba(91, 115, 142, 0.18);
+  --sn-glass: rgba(246, 248, 250, 0.86);
+  --sn-shadow: 0 12px 36px -20px rgba(0, 21, 47, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color-scheme: light;
+  background: #e9eef3;
+  background-image:
+    linear-gradient(rgba(233, 239, 245, 0.89), rgba(240, 244, 248, 0.97)), url('/images/login2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--sn-navy);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.sn-auth-shell:has(
+    .fd-dashboard,
+    .md-dashboard,
+    .sn-admin-dashboard,
+    .sn-workspace-page,
+    .pp-page,
+    .sr-page,
+    .management-page,
+    .account-page
+  )
+  > header {
+  padding-block: 18px;
+  background: rgba(246, 248, 250, 0.78);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+.sn-auth-shell:has(
+    .fd-dashboard,
+    .md-dashboard,
+    .sn-admin-dashboard,
+    .sn-workspace-page,
+    .pp-page,
+    .sr-page,
+    .management-page,
+    .account-page
+  )
+  > header
+  > div
+  > a {
+  color: var(--sn-navy);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.sn-auth-shell:has(
+    .fd-dashboard,
+    .md-dashboard,
+    .sn-admin-dashboard,
+    .sn-workspace-page,
+    .pp-page,
+    .sr-page,
+    .management-page,
+    .account-page
+  )
+  > header
+  button {
+  background: var(--sn-navy);
+  border-radius: 999px;
+  min-height: 42px;
+}
+
+:is(.sn-frontdesk-dashboard, .md-dashboard, .sn-admin-dashboard) {
+  --fd-muted: var(--sn-muted);
+  --md-muted: var(--sn-muted);
+  --fd-line: var(--sn-line);
+  --md-line: var(--sn-line);
+  background: transparent;
+  color: var(--sn-navy);
+  font-family: inherit;
+}
+
+.md-dashboard,
+.sn-admin-dashboard {
+  max-width: 1408px;
+  margin-inline: auto;
+  padding: 36px clamp(20px, 3vw, 48px) 40px;
+}
+
+.sn-frontdesk-dashboard .fd-content {
+  padding: 36px clamp(20px, 3vw, 48px) 40px;
+}
+
+/* AuthLayout already renders the same front desk navigation. */
+.sn-frontdesk-dashboard > .fd-sidebar {
+  display: none;
+}
+
+:is(.fd-heading, .md-heading, .sn-admin-heading) {
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+:is(.fd-heading, .md-heading, .sn-admin-heading) h1 {
+  color: var(--sn-navy);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(30px, 3vw, 40px);
+  font-weight: 400;
+  letter-spacing: -1.1px;
+  line-height: 1.2;
+  margin-top: 0;
+}
+
+.fd-eyebrow,
+.md-eyebrow,
+.sn-admin-heading > div > span {
+  display: block;
+  color: var(--sn-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  margin-bottom: 12px;
+}
+
+.sn-admin-heading {
+  border-bottom: 1px solid var(--sn-line);
+}
+
+.fd-description,
+.md-description,
+.sn-admin-heading p {
+  color: var(--sn-muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-top: 10px;
+}
+
+:is(
+  .fd-metric,
+  .md-metric,
+  .sn-admin-metric,
+  .fd-panel,
+  .md-panel,
+  .sn-admin-panel,
+  .fd-quick-action,
+  .md-quick-action,
+  .sn-admin-portal
+) {
+  background: var(--sn-glass);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 22px;
+  box-shadow: var(--sn-shadow);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+.fd-metric,
+.md-metric,
+.sn-admin-metric {
+  padding: 24px;
+  min-width: 0;
+}
+
+.fd-metric-top,
+.md-metric-top {
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.fd-metric-top h2,
+.md-metric-top h2,
+.sn-admin-metric > div:first-child > span {
+  color: var(--sn-muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.fd-metric-value,
+.md-metric-value,
+.sn-admin-metric > .mt-3 > div {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(26px, 2.4vw, 34px);
+  font-weight: 400;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  margin: 20px 0 10px;
+}
+
+.fd-featured,
+.md-featured {
+  background: linear-gradient(130deg, rgba(0, 21, 47, 0.96), rgba(30, 58, 88, 0.92));
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 14px 32px -18px rgba(0, 21, 47, 0.5);
+  color: white;
+}
+
+.fd-featured .fd-metric-top h2,
+.md-featured .md-metric-top h2 {
+  color: #d4e3f1;
+}
+
+.md-progress span,
+.fd-progress span {
+  background: #c7d8eb;
+}
+
+.fd-metric-top svg,
+.md-metric-icon,
+.sn-admin-metric > div:first-child > div,
+.sn-admin-portal .h-10 {
+  color: #395777;
+}
+
+.md-metric-icon,
+.sn-admin-metric > div:first-child > div,
+.sn-admin-portal .h-10,
+.fd-action-icon,
+.md-action-icon {
+  background: #e8eef5;
+  border-color: #d5dfe9;
+  border-radius: 12px;
+}
+
+.md-featured .md-metric-icon {
+  color: #dfebf8;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:is(.fd-panel-heading, .md-panel-heading) h2,
+.sn-admin-panel h3,
+.sn-admin-dashboard > section > h2 {
+  color: var(--sn-navy);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.4px;
+}
+
+:is(
+  .sn-auth-shell:has(
+      .fd-dashboard,
+      .md-dashboard,
+      .sn-admin-dashboard,
+      .sn-workspace-page,
+      .pp-page,
+      .sr-page,
+      .management-page,
+      .account-page
+    )
+    .fd-button,
+  .md-button,
+  .sn-dashboard-button
+) {
+  background: var(--sn-navy, #00152f);
+  color: white;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  min-height: 44px;
+  padding: 12px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 6px 16px -8px rgba(0, 21, 47, 0.4);
+}
+
+:is(
+  .sn-auth-shell:has(
+      .fd-dashboard,
+      .md-dashboard,
+      .sn-admin-dashboard,
+      .sn-workspace-page,
+      .pp-page,
+      .sr-page,
+      .management-page,
+      .account-page
+    )
+    .fd-button,
+  .md-button,
+  .sn-dashboard-button
+):hover {
+  background: #163858;
+}
+
+.md-button-secondary,
+.sn-dashboard-refresh {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--sn-line);
+  color: var(--sn-navy);
+}
+
+.sn-dashboard-refresh {
+  display: grid;
+  place-items: center;
+}
+
+:is(.sn-frontdesk-dashboard, .md-dashboard, .sn-admin-dashboard) :focus-visible {
+  outline: 3px solid #54789e;
+  outline-offset: 4px;
+}
+
+.md-button-secondary:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.fd-attention {
+  background: rgba(225, 234, 244, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 18px;
+}
+
+.fd-search,
+.md-search {
+  min-height: 44px;
+  background: rgba(235, 240, 245, 0.85);
+  border: 1px solid #d8e0e8;
+  border-radius: 12px;
+  color: var(--sn-muted);
+}
+
+.fd-search:focus-within,
+.md-search:focus-within {
+  outline: 2px solid #54789e;
+  outline-offset: 2px;
+}
+
+.fd-search input::placeholder,
+.md-search input::placeholder {
+  color: var(--sn-muted);
+}
+
+.fd-table thead,
+.md-table thead,
+.sn-admin-panel thead,
+.fd-room-availability,
+.md-room-availability,
+.fd-service-preview,
+.md-service-box,
+.fd-segments {
+  background: rgba(231, 237, 244, 0.7);
+}
+
+.sn-admin-panel tbody {
+  background: transparent;
+}
+
+.fd-table th,
+.md-table th,
+.sn-admin-panel th {
+  color: var(--sn-muted);
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  border-color: var(--sn-line);
+}
+
+.fd-table td,
+.md-table td {
+  border-color: var(--sn-line);
+}
+
+.fd-table tbody tr:hover,
+.md-table tbody tr:hover {
+  background: rgba(230, 237, 245, 0.65);
+}
+
+.fd-text-link,
+.fd-management a,
+.sn-admin-portal h3,
+.sn-admin-portal > div:last-child,
+.sn-admin-panel a {
+  color: var(--sn-navy);
+}
+
+.sn-admin-portal p {
+  line-height: 1.75;
+}
+
+.fd-footer,
+.md-footer,
+.fd-table-footer,
+.fd-guest small,
+.fd-room-type,
+.fd-segments button {
+  color: var(--sn-muted);
+}
+
+.sn-auth-shell:has(
+    .fd-dashboard,
+    .md-dashboard,
+    .sn-admin-dashboard,
+    .sn-workspace-page,
+    .pp-page,
+    .sr-page,
+    .management-page,
+    .account-page
+  )
+  .fd-sidebar {
+  background: rgba(246, 248, 250, 0.86);
+  border-right: 1px solid white;
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  box-shadow: 10px 0 36px -24px rgba(0, 21, 47, 0.22);
+}
+
+.sn-auth-shell:has(
+    .fd-dashboard,
+    .md-dashboard,
+    .sn-admin-dashboard,
+    .sn-workspace-page,
+    .pp-page,
+    .sr-page,
+    .management-page,
+    .account-page
+  )
+  .fd-sidebar
+  .fd-workspace-nav
+  > * {
+  border-radius: 12px;
+  color: var(--sn-muted);
+}
+
+.sn-auth-shell:has(
+    .fd-dashboard,
+    .md-dashboard,
+    .sn-admin-dashboard,
+    .sn-workspace-page,
+    .pp-page,
+    .sr-page,
+    .management-page,
+    .account-page
+  )
+  .fd-sidebar
+  .fd-workspace-nav
+  .is-current {
+  background: #00152f;
+  color: white;
+  border-color: transparent;
+}
+
+.sn-auth-shell:has(
+    .fd-dashboard,
+    .md-dashboard,
+    .sn-admin-dashboard,
+    .sn-workspace-page,
+    .pp-page,
+    .sr-page,
+    .management-page,
+    .account-page
+  )
+  .fd-sidebar
+  .fd-workspace-nav
+  a:hover:not(.is-current) {
+  background: #e4ebf3;
+  color: var(--sn-navy);
+}
+
+.sn-auth-shell:has(
+    .fd-dashboard,
+    .md-dashboard,
+    .sn-admin-dashboard,
+    .sn-workspace-page,
+    .pp-page,
+    .sr-page,
+    .management-page,
+    .account-page
+  )
+  .fd-sidebar-bottom
+  .fd-button {
+  border-radius: 999px;
+}
+
+.md-caption,
+.md-caption > div,
+.fd-caption,
+.fd-caption > div,
+.md-heading > div:last-child {
+  flex-wrap: wrap;
+}
+
+.sn-admin-heading > div,
+.md-caption > div,
+.fd-caption > div {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sn-admin-heading .rounded-full {
+  overflow-wrap: anywhere;
+}
+
+.md-caption select,
+.fd-caption select {
+  max-width: 100%;
+  min-height: 40px;
+}
+
+@media (max-width: 760px) {
+  .md-dashboard,
+  .sn-admin-dashboard,
+  .sn-frontdesk-dashboard .fd-content {
+    padding: 24px 16px 32px;
+  }
+
+  .md-caption,
+  .md-toolbar {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .fd-metric,
+  .md-metric,
+  .sn-admin-metric {
+    padding: 20px;
+  }
+
+  .md-panel-heading {
+    flex-wrap: wrap;
+  }
+
+  .md-footer {
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.sn-frontdesk-dashboard, .md-dashboard, .sn-admin-dashboard) *,
+  .sn-auth-shell:has(
+      .fd-dashboard,
+      .md-dashboard,
+      .sn-admin-dashboard,
+      .sn-workspace-page,
+      .pp-page,
+      .sr-page,
+      .management-page,
+      .account-page
+    )
+    .fd-sidebar
+    * {
+    animation: none;
+    transition: none;
+    scroll-behavior: auto;
+  }
+
+  :is(.fd-quick-action, .md-quick-action, .md-metric, .md-button):hover {
+    transform: none;
+  }
+}

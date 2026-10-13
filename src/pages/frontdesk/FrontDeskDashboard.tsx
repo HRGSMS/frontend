@@ -214,7 +214,7 @@ export default function FrontDeskDashboard() {
   if (isLoading) return <DashboardSkeleton />;
 
   return (
-    <main className="fd-dashboard">
+    <main className="fd-dashboard sn-frontdesk-dashboard">
       <aside className="fd-sidebar" aria-label="Front desk workspace">
         <Link to="/frontdesk/dashboard" className="fd-brand">
           <span className="fd-brand-mark">
@@ -657,7 +657,7 @@ export default function FrontDeskDashboard() {
 function DashboardSkeleton() {
   return (
     <main
-      className="fd-dashboard fd-loading"
+      className="fd-dashboard sn-frontdesk-dashboard fd-loading"
       aria-busy="true"
       aria-label="Loading front desk overview"
     >

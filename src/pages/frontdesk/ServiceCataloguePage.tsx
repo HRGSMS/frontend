@@ -76,7 +76,7 @@ export default function ServiceCataloguePage() {
   const totalServices = services.length;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="sn-workspace-page min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <nav className="mb-6 text-sm text-slate-500">
           <Link to="/frontdesk/dashboard" className="hover:text-slate-900">
@@ -142,7 +142,7 @@ export default function ServiceCataloguePage() {
 
 
         <section className="mb-6 grid gap-4 sm:grid-cols-2">
-          <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <article className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Catalogue services</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">
               {totalServices}
@@ -152,7 +152,7 @@ export default function ServiceCataloguePage() {
             </p>
           </article>
 
-          <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <article className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Search results</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">
               {filteredServices.length}
@@ -163,7 +163,7 @@ export default function ServiceCataloguePage() {
           </article>
         </section>
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section className="sn-workspace-card overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">

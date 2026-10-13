@@ -131,7 +131,7 @@ export default function ServiceRequestsQueuePage() {
   const completedCount = requests.filter((request) => request.status === 'Completed').length;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="sn-workspace-page min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <nav className="mb-6 text-sm text-slate-500">
           <Link to={dashboard} className="hover:text-slate-900">
@@ -151,7 +151,7 @@ export default function ServiceRequestsQueuePage() {
               Back to Dashboard
             </Link>
 
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-700">
+            <p className="sr-eyebrow mb-2 text-xs font-semibold uppercase tracking-widest text-blue-700">
               SKY NEST HOTELS · OPERATIONS
             </p>
 
@@ -196,31 +196,31 @@ export default function ServiceRequestsQueuePage() {
           className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           aria-label="Service request summary"
         >
-          <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <article className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Total requests</p>
-            <p className="mt-2 text-3xl font-bold text-slate-900">{requests.length}</p>
+            <p className="sr-metric-value mt-2 text-3xl font-bold text-slate-900">{requests.length}</p>
           </article>
 
-          <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <article className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Pending requests</p>
-            <p className="mt-2 text-3xl font-bold text-amber-700">{pendingCount}</p>
+            <p className="sr-metric-value mt-2 text-3xl font-bold text-amber-700">{pendingCount}</p>
           </article>
 
-          <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <article className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Completed requests</p>
-            <p className="mt-2 text-3xl font-bold text-emerald-700">{completedCount}</p>
+            <p className="sr-metric-value mt-2 text-3xl font-bold text-emerald-700">{completedCount}</p>
             <p className="mt-1 text-xs text-slate-500">{totalQuantity} total units requested</p>
           </article>
 
-          <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <article className="sn-workspace-card rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <p className="text-sm text-slate-500">Recorded value</p>
-            <p className="mt-2 break-words text-2xl font-bold text-slate-900">
+            <p className="sr-metric-value mt-2 break-words text-2xl font-bold text-slate-900">
               {currency.format(totalValue)}
             </p>
           </article>
         </section>
 
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section className="sn-workspace-card overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <div className="grid grid-cols-1 gap-4 border-b border-slate-200 p-5 md:grid-cols-[minmax(0,1fr)_auto_minmax(16rem,22rem)] md:items-center">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">Request queue</h2>

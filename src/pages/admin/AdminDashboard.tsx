@@ -120,9 +120,9 @@ export default function AdminDashboard() {
   const topService = topServicesData[0];
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="sn-admin-dashboard mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Top Banner & Header */}
-      <div className="flex flex-col gap-4 pb-6 border-b border-gray-200 md:flex-row md:items-center md:justify-between">
+      <div className="sn-admin-heading flex flex-col gap-4 pb-6 border-b border-gray-200 md:flex-row md:items-center md:justify-between">
         <div>
           <span className="text-xs font-semibold tracking-wider text-amber-700 uppercase">
             SkyNest Hotels · Executive Administration
@@ -143,13 +143,13 @@ export default function AdminDashboard() {
           <button
             onClick={() => void loadData()}
             title="Refresh metrics"
-            className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
+            className="sn-dashboard-refresh p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
           >
             <Icon name="refresh" size={16} />
           </button>
           <Link
             to="/admin/reports"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#224846] hover:bg-[#193634] text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
+            className="sn-dashboard-button inline-flex items-center gap-2 px-4 py-2 bg-[#224846] hover:bg-[#193634] text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
           >
             <Icon name="chart" size={17} />
             View Reports Suite
@@ -173,7 +173,7 @@ export default function AdminDashboard() {
       <section className="mt-6" aria-label="Executive KPIs">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {/* Revenue KPI */}
-          <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="sn-admin-metric relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
                 Portfolio Revenue
@@ -197,7 +197,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Occupancy KPI */}
-          <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="sn-admin-metric relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
                 Live Occupancy
@@ -221,7 +221,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Outstanding Receivables */}
-          <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="sn-admin-metric relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
                 Outstanding Balance
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Top Service */}
-          <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <div className="sn-admin-metric relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium uppercase tracking-wider text-gray-500">
                 Leading Service
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
           {/* Reports & Analytics Card */}
           <Link
             to="/admin/reports"
-            className="group relative flex flex-col justify-between p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-[#224846] transition-all"
+            className="sn-admin-portal group relative flex flex-col justify-between p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-[#224846] transition-all"
           >
             <div>
               <div className="flex items-center justify-between">
@@ -302,7 +302,7 @@ export default function AdminDashboard() {
           {/* Front Desk Operations Card */}
           <Link
             to="/frontdesk/dashboard"
-            className="group relative flex flex-col justify-between p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-400 transition-all"
+            className="sn-admin-portal group relative flex flex-col justify-between p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-400 transition-all"
           >
             <div>
               <div className="flex items-center justify-between">
@@ -329,7 +329,7 @@ export default function AdminDashboard() {
           {/* System Settings Card */}
           <Link
             to="/admin/settings"
-            className="group relative flex flex-col justify-between p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-400 transition-all"
+            className="sn-admin-portal group relative flex flex-col justify-between p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-gray-400 transition-all"
           >
             <div>
               <div className="flex items-center justify-between">
@@ -356,7 +356,7 @@ export default function AdminDashboard() {
 
       {/* Branch Performance Snapshot Table */}
       <section className="mt-8">
-        <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
+        <div className="sn-admin-panel rounded-xl border border-gray-200 bg-white overflow-hidden shadow-sm">
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between flex-wrap gap-4">
             <div>
               <h3 className="text-base font-semibold text-gray-900">Branch Revenue Performance</h3>
