@@ -1,6 +1,7 @@
-import { useState, useMemo, type ReactNode } from 'react';
+import { useState, useEffect, useMemo, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/auth-state';
+import { guestApi, type BranchItem } from '../../api/guestApi';
 import './StaffManagementPage.css';
 
 export type Department =
@@ -439,6 +440,7 @@ export default function StaffManagementPage() {
   const [selectedDept, setSelectedDept] = useState<string>('All');
   const [selectedShift, setSelectedShift] = useState<string>('All');
   const [selectedStatus, setSelectedStatus] = useState<string>('All');
+  const [branches, setBranches] = useState<BranchItem[]>([]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -452,6 +454,15 @@ export default function StaffManagementPage() {
     shift: 'Morning' as Shift,
     status: 'On Duty' as StaffStatus,
   });
+
+  useEffect(() => {
+    guestApi.getBranches().then((list) => {
+      if (list && list.length > 0) {
+        setBranches(list);
+        setFormData((prev) => ({ ...prev, branch: list[0].name }));
+      }
+    }).catch(() => {});
+  }, []);
 
   const saveStaff = (updated: StaffMember[]) => {
     setStaffList(updated);
@@ -720,9 +731,11 @@ export default function StaffManagementPage() {
                   className="sm-select"
                 >
                   <option value="All">All Branches</option>
-                  <option value="SkyNest Colombo">SkyNest Colombo</option>
-                  <option value="SkyNest Kandy">SkyNest Kandy</option>
-                  <option value="SkyNest Galle">SkyNest Galle</option>
+                  {branches.map((b) => (
+                    <option key={b.public_id} value={b.name}>
+                      {b.name}
+                    </option>
+                  ))}
                 </select>
 
                 <select
@@ -988,9 +1001,11 @@ export default function StaffManagementPage() {
                       value={formData.branch}
                       onChange={(e) => setFormData({ ...formData, branch: e.target.value })}
                     >
-                      <option value="SkyNest Colombo">SkyNest Colombo</option>
-                      <option value="SkyNest Kandy">SkyNest Kandy</option>
-                      <option value="SkyNest Galle">SkyNest Galle</option>
+                      {branches.map((b) => (
+                        <option key={b.public_id} value={b.name}>
+                          {b.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 

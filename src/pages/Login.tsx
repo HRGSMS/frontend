@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/auth-state';
+import { guestApi, type BranchItem, type HotelConfig } from '../api/guestApi';
 import './Login.css';
 
 export const Login = () => {
@@ -8,8 +9,25 @@ export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [branch, setBranch] = useState('Colombo');
+  const [branches, setBranches] = useState<BranchItem[]>([]);
+  const [hotelConfig, setHotelConfig] = useState<HotelConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    Promise.all([
+      guestApi.getBranches().catch(() => []),
+      guestApi.getHotelConfig().catch(() => null),
+    ]).then(([branchList, cfg]) => {
+      if (branchList.length > 0) {
+        setBranches(branchList);
+        setBranch(branchList[0].location_city || branchList[0].name);
+      }
+      if (cfg) {
+        setHotelConfig(cfg);
+      }
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +48,12 @@ export const Login = () => {
       {/* Top Navigation Bar */}
       <header className="sn-login-header">
         <div className="sn-brand-lockup">
-          <div className="sn-monogram">SN</div>
-          <span className="sn-brand-text">SkyNest Hotels</span>
+          <div className="sn-monogram">
+            {(hotelConfig?.hotel_name ?? 'SN').slice(0, 2).toUpperCase()}
+          </div>
+          <span className="sn-brand-text">
+            {hotelConfig?.hotel_name ?? 'SkyNest Hotels'}
+          </span>
         </div>
         <nav className="sn-nav-links" aria-label="Portal Navigation">
           <a href="#story" onClick={(e) => e.preventDefault()} className="sn-nav-link">
@@ -149,9 +171,15 @@ export const Login = () => {
                   className="sn-select"
                   disabled={isSubmitting}
                 >
-                  <option value="Colombo">Colombo</option>
-                  <option value="Kandy">Kandy</option>
-                  <option value="Galle">Galle</option>
+                  {branches.length > 0 ? (
+                    branches.map((b) => (
+                      <option key={b.public_id} value={b.location_city || b.name}>
+                        {b.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="Colombo">Colombo</option>
+                  )}
                 </select>
                 <div className="sn-select-arrow" aria-hidden="true">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -207,12 +235,24 @@ export const Login = () => {
       {/* Bottom Luxury Curved Section */}
       <footer className="sn-login-footer">
         <p className="sn-footer-slogan">
-          DEDICATED TO PROVIDING THE HIGHEST LEVEL OF COMFORT AND SERENITY ACROSS SRI LANKA.
+          {hotelConfig?.hotel_tagline
+            ? hotelConfig.hotel_tagline.toUpperCase()
+            : 'DEDICATED TO PROVIDING THE HIGHEST LEVEL OF COMFORT AND SERENITY ACROSS SRI LANKA.'}
         </p>
         <div className="sn-branches-row">
-          <span className="sn-branch-pill">COLOMBO</span>
-          <span className="sn-branch-pill">KANDY</span>
-          <span className="sn-branch-pill">GALLE</span>
+          {branches.length > 0 ? (
+            branches.map((b) => (
+              <span key={b.public_id} className="sn-branch-pill">
+                {(b.location_city || b.name).toUpperCase()}
+              </span>
+            ))
+          ) : (
+            <>
+              <span className="sn-branch-pill">COLOMBO</span>
+              <span className="sn-branch-pill">KANDY</span>
+              <span className="sn-branch-pill">GALLE</span>
+            </>
+          )}
         </div>
       </footer>
     </div>

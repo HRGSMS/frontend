@@ -8,6 +8,7 @@ import {
   type BillingRecord,
   type TopServiceRecord,
 } from '../../api/reportApi';
+import { guestApi, type BranchItem } from '../../api/guestApi';
 import './ManagerDashboard.css';
 
 function formatLKR(value: number | string | null | undefined): string {
@@ -118,6 +119,7 @@ export default function ManagerDashboard() {
   const [occupancyData, setOccupancyData] = useState<OccupancyRecord[]>([]);
   const [billingData, setBillingData] = useState<BillingRecord[]>([]);
   const [topServicesData, setTopServicesData] = useState<TopServiceRecord[]>([]);
+  const [branches, setBranches] = useState<BranchItem[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<string>('All');
 
   const loadData = async () => {
@@ -126,17 +128,19 @@ export default function ManagerDashboard() {
     try {
       const from = '2026-10-01';
       const to = '2026-10-31';
-      const [revRes, occRes, billRes, topRes] = await Promise.all([
+      const [revRes, occRes, billRes, topRes, branchList] = await Promise.all([
         reportApi.getRevenueReport({ from, to }),
         reportApi.getOccupancyReport({ from, to }),
         reportApi.getBillingReport(),
         reportApi.getTopServicesReport(),
+        guestApi.getBranches().catch(() => []),
       ]);
 
       setRevenueData(revRes.data || []);
       setOccupancyData(occRes.data || []);
       setBillingData(billRes.data || []);
       setTopServicesData(topRes.data || []);
+      setBranches(branchList);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load manager reporting metrics.');
     } finally {
@@ -306,9 +310,11 @@ export default function ManagerDashboard() {
             aria-label="Filter property branch"
           >
             <option value="All">All Properties (Portfolio)</option>
-            <option value="SkyNest Colombo">SkyNest Colombo</option>
-            <option value="SkyNest Kandy">SkyNest Kandy</option>
-            <option value="SkyNest Galle">SkyNest Galle</option>
+            {branches.map((b) => (
+              <option key={b.public_id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
           </select>
           <span className="md-live">
             <span />

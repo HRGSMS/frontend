@@ -28,18 +28,8 @@ export default function NewReservationPage() {
   const navigate = useNavigate();
 
   // Reference data
-  const [branches, setBranches] = useState<BranchOption[]>([
-    { name: 'SkyNest Colombo', location_city: 'Colombo' },
-    { name: 'SkyNest Kandy', location_city: 'Kandy' },
-    { name: 'SkyNest Galle', location_city: 'Galle' },
-  ]);
-  const [roomTypes, setRoomTypes] = useState<RoomTypeOption[]>([
-    { type_name: 'Single', daily_rate: 15000, capacity: 1 },
-    { type_name: 'Double', daily_rate: 22000, capacity: 2 },
-    { type_name: 'Deluxe', daily_rate: 30000, capacity: 2 },
-    { type_name: 'Family', daily_rate: 40000, capacity: 4 },
-    { type_name: 'Suite', daily_rate: 55000, capacity: 3 },
-  ]);
+  const [branches, setBranches] = useState<BranchOption[]>([]);
+  const [roomTypes, setRoomTypes] = useState<RoomTypeOption[]>([]);
   const [allRooms, setAllRooms] = useState<
     { room_number: string; branch_name: string; type_name: string; public_id: string }[]
   >([]);
@@ -87,11 +77,7 @@ export default function NewReservationPage() {
     const branchRooms = allRooms.filter((r) => !selectedBranch || r.branch_name === selectedBranch);
     if (branchRooms.length > 0) return branchRooms.map((r) => r.room_number);
 
-    return selectedBranch === 'SkyNest Kandy'
-      ? ['K201', 'K202', 'K203']
-      : selectedBranch === 'SkyNest Galle'
-        ? ['G301', 'G302', 'G303', 'G304', 'G305']
-        : ['C101', 'C102', 'C103', 'C104'];
+    return [];
   }, [allRooms, selectedBranch, selectedRoomType]);
 
   useEffect(() => {

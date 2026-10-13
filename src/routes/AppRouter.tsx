@@ -23,6 +23,9 @@ import GuestServiceRequestPage from '../pages/frontdesk/GuestServiceRequestPage'
 import ServiceCataloguePage from '../pages/frontdesk/ServiceCataloguePage';
 import ReportsPage from '../pages/reports/ReportsPage';
 import StaffManagementPage from '../pages/manager/StaffManagementPage';
+import PublicRoomsPage from '../pages/guest/PublicRoomsPage';
+import GuestAuthPage from '../pages/guest/GuestAuthPage';
+import GuestPortalPage from '../pages/guest/GuestPortalPage';
 
 function Loading() {
   return (
@@ -66,6 +69,19 @@ function PublicRoute() {
   return <Login />;
 }
 
+/** Guest portal guard — allows guests, blocks staff redirect loops */
+function GuestPortalRoute() {
+  const { isLoading, isAuthenticated, user } = useAuth();
+
+  if (isLoading) return <Loading />;
+  if (!isAuthenticated) return <Navigate to="/guest/login" replace />;
+  // Staff members are redirected to their own home
+  if (user?.role && user.role !== 'guest') {
+    return <Navigate to={homeForRole(user.role)} replace />;
+  }
+  return <Outlet />;
+}
+
 function Home() {
   const { isLoading, isAuthenticated, user } = useAuth();
 
@@ -93,9 +109,19 @@ function Placeholder({ title }: { title: string }) {
 export function AppRouter() {
   return (
     <Routes>
+      {/* ── Public / guest-facing routes ── */}
       <Route path="/login" element={<PublicRoute />} />
+      <Route path="/guest/login" element={<GuestAuthPage />} />
+      <Route path="/rooms" element={<PublicRoomsPage />} />
       <Route path="/" element={<Home />} />
 
+      {/* ── Guest portal (authenticated guests only) ── */}
+      <Route element={<GuestPortalRoute />}>
+        <Route path="/guest" element={<Navigate to="/guest/dashboard" replace />} />
+        <Route path="/guest/dashboard" element={<GuestPortalPage />} />
+      </Route>
+
+      {/* ── Staff portal (all roles) ── */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AuthLayout />}>
           <Route path="/unauthorized" element={<Unauthorized />} />
@@ -189,13 +215,6 @@ export function AppRouter() {
               path="/services/requests"
               element={<ServiceRequestsQueuePage />}
             />
-
-            {/* Guest routes */}
-            <Route
-              path="/guest"
-              element={<Navigate to="/guest/dashboard" replace />}
-            />
-            <Route path="/guest/dashboard" element={<RoleDashboard />} />
           </Route>
         </Route>
       </Route>

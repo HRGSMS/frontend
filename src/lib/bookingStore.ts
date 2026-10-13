@@ -80,7 +80,7 @@ export const bookingStore = {
             bookingReference: row.booking_reference,
             guestName: row.guest_name || 'Guest',
             guestEmail: row.guest_email || 'guest@example.com',
-            branchName: row.branch_names || 'SkyNest Colombo',
+            branchName: row.branch_names || 'Main Branch',
             roomNumbers: row.room_numbers || 'Unassigned',
             roomType: 'Standard Room',
             bookingTime: row.booking_time || new Date().toISOString(),

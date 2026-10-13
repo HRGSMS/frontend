@@ -826,7 +826,7 @@ export default function ReportsPage() {
                             </td>
                             <td>
                               <span style={{ fontSize: '0.82rem', color: '#475569', fontWeight: 500 }}>
-                                {row.branch_names || 'SkyNest Colombo'}
+                                {row.branch_names || '—'}
                               </span>
                             </td>
                             <td>
