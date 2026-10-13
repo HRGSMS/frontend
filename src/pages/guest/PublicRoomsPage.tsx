@@ -122,7 +122,7 @@ export const PublicRoomsPage: React.FC = () => {
   const handleConfirmReservation = async () => {
     if (!bookingRoom) return;
     if (!isAuthenticated) {
-      navigate('/guest/login?redirect=rooms');
+      navigate('/login?redirect=rooms');
       return;
     }
     setIsBooking(true);
@@ -224,10 +224,10 @@ export const PublicRoomsPage: React.FC = () => {
             ) : (
               <div className="flex items-center gap-2">
                 <Link
-                  to="/guest/login"
+                  to="/login"
                   className="px-4 py-2 text-xs font-semibold rounded-lg border border-[#c5a86a] text-[#c5a86a] hover:bg-[#c5a86a] hover:text-[#0d1824] transition"
                 >
-                  Guest Login / Register
+                  Sign In / Register
                 </Link>
               </div>
             )}
@@ -445,7 +445,7 @@ export const PublicRoomsPage: React.FC = () => {
                         type="button"
                         onClick={() => {
                           if (!isAuthenticated) {
-                            navigate('/guest/login?redirect=rooms');
+                            navigate('/login?redirect=rooms');
                           } else {
                             setBookingRoom(room);
                             setBookingError(null);

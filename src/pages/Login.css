@@ -394,3 +394,98 @@
     letter-spacing: 0.16em;
   }
 }
+
+/* Tabs for Sign In vs Guest Registration */
+.sn-tabs-row {
+  display: flex;
+  gap: 4px;
+  background: rgba(226, 232, 240, 0.7);
+  padding: 4px;
+  border-radius: 9999px;
+  margin-bottom: 22px;
+}
+
+.sn-tab-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748b;
+  border: none;
+  background: transparent;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.sn-tab-btn.is-active {
+  background: #ffffff;
+  color: #00152f;
+  box-shadow: 0 2px 6px rgba(0, 21, 47, 0.1);
+}
+
+.sn-tab-btn:hover:not(.is-active) {
+  color: #00152f;
+}
+
+/* Password Eye Toggle */
+.sn-password-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sn-password-wrap .sn-input {
+  padding-right: 42px;
+}
+
+.sn-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.sn-password-toggle:hover {
+  color: #00152f;
+}
+
+/* 2-Column Form Row */
+.sn-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Switch link beneath submit */
+.sn-switch-link-wrap {
+  text-align: center;
+  margin-top: 18px;
+}
+
+.sn-switch-link-btn {
+  background: none;
+  border: none;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 0.15s ease;
+}
+
+.sn-switch-link-btn:hover {
+  color: #00152f;
+}
