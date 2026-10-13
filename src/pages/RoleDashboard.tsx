@@ -8,7 +8,6 @@ export function RoleDashboard() {
   const links =
     role === 'admin'
       ? [
-          ['User management', '/admin/users'],
           ['System settings', '/admin/settings'],
           ['Reports', '/admin/reports'],
           ['Hotel operations', '/frontdesk/dashboard'],
@@ -18,7 +17,6 @@ export function RoleDashboard() {
             ['Hotel operations', '/frontdesk/dashboard'],
             ['Revenue reports', '/manager/reports'],
             ['Analytics', '/manager/analytics'],
-            ['Staff management', '/manager/staff'],
           ]
         : role === 'service_staff'
           ? [['Service requests', '/services/requests']]

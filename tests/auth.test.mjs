@@ -197,7 +197,7 @@ test('login always selects the assigned dashboard, including after a permitted d
     loginDestination('front_desk', '/frontdesk/reservations/123?tab=bill'),
     '/frontdesk/dashboard',
   );
-  assert.equal(loginDestination('guest', '/admin/users'), '/guest/dashboard');
+  assert.equal(loginDestination('guest', '/admin/settings'), '/guest/dashboard');
   assert.equal(
     loginDestination('service_staff', '/frontdesk/payment-processing'),
     '/services/dashboard',
@@ -224,8 +224,8 @@ test('redirect destinations cannot escape their permitted application area', () 
   for (const destination of [
     'https://evil.test',
     '//evil.test',
-    '/frontdesk/../admin/users',
-    '/frontdesk/%2e%2e/admin/users',
+    '/frontdesk/../admin/settings',
+    '/frontdesk/%2e%2e/admin/settings',
     '/frontdesk/\\evil',
     '/frontdesk/\nadmin',
     '/login',

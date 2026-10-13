@@ -32,11 +32,11 @@ Vite environment values are public. Server credentials and secrets belong in the
 - Session restoration, expiry checks, local inactivity handling and cross-tab notifications.
 - Password changes with revocation of other sessions.
 - Shared authenticated navigation and sign-out.
-- Front desk dashboard with sample operational data and socket listeners.
-- Reservation, check-in/out, payment and service screens currently contain placeholders.
-- Manager/admin screens provide navigation and placeholder modules.
+- API-connected reservation, check-in/out, payment-recording, service, and reporting screens.
+- Persistent system settings for hotel contact details and standard arrival times.
+- Dedicated manager analytics and service staff dashboard. See [Management modules](docs/management-modules.md) for backend setup and behavior.
 - Guest/service staff have separate access policies; the guest portal is not implemented.
-- Axios wrappers for reservations, billing, services and reporting; business screens are not yet connected to them.
+- Cookie-authenticated API wrappers for reservations, billing, services, reporting, and management.
 
 See [Authentication implementation](BETTERAUTH_LOGIN_IMPLEMENTATION.md) for the role matrix, endpoint contract, session behavior and backend requirements. Accounts must be provisioned on the server; public signup is disabled.
 
@@ -69,7 +69,7 @@ Tests use the actual Better Auth client against mocked HTTP responses. They do n
 
 ## Remaining integration work
 
-Implement hotel workflows and connect their APIs. Enforce authentication, permissions and branch scope on the backend. Socket subscriptions require trusted branch membership and a running Socket.io server. Email password reset, MFA, lockout and server-side inactivity enforcement also require backend configuration.
+System settings still require a persistent backend endpoint. Guest portal work remains outstanding. Socket subscriptions require trusted branch membership and a running Socket.io server. Email password reset, MFA, lockout and server-side inactivity enforcement also require backend configuration.
 
 ## License
 

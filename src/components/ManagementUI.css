@@ -1,0 +1,186 @@
+.management-page {
+  max-width: 1280px;
+  margin: auto;
+  padding: 32px 24px;
+  color: #203b3a;
+}
+.management-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.management-heading h1 {
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.7px;
+}
+.management-heading p,
+.management-card > p {
+  color: #627472;
+}
+.management-eyebrow {
+  font-size: 11px;
+  letter-spacing: 2px;
+  font-weight: 700;
+}
+.management-page a {
+  color: #24635d;
+  text-decoration: underline;
+}
+.management-card {
+  background: white;
+  border: 1px solid #dfe7e5;
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+.management-card h2 {
+  font-size: 19px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+.management-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.management-metric {
+  display: block;
+  font-size: 28px;
+  margin-top: 8px;
+}
+.management-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 16px;
+}
+.management-page label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.management-page input,
+.management-page select,
+.management-page textarea {
+  border: 1px solid #b8cac6;
+  border-radius: 7px;
+  padding: 10px;
+  background: white;
+  color: #203b3a;
+  min-width: 0;
+  width: 100%;
+  font: inherit;
+}
+.management-page textarea {
+  min-height: 110px;
+}
+.management-page button {
+  background: #224846;
+  color: white;
+  padding: 9px 15px;
+  border-radius: 7px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.management-page button.secondary {
+  background: #eaf0ed;
+  color: #224846;
+}
+.management-page button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.management-page :focus-visible {
+  outline: 3px solid #87b7a9;
+  outline-offset: 3px;
+}
+.management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
+}
+.management-error {
+  padding: 14px;
+  background: #fff1f0;
+  color: #9b2929;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.management-success {
+  padding: 14px;
+  background: #eaf5ee;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.management-table-wrap {
+  overflow-x: auto;
+}
+.management-page table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.management-page th {
+  text-align: left;
+  background: #f2f6f4;
+  color: #566c68;
+  font-size: 12px;
+}
+.management-page td,
+.management-page th {
+  padding: 14px 10px;
+  border-bottom: 1px solid #e2e9e6;
+  vertical-align: top;
+}
+.management-page td small {
+  display: block;
+  color: #637772;
+}
+.management-page progress {
+  accent-color: #32776a;
+  width: 100%;
+  height: 16px;
+}
+.management-note {
+  border-bottom: 1px solid #e2e9e6;
+  padding: 14px 0;
+}
+.management-note p {
+  white-space: pre-wrap;
+}
+.management-note time {
+  font-size: 12px;
+  color: #637772;
+  display: block;
+}
+.management-muted {
+  color: #657671;
+  font-size: 13px;
+}
+.management-page fieldset:disabled {
+  opacity: 0.65;
+}
+.management-page fieldset {
+  min-width: 0;
+}
+.management-span {
+  grid-column: 1/-1;
+}
+@media (max-width: 650px) {
+  .management-page {
+    padding: 20px 12px;
+  }
+  .management-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .management-heading h1 {
+    font-size: 25px;
+  }
+}
