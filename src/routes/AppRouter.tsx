@@ -2,7 +2,6 @@ import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/auth-state';
 import { canAccessPath, homeForRole, loginDestination } from '../lib/auth-policy';
 import { AuthLayout } from '../components/AuthLayout';
-import { RoleDashboard } from '../pages/RoleDashboard';
 import Account from '../pages/Account';
 import { Login } from '../pages/Login';
 import { Unauthorized } from '../pages/Unauthorized';
@@ -18,6 +17,9 @@ import ServiceRequestsQueuePage from '../pages/frontdesk/ServiceRequestsQueuePag
 import GuestServiceRequestPage from '../pages/frontdesk/GuestServiceRequestPage';
 import ServiceCataloguePage from '../pages/frontdesk/ServiceCataloguePage';
 import ReportsPage from '../pages/reports/ReportsPage';
+import PublicRoomsPage from '../pages/guest/PublicRoomsPage';
+import GuestAuthPage from '../pages/guest/GuestAuthPage';
+import GuestPortalPage from '../pages/guest/GuestPortalPage';
 import SystemSettingsPage from '../pages/admin/SystemSettingsPage';
 import ServiceStaffDashboard from '../pages/services/ServiceStaffDashboard';
 import AnalyticsPage from '../pages/manager/AnalyticsPage';
@@ -57,6 +59,19 @@ function PublicRoute() {
   return <Login />;
 }
 
+/** Guest portal guard — allows guests, blocks staff redirect loops */
+function GuestPortalRoute() {
+  const { isLoading, isAuthenticated, user } = useAuth();
+
+  if (isLoading) return <Loading />;
+  if (!isAuthenticated) return <Navigate to="/guest/login" replace />;
+  // Staff members are redirected to their own home
+  if (user?.role && user.role !== 'guest') {
+    return <Navigate to={homeForRole(user.role)} replace />;
+  }
+  return <Outlet />;
+}
+
 function Home() {
   const { isLoading, isAuthenticated, user } = useAuth();
 
@@ -68,9 +83,19 @@ function Home() {
 export function AppRouter() {
   return (
     <Routes>
+      {/* ── Public / guest-facing routes ── */}
       <Route path="/login" element={<PublicRoute />} />
+      <Route path="/guest/login" element={<GuestAuthPage />} />
+      <Route path="/rooms" element={<PublicRoomsPage />} />
       <Route path="/" element={<Home />} />
 
+      {/* ── Guest portal (authenticated guests only) ── */}
+      <Route element={<GuestPortalRoute />}>
+        <Route path="/guest" element={<Navigate to="/guest/dashboard" replace />} />
+        <Route path="/guest/dashboard" element={<GuestPortalPage />} />
+      </Route>
+
+      {/* ── Staff portal (all roles) ── */}
       <Route element={<ProtectedRoute />}>
         <Route element={<AuthLayout />}>
           <Route path="/unauthorized" element={<Unauthorized />} />
@@ -104,14 +129,9 @@ export function AppRouter() {
             <Route path="/manager/reports" element={<ReportsPage />} />
             <Route path="/manager/analytics" element={<AnalyticsPage />} />
 
-            {/* General service routes */}
             <Route path="/services" element={<Navigate to="/services/dashboard" replace />} />
             <Route path="/services/dashboard" element={<ServiceStaffDashboard />} />
             <Route path="/services/requests" element={<ServiceRequestsQueuePage />} />
-
-            {/* Guest routes */}
-            <Route path="/guest" element={<Navigate to="/guest/dashboard" replace />} />
-            <Route path="/guest/dashboard" element={<RoleDashboard />} />
           </Route>
         </Route>
       </Route>
