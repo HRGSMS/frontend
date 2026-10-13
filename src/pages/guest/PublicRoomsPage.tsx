@@ -63,6 +63,7 @@ export const PublicRoomsPage: React.FC = () => {
   const [guestPhone, setGuestPhone] = useState('');
   const [isBooking, setIsBooking] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [hotlineCopied, setHotlineCopied] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
 
   /* ── Load config + branches + initial rooms safely ──────────────── */
@@ -248,10 +249,26 @@ export const PublicRoomsPage: React.FC = () => {
 
           <nav className="public-header-actions">
             {config.hotline_number && (
-              <a href={`tel:${config.hotline_number}`} className="public-hotline-btn">
+              <button
+                type="button"
+                onClick={() => {
+                  if (navigator.clipboard) {
+                    navigator.clipboard.writeText(config.hotline_number);
+                  }
+                  setHotlineCopied(true);
+                  setTimeout(() => setHotlineCopied(false), 2500);
+                }}
+                className="public-hotline-btn cursor-pointer"
+                title="Click to copy 24/7 hotline number"
+              >
                 <span>📞 Hotline:</span>
                 <span className="font-semibold text-slate-800">{config.hotline_number}</span>
-              </a>
+                {hotlineCopied && (
+                  <span className="ml-1 text-[11px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">
+                    Copied ✓
+                  </span>
+                )}
+              </button>
             )}
 
             {isAuthenticated ? (
