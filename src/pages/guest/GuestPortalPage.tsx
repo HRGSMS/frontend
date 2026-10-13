@@ -360,7 +360,7 @@ export const GuestPortalPage: React.FC = () => {
               onClick={() => navigate('/rooms')}
               className="guest-header-btn guest-btn-outline"
             >
-              🏨 Browse Rooms
+              Browse Rooms
             </button>
             <span className="text-xs text-[#626978] hidden sm:inline-block">
               {profile ? `${profile.first_name} ${profile.last_name}` : user?.name}
@@ -413,7 +413,6 @@ export const GuestPortalPage: React.FC = () => {
           <div className="guest-metric-card">
             <div className="guest-metric-top">
               <h2 className="guest-metric-title">NEXT CHECK-IN</h2>
-              <span className="guest-metric-icon">📅</span>
             </div>
             <p className="guest-metric-value text-2xl sm:text-3xl">{nextArrival}</p>
             <p className="guest-metric-note">
@@ -424,7 +423,6 @@ export const GuestPortalPage: React.FC = () => {
           <div className="guest-metric-card">
             <div className="guest-metric-top">
               <h2 className="guest-metric-title">TOTAL RESERVATIONS</h2>
-              <span className="guest-metric-icon">🛏️</span>
             </div>
             <p className="guest-metric-value">{bookings.length < 10 ? `0${bookings.length}` : bookings.length}</p>
             <p className="guest-metric-note">Lifetime stays with SkyNest Hotels</p>
@@ -433,7 +431,6 @@ export const GuestPortalPage: React.FC = () => {
           <div className="guest-metric-card">
             <div className="guest-metric-top">
               <h2 className="guest-metric-title">CHECK-OUT POLICY</h2>
-              <span className="guest-metric-icon">⏰</span>
             </div>
             <p className="guest-metric-value text-2xl sm:text-3xl">
               {hotelConfig?.checkout_time ?? '11:00 AM'}
@@ -445,7 +442,6 @@ export const GuestPortalPage: React.FC = () => {
           <div className="guest-metric-card guest-metric-featured">
             <div className="guest-metric-top">
               <h2 className="guest-metric-title">OUTSTANDING BALANCE</h2>
-              <span className="text-[#a5b4fc]">💳</span>
             </div>
             <p className="guest-metric-value text-2xl sm:text-3xl">{lkr(totalOutstanding)}</p>
             <p className="guest-metric-note">
@@ -687,7 +683,7 @@ export const GuestPortalPage: React.FC = () => {
             onClick={() => navigate('/rooms')}
             className="guest-header-btn guest-btn-primary px-8 py-3.5 text-sm"
           >
-            🏨 Book Another Room at SkyNest Hotels
+            Book Another Room at SkyNest Hotels
           </button>
         </section>
       </main>
