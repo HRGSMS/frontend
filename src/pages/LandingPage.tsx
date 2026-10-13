@@ -1,35 +1,124 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { guestApi, type BranchItem, type HotelConfig } from '../api/guestApi';
+import { guestApi, type AvailableRoom, type BranchItem, type HotelConfig } from '../api/guestApi';
 import { FloatingContactButtonAuto } from '../components/FloatingContactButton';
 import './LandingPage.css';
+
+interface BranchStats extends BranchItem {
+  minPrice: number;
+  totalRooms: number;
+  availableRooms: number;
+  roomTypes: string[];
+}
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
   const [branches, setBranches] = useState<BranchItem[]>([]);
+  const [branchStats, setBranchStats] = useState<Record<string, BranchStats>>({});
   const [hotelConfig, setHotelConfig] = useState<HotelConfig | null>(null);
 
-  // Search parameters for quick room availability check
+  // Date calculation utilities
   const today = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
+  const addDays = (dateStr: string, days: number): string => {
+    try {
+      const d = new Date(dateStr);
+      d.setDate(d.getDate() + days);
+      return d.toISOString().split('T')[0];
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const defaultCheckout = addDays(today, 2);
+
   const [selectedBranch, setSelectedBranch] = useState<string>('all');
   const [checkIn, setCheckIn] = useState<string>(today);
-  const [checkOut, setCheckOut] = useState<string>(tomorrow);
+  const [checkOut, setCheckOut] = useState<string>(defaultCheckout);
+
+  // Synchronize check-in and check-out so check-out is always strictly after check-in
+  const handleCheckInChange = (newIn: string) => {
+    setCheckIn(newIn);
+    if (!checkOut || new Date(checkOut) <= new Date(newIn)) {
+      setCheckOut(addDays(newIn, 2));
+    }
+  };
+
+  const handleCheckOutChange = (newOut: string) => {
+    if (new Date(newOut) <= new Date(checkIn)) {
+      setCheckOut(addDays(checkIn, 1));
+      return;
+    }
+    setCheckOut(newOut);
+  };
 
   useEffect(() => {
-    Promise.all([
-      guestApi.getBranches().catch(() => []),
-      guestApi.getHotelConfig().catch(() => null),
-    ]).then(([branchList, cfg]) => {
-      if (branchList.length > 0) setBranches(branchList);
-      if (cfg) setHotelConfig(cfg);
+    // Connect with live database room inventory and hotel configuration
+    Promise.allSettled([
+      guestApi.getRooms(),
+      guestApi.getHotelConfig(),
+    ]).then(([roomsRes, cfgRes]) => {
+      if (cfgRes.status === 'fulfilled') {
+        setHotelConfig(cfgRes.value);
+      }
+
+      if (roomsRes.status === 'fulfilled') {
+        const rooms: AvailableRoom[] = roomsRes.value;
+
+        // Derive branches directly from database room inventory
+        const derivedBranches: BranchItem[] = Array.from(
+          new Map(
+            rooms.map((r) => [
+              r.branch_public_id,
+              {
+                public_id: r.branch_public_id,
+                name: r.branch_name,
+                location_city: r.branch_name.replace('SkyNest ', ''),
+              },
+            ]),
+          ).values(),
+        );
+
+        setBranches(derivedBranches);
+
+        // Aggregate stats per branch (lowest price, total rooms, types)
+        const stats: Record<string, BranchStats> = {};
+        for (const b of derivedBranches) {
+          const bRooms = rooms.filter((r) => r.branch_public_id === b.public_id);
+          const prices = bRooms.map((r) => Number(r.daily_rate)).filter((p) => p > 0);
+          const minP = prices.length > 0 ? Math.min(...prices) : 15000;
+          const types = Array.from(new Set(bRooms.map((r) => r.type_name)));
+
+          stats[b.public_id] = {
+            ...b,
+            minPrice: minP,
+            totalRooms: bRooms.length,
+            availableRooms: bRooms.filter((r) => r.booking_availability === 1).length,
+            roomTypes: types,
+          };
+        }
+        setBranchStats(stats);
+      }
     });
   }, []);
 
   const handleSearchRooms = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/rooms?from=${checkIn}&to=${checkOut}`);
+    const finalOut = new Date(checkOut) <= new Date(checkIn) ? addDays(checkIn, 1) : checkOut;
+    const branchQuery = selectedBranch !== 'all' ? `&branch=${encodeURIComponent(selectedBranch)}` : '';
+    navigate(`/rooms?from=${checkIn}&to=${finalOut}${branchQuery}`);
   };
+
+  const getBranchDataByName = (keyword: string): BranchStats | undefined => {
+    return Object.values(branchStats).find((b) =>
+      b.name.toLowerCase().includes(keyword.toLowerCase()),
+    );
+  };
+
+  const colomboData = getBranchDataByName('Colombo');
+  const kandyData = getBranchDataByName('Kandy');
+  const galleData = getBranchDataByName('Galle');
+
+  const formatLkr = (amount: number) => `LKR ${Number(amount).toLocaleString('en-US')}`;
 
   return (
     <div className="lp-page">
@@ -37,12 +126,16 @@ export const LandingPage: React.FC = () => {
       <header className="lp-header">
         <div className="lp-header-inner">
           <Link to="/" className="lp-brand">
-            <span className="lp-monogram">SN</span>
+            <span className="lp-monogram">
+              {(hotelConfig?.hotel_name ?? 'SN').slice(0, 2).toUpperCase()}
+            </span>
             <div className="lp-brand-text">
               <span className="lp-brand-name">
                 {hotelConfig?.hotel_name ?? 'SkyNest Hotels'}
               </span>
-              <span className="lp-brand-tagline">Resorts & Sanctuaries</span>
+              <span className="lp-brand-tagline">
+                {hotelConfig?.hotel_tagline ?? 'Luxury Stays & Serenity'}
+              </span>
             </div>
           </Link>
 
@@ -69,7 +162,11 @@ export const LandingPage: React.FC = () => {
         <div className="lp-hero-content">
           <div className="lp-hero-eyebrow">
             <span>✦</span>
-            <span>Exquisite Hospitality Across Sri Lanka</span>
+            <span>
+              {branches.length > 0
+                ? `${branches.length} Destinations Across Sri Lanka`
+                : 'Exquisite Hospitality Across Sri Lanka'}
+            </span>
             <span>✦</span>
           </div>
 
@@ -78,11 +175,11 @@ export const LandingPage: React.FC = () => {
           </h1>
 
           <p className="lp-hero-desc">
-            Immerse yourself in unrivaled elegance across our sanctuaries in Colombo, Kandy, and Galle.
-            Bespoke suites, culinary artistry, and personalized guest service.
+            {hotelConfig?.hotel_description ??
+              'Immerse yourself in unrivaled elegance across our sanctuaries in Colombo, Kandy, and Galle. Bespoke suites, culinary artistry, and personalized guest service.'}
           </p>
 
-          {/* Quick Booking Strip */}
+          {/* Quick Booking Strip — Connected to Live Database */}
           <form onSubmit={handleSearchRooms} className="lp-search-strip">
             <div className="lp-search-group">
               <label className="lp-search-label">Destination</label>
@@ -91,7 +188,9 @@ export const LandingPage: React.FC = () => {
                 onChange={(e) => setSelectedBranch(e.target.value)}
                 className="lp-search-select"
               >
-                <option value="all">All Destinations</option>
+                <option value="all">
+                  All Destinations {branches.length > 0 ? `(${branches.length} Locations)` : ''}
+                </option>
                 {branches.map((b) => (
                   <option key={b.public_id} value={b.public_id}>
                     {b.name} ({b.location_city})
@@ -106,7 +205,7 @@ export const LandingPage: React.FC = () => {
                 type="date"
                 min={today}
                 value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
+                onChange={(e) => handleCheckInChange(e.target.value)}
                 className="lp-search-input"
                 required
               />
@@ -116,9 +215,9 @@ export const LandingPage: React.FC = () => {
               <label className="lp-search-label">Check-Out</label>
               <input
                 type="date"
-                min={checkIn}
+                min={addDays(checkIn, 1)}
                 value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
+                onChange={(e) => handleCheckOutChange(e.target.value)}
                 className="lp-search-input"
                 required
               />
@@ -145,11 +244,13 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ══ DESTINATIONS SECTION ══ */}
+      {/* ══ DESTINATIONS SECTION (Mapped to Database Branches) ══ */}
       <section id="destinations" className="lp-section-destinations">
         <div className="lp-section-header">
           <p className="lp-section-eyebrow">Iconic Sanctuaries</p>
-          <h2 className="lp-section-title">Discover Our Three Premier Locations</h2>
+          <h2 className="lp-section-title">
+            Discover Our {branches.length > 0 ? branches.length : 3} Premier Locations
+          </h2>
           <p className="lp-section-desc">
             From cosmopolitan oceanfront high-rises to misty mountain hideaways and historic colonial ramparts, each SkyNest hotel offers an unforgettable sense of place.
           </p>
@@ -172,8 +273,19 @@ export const LandingPage: React.FC = () => {
                 Urban oceanfront sanctuary in the capital. Panoramic Indian Ocean views, rooftop infinity lounge, and premier access to luxury shopping and commerce.
               </p>
               <div className="lp-dest-meta">
-                <span className="lp-dest-price">From <strong>LKR 25,000</strong> / night</span>
-                <Link to="/rooms" className="lp-dest-link">View Suites →</Link>
+                <span className="lp-dest-price">
+                  From <strong>{colomboData ? formatLkr(colomboData.minPrice) : 'LKR 15,000'}</strong> / night
+                </span>
+                <Link
+                  to={
+                    colomboData
+                      ? `/rooms?branch=${colomboData.public_id}&from=${checkIn}&to=${checkOut}`
+                      : '/rooms'
+                  }
+                  className="lp-dest-link"
+                >
+                  View Suites →
+                </Link>
               </div>
             </div>
           </article>
@@ -194,8 +306,19 @@ export const LandingPage: React.FC = () => {
                 Nestled amidst misty central highlands and lush rainforests. Authentic cultural serenity, mountain-view balconies, and serene tea estate tours.
               </p>
               <div className="lp-dest-meta">
-                <span className="lp-dest-price">From <strong>LKR 22,000</strong> / night</span>
-                <Link to="/rooms" className="lp-dest-link">View Suites →</Link>
+                <span className="lp-dest-price">
+                  From <strong>{kandyData ? formatLkr(kandyData.minPrice) : 'LKR 15,000'}</strong> / night
+                </span>
+                <Link
+                  to={
+                    kandyData
+                      ? `/rooms?branch=${kandyData.public_id}&from=${checkIn}&to=${checkOut}`
+                      : '/rooms'
+                  }
+                  className="lp-dest-link"
+                >
+                  View Suites →
+                </Link>
               </div>
             </div>
           </article>
@@ -216,8 +339,19 @@ export const LandingPage: React.FC = () => {
                 Heritage-inspired coastal resort along golden southern sands. Steps from the historic Dutch Fort, offering private plunge pools and seafood dining.
               </p>
               <div className="lp-dest-meta">
-                <span className="lp-dest-price">From <strong>LKR 30,000</strong> / night</span>
-                <Link to="/rooms" className="lp-dest-link">View Suites →</Link>
+                <span className="lp-dest-price">
+                  From <strong>{galleData ? formatLkr(galleData.minPrice) : 'LKR 15,000'}</strong> / night
+                </span>
+                <Link
+                  to={
+                    galleData
+                      ? `/rooms?branch=${galleData.public_id}&from=${checkIn}&to=${checkOut}`
+                      : '/rooms'
+                  }
+                  className="lp-dest-link"
+                >
+                  View Suites →
+                </Link>
               </div>
             </div>
           </article>
@@ -314,14 +448,18 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ══ FOOTER ══ */}
+      {/* ══ FOOTER (Connected to Database Hotel Settings) ══ */}
       <footer className="lp-footer">
         <div className="lp-footer-inner">
           <div className="lp-footer-top">
             <div className="lp-footer-brand">
               <div className="lp-brand">
-                <span className="lp-monogram">SN</span>
-                <span className="lp-brand-name">SkyNest Hotels & Resorts</span>
+                <span className="lp-monogram">
+                  {(hotelConfig?.hotel_name ?? 'SN').slice(0, 2).toUpperCase()}
+                </span>
+                <span className="lp-brand-name">
+                  {hotelConfig?.hotel_name ?? 'SkyNest Hotels & Resorts'}
+                </span>
               </div>
               <p>
                 {hotelConfig?.hotel_tagline ??
@@ -346,8 +484,9 @@ export const LandingPage: React.FC = () => {
 
             <div className="lp-footer-links-col">
               <span className="lp-footer-heading">Direct Concierge</span>
-              <span className="lp-footer-link">Hotline: {hotelConfig?.hotline_number || '0760 218 879'}</span>
-              <span className="lp-footer-link">Email: {hotelConfig?.contact_email || 'info@skynesthotels.lk'}</span>
+              <span className="lp-footer-link">Hotline: {hotelConfig?.hotline_number || '0760218879'}</span>
+              <span className="lp-footer-link">Check-In: From {hotelConfig?.checkin_time || '14:00'}</span>
+              <span className="lp-footer-link">Check-Out: By {hotelConfig?.checkout_time || '11:00'}</span>
               <span className="lp-footer-link">Head Office: Colombo 03, Sri Lanka</span>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   type AvailableRoom,
   type BranchItem,
@@ -32,15 +32,46 @@ const CONFIG_DEFAULTS: HotelConfig = {
 export const PublicRoomsPage: React.FC = () => {
   const { user, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // URL Query Parameters from Landing Page or direct links
+  const paramFrom = searchParams.get('from');
+  const paramTo = searchParams.get('to');
+  const paramBranch = searchParams.get('branch');
 
   // Date defaults
   const today = new Date().toISOString().split('T')[0];
-  const defaultCheckout = new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0];
+  const addDays = (d: string, n: number) => {
+    try {
+      const dt = new Date(d);
+      dt.setDate(dt.getDate() + n);
+      return dt.toISOString().split('T')[0];
+    } catch {
+      return d;
+    }
+  };
 
-  const [checkIn, setCheckIn] = useState(today);
-  const [checkOut, setCheckOut] = useState(defaultCheckout);
-  const [selectedBranch, setSelectedBranch] = useState('All');
+  const defaultCheckout = addDays(today, 2);
+
+  const [checkIn, setCheckIn] = useState(paramFrom || today);
+  const [checkOut, setCheckOut] = useState(paramTo || defaultCheckout);
+  const [selectedBranch, setSelectedBranch] = useState(paramBranch || 'All');
   const [minCapacity, setMinCapacity] = useState('1');
+
+  const handleCheckInChange = (newIn: string) => {
+    setCheckIn(newIn);
+    if (!checkOut || new Date(checkOut) <= new Date(newIn)) {
+      setCheckOut(addDays(newIn, 2));
+    }
+  };
+
+  const handleCheckOutChange = (newOut: string) => {
+    if (new Date(newOut) <= new Date(checkIn)) {
+      setCheckOut(addDays(checkIn, 1));
+      return;
+    }
+    setCheckOut(newOut);
+  };
 
   // API-driven data
   const [rooms, setRooms] = useState<AvailableRoom[]>([]);
@@ -335,7 +366,7 @@ export const PublicRoomsPage: React.FC = () => {
                 type="date"
                 min={today}
                 value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
+                onChange={(e) => handleCheckInChange(e.target.value)}
                 className="public-search-input"
                 required
               />
@@ -345,9 +376,9 @@ export const PublicRoomsPage: React.FC = () => {
               <label className="public-search-label">Check-Out Date</label>
               <input
                 type="date"
-                min={checkIn || today}
+                min={addDays(checkIn, 1)}
                 value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
+                onChange={(e) => handleCheckOutChange(e.target.value)}
                 className="public-search-input"
                 required
               />
