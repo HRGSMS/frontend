@@ -372,7 +372,7 @@ export const PublicRoomsPage: React.FC = () => {
             <p className="text-sm font-medium">Checking live room availability across all branches...</p>
           </div>
         ) : filteredRooms.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+          <div className="public-empty-state text-center py-16 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
             <p className="text-slate-800 text-base font-medium">
               No rooms match your filter criteria for these dates.
             </p>

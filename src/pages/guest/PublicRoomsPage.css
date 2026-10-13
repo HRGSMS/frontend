@@ -1,19 +1,25 @@
-/* PublicRoomsPage.css — Aligned with FrontDesk & GuestPortal Light Aesthetic */
+/* Public room discovery — SkyNest frosted navy hospitality theme. */
 .public-rooms-root {
   --pr-ink: #00152f;
-  --pr-muted: #626978;
-  --pr-line: #e9ecf5;
-  --pr-gold: #806b43;
+  --pr-muted: #58697d;
+  --pr-line: rgba(91, 115, 142, 0.18);
+  --pr-gold: #58697d;
   --pr-navy: #00152f;
   --pr-navy-hover: #0f2a4a;
-  --pr-card-bg: #ffffff;
+  --pr-card-bg: rgba(246, 248, 250, 0.86);
+  --pr-shadow: 0 12px 36px -20px rgba(0, 21, 47, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   --pr-subtle-bg: #f8fafc;
-  
+
   color-scheme: light;
   color: var(--pr-ink);
-  background: radial-gradient(ellipse at 100% 0%, #f0f3ff 0, transparent 40%), #f9f9ff;
+  background: #e9eef3;
+  background-image:
+    linear-gradient(rgba(233, 239, 245, 0.89), rgba(240, 244, 248, 0.97)), url('/images/login2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   min-height: 100vh;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   display: flex;
   flex-direction: column;
 }
@@ -23,9 +29,9 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(246, 248, 250, 0.82);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
   border-bottom: 1px solid var(--pr-line);
   padding: 16px 24px;
 }
@@ -47,8 +53,9 @@
 }
 
 .public-brand-monogram {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  flex-shrink: 0;
+  height: 42px;
   border-radius: 50%;
   background: #00152f;
   color: #ffffff;
@@ -62,8 +69,9 @@
 }
 
 .public-brand-title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 22px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
   color: var(--pr-ink);
 }
 
@@ -108,12 +116,15 @@
   font-size: 12.5px;
   font-weight: 600;
   padding: 8px 16px;
-  border-radius: 10px;
+  border-radius: 999px;
+  min-height: 46px;
   background: var(--pr-navy);
   color: #ffffff;
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
   border: none;
 }
 
@@ -128,13 +139,16 @@
   font-size: 12.5px;
   font-weight: 600;
   padding: 8px 16px;
-  border-radius: 10px;
+  border-radius: 999px;
+  min-height: 46px;
   border: 1px solid var(--pr-line);
   background: #ffffff;
   color: var(--pr-ink);
   text-decoration: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .public-btn-outline:hover {
@@ -143,7 +157,11 @@
 
 /* ── Hero Section ── */
 .public-hero-section {
-  padding: 48px 24px 32px;
+  padding: 76px 24px 36px;
+  background:
+    linear-gradient(180deg, rgba(0, 21, 47, 0.68), rgba(0, 21, 47, 0.48)),
+    url('/images/login2.jpg') center 54% / cover;
+  border-radius: 0 0 36px 36px;
   text-align: center;
   position: relative;
 }
@@ -156,38 +174,41 @@
 .public-hero-eyebrow {
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: var(--pr-gold);
-  margin-bottom: 8px;
+  color: #dce6f2;
+  margin-bottom: 18px;
 }
 
 .public-hero-heading {
   font-family: Georgia, Cambria, 'Times New Roman', serif;
-  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-size: clamp(2.25rem, 4.5vw, 3.75rem);
   font-weight: 400;
-  color: var(--pr-ink);
-  letter-spacing: -0.01em;
+  color: #ffffff;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
   line-height: 1.2;
 }
 
 .public-hero-desc {
   font-size: 14.5px;
-  color: var(--pr-muted);
+  color: #e1e9f2;
   max-width: 620px;
   margin: 12px auto 0;
-  line-height: 1.6;
+  line-height: 1.8;
 }
 
 /* ── Search & Filter Bar ── */
 .public-search-card {
   max-width: 1080px;
-  margin: 32px auto 0;
-  background: #ffffff;
-  border: 1px solid var(--pr-line);
-  border-radius: 18px;
-  padding: 20px 24px;
-  box-shadow: 0 4px 20px -2px rgba(0, 21, 47, 0.05);
+  margin: 40px auto 0;
+  background: var(--pr-card-bg);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--pr-shadow);
 }
 
 .public-search-form {
@@ -244,14 +265,17 @@
   font-size: 13.5px;
   font-weight: 600;
   padding: 10px 20px;
-  border-radius: 10px;
+  border-radius: 999px;
+  min-height: 46px;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  transition: all 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
   white-space: nowrap;
   width: 100%;
 }
@@ -285,8 +309,9 @@
 }
 
 .public-results-title {
-  font-size: 19px;
-  font-weight: 600;
+  font-size: 28px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
   color: var(--pr-ink);
 }
 
@@ -329,12 +354,18 @@
 }
 
 .public-room-card {
-  background: #ffffff;
-  border: 1px solid var(--pr-line);
-  border-radius: 16px;
+  background: var(--pr-card-bg);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 21, 47, 0.04);
-  transition: all 0.2s ease;
+  box-shadow: var(--pr-shadow);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -347,12 +378,14 @@
 }
 
 .public-card-banner {
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-  padding: 20px;
+  background:
+    radial-gradient(ellipse at 100% 0%, rgba(116, 149, 181, 0.35), transparent 65%),
+    linear-gradient(130deg, #00152f, #1e3a58);
+  padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 150px;
+  min-height: 180px;
   border-bottom: 1px solid var(--pr-line);
 }
 
@@ -360,6 +393,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .public-branch-pill {
@@ -367,9 +402,10 @@
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 9999px;
-  background: #ffffff;
-  color: var(--pr-ink);
-  border: 1px solid #cbd5e1;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  overflow-wrap: anywhere;
 }
 
 .public-avail-pill {
@@ -396,21 +432,23 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: var(--pr-muted);
+  color: #c7d8eb;
   display: block;
-  margin-top: 10px;
+  margin-top: 24px;
 }
 
 .public-room-type {
   font-family: Georgia, Cambria, 'Times New Roman', serif;
-  font-size: 20px;
+  font-size: 28px;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
   font-weight: 400;
-  color: var(--pr-ink);
+  color: #ffffff;
   margin-top: 2px;
 }
 
 .public-card-body {
-  padding: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -427,10 +465,11 @@
 .public-detail-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   font-size: 12.5px;
   padding-bottom: 8px;
-  border-bottom: 1px dashed #f1f5f9;
+  border-bottom: 1px solid var(--pr-line);
+  gap: 16px;
+  align-items: baseline;
 }
 
 .public-detail-label {
@@ -447,6 +486,8 @@
   align-items: baseline;
   justify-content: space-between;
   padding-top: 6px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .public-price-label {
@@ -455,8 +496,11 @@
 }
 
 .public-price-amount {
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 25px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  font-weight: 400;
   color: var(--pr-ink);
 }
 
@@ -465,12 +509,15 @@
   background: var(--pr-navy);
   color: #ffffff;
   padding: 11px 16px;
-  border-radius: 10px;
+  border-radius: 999px;
+  min-height: 46px;
   font-size: 12.5px;
   font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease;
   letter-spacing: 0.3px;
   text-align: center;
 }
@@ -494,12 +541,17 @@
 }
 
 .public-modal-card {
-  background: #ffffff;
-  border: 1px solid var(--pr-line);
-  border-radius: 18px;
+  background: var(--pr-card-bg);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 28px;
   max-width: 520px;
   width: 100%;
-  padding: 24px;
+  padding: 28px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   box-shadow: 0 20px 45px -10px rgba(0, 21, 47, 0.2);
   color: var(--pr-ink);
 }
@@ -530,7 +582,10 @@
   font-size: 18px;
   color: var(--pr-muted);
   cursor: pointer;
-  padding: 4px;
+  padding: 8px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
 }
 
 .public-close-btn:hover {
@@ -540,9 +595,110 @@
 /* ── Footer ── */
 .public-rooms-footer {
   border-top: 1px solid var(--pr-line);
-  background: #ffffff;
-  padding: 24px;
+  background: rgba(246, 248, 250, 0.78);
+  padding: 28px 24px;
   text-align: center;
   font-size: 12px;
   color: var(--pr-muted);
+}
+
+/* Focus, small-screen layouts, and motion preferences. */
+.public-rooms-root :focus-visible {
+  outline: 3px solid #54789e;
+  outline-offset: 4px;
+}
+.public-search-form > div {
+  min-width: 0;
+}
+.public-search-input,
+.public-search-select {
+  min-height: 46px;
+  min-width: 0;
+  background: rgba(235, 240, 245, 0.85);
+  border-color: #d8e0e8;
+  border-radius: 12px;
+}
+.public-search-select option {
+  background: #f6f8fa;
+}
+.public-detail-value {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.public-halfpay-badge {
+  align-self: center;
+}
+.public-rooms-root button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.public-rooms-root .public-empty-state {
+  background: var(--pr-card-bg);
+  border: 1px solid white;
+  box-shadow: var(--pr-shadow);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+}
+.public-modal-card textarea {
+  min-height: 90px;
+  background: rgba(235, 240, 245, 0.85);
+  font-size: 14px;
+}
+.public-modal-card button:not(.public-close-btn) {
+  min-height: 44px;
+  border-radius: 999px;
+}
+.public-modal-card button[type='submit'] {
+  background: var(--pr-navy);
+}
+@media (max-width: 639px) {
+  .public-rooms-header {
+    padding: 14px 16px;
+  }
+  .public-rooms-header-inner {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .public-header-actions {
+    flex-wrap: wrap;
+  }
+  .public-brand-title {
+    font-size: 20px;
+  }
+  .public-brand-tagline {
+    font-size: 9px;
+  }
+  .public-hero-section {
+    padding: 44px 16px 24px;
+    border-radius: 0 0 24px 24px;
+  }
+  .public-hero-desc {
+    font-size: 14px;
+  }
+  .public-search-card {
+    margin-top: 28px;
+    padding: 20px;
+  }
+  .public-rooms-container {
+    padding: 28px 16px 40px;
+  }
+  .public-halfpay-badge {
+    align-self: flex-start;
+  }
+  .public-modal-card {
+    padding: 20px;
+    border-radius: 22px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .public-rooms-root *,
+  .public-rooms-root *::before,
+  .public-rooms-root *::after {
+    animation: none;
+    transition: none;
+    scroll-behavior: auto;
+  }
+  .public-room-card:hover {
+    transform: none;
+  }
 }
