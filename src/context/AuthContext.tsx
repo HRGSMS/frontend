@@ -64,6 +64,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const signUpGuest = async (payload: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone_number: string;
+    password: string;
+  }) => {
+    try {
+      const authBase =
+        import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:4000/api/auth';
+      const res = await fetch(`${authBase}/guest-sign-up`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const errorBody = await res.json().catch(() => ({}));
+        throw new Error(errorBody.error || 'Failed to create guest account');
+      }
+
+      return await signIn(payload.email, payload.password);
+    } catch (error) {
+      return { error: new Error(message(error)) };
+    }
+  };
+
   const signOut = useCallback(async () => {
     busy.current = true;
     const current = ++revision.current;
@@ -171,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!data,
         authError,
         signIn,
+        signUpGuest,
         signOut,
         refreshSession,
       }}
