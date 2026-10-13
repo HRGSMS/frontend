@@ -87,6 +87,20 @@ export interface PaymentMethod {
   display_name: string;
 }
 
+export interface PaymentResult {
+  public_id: string;
+  booking_public_id: string;
+  amount: number;
+  outstanding_amount?: number | string;
+  payment_status?: string;
+  sms_notification?: {
+    sent: boolean;
+    phone_number: string;
+    message: string;
+    timestamp: string;
+  };
+}
+
 export const guestApi = {
   getProfile: async () => {
     const res = await apiClient.get<{ data: GuestProfile }>('/guest/profile');
@@ -109,9 +123,12 @@ export const guestApi = {
 
   makePayment: async (
     bookingPublicId: string,
-    data: { amount: number; payment_method: string },
+    data: { amount: number; payment_method: string; phone_number?: string },
   ) => {
-    const res = await apiClient.post(`/guest/bookings/${bookingPublicId}/payments`, data);
+    const res = await apiClient.post<{ data: PaymentResult }>(
+      `/guest/bookings/${bookingPublicId}/payments`,
+      data,
+    );
     return res.data;
   },
 

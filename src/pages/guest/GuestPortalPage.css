@@ -303,10 +303,14 @@
   border: 1px solid var(--gp-line);
   border-radius: 20px;
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
   padding: 28px;
   box-shadow: 0 24px 48px -12px rgba(0, 21, 47, 0.25);
   color: var(--gp-ink);
+}
+
+.guest-gateway-card {
+  max-width: 520px;
 }
 
 .guest-modal-title {
@@ -316,3 +320,26 @@
   color: var(--gp-ink);
   margin: 0 0 8px;
 }
+
+.guest-gateway-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.guest-gateway-tab.active {
+  border-color: #00152f;
+  background: #ffffff;
+  color: #00152f;
+  box-shadow: 0 2px 6px rgba(0, 21, 47, 0.08);
+}
+

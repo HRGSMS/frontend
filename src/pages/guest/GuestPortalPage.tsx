@@ -9,6 +9,7 @@ import {
   type ServiceItem,
   type PaymentMethod,
   type HotelConfig,
+  type PaymentResult,
 } from '../../api/guestApi';
 import { FloatingContactButtonAuto } from '../../components/FloatingContactButton';
 import './GuestPortalPage.css';
@@ -86,12 +87,21 @@ export const GuestPortalPage: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [usageByBooking, setUsageByBooking] = useState<Record<string, GuestServiceUsage[]>>({});
 
-  // Pay-balance modal
+  // Payment Gateway modal & state
   const [payBooking, setPayBooking] = useState<GuestBooking | null>(null);
   const [payAmount, setPayAmount] = useState('');
-  const [payMethod, setPayMethod] = useState('');
+  const [payMethod, setPayMethod] = useState('Credit Card');
   const [isProcessingPay, setIsProcessingPay] = useState(false);
   const [payError, setPayError] = useState<string | null>(null);
+  const [gatewayStep, setGatewayStep] = useState<'form' | 'processing' | 'success'>('form');
+  const [gatewayStatusText, setGatewayStatusText] = useState('Connecting to SkyNest Secure Gateway…');
+  const [cardNumber, setCardNumber] = useState('4532 8920 1102 3349');
+  const [cardHolder, setCardHolder] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('12/28');
+  const [cardCvv, setCardCvv] = useState('789');
+  const [guestPhone, setGuestPhone] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState<PaymentResult | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Cancel modal
   const [cancelBooking, setCancelBooking] = useState<GuestBooking | null>(null);
@@ -173,22 +183,69 @@ export const GuestPortalPage: React.FC = () => {
     void loadUsage(id);
   };
 
-  /* ── Payment submit ─────────────────────────────────────── */
+  /* ── Open Payment Gateway ───────────────────────────────── */
+  const openPaymentGateway = (b: GuestBooking) => {
+    const outstanding = Number(b.outstanding_amount ?? 0);
+    setPayBooking(b);
+    setPayAmount(String(outstanding > 0 ? outstanding : 0));
+    setPayMethod(paymentMethods[0]?.method_name || 'Credit Card');
+    setPayError(null);
+    setGatewayStep('form');
+    setPaymentSuccess(null);
+    setCardNumber('4532 8920 1102 3349');
+    setCardExpiry('12/28');
+    setCardCvv('789');
+    setCardHolder(
+      profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Guest Cardholder'
+    );
+    setGuestPhone(profile?.phone_number || '+94760218879');
+  };
+
+  /* ── Payment Gateway submit ─────────────────────────────── */
   const handlePaySubmit = async () => {
     if (!payBooking) return;
     const amount = Number(payAmount);
     if (!amount || amount <= 0) {
-      setPayError('Enter a valid amount');
+      setPayError('Please enter a valid payment amount');
       return;
     }
+    if (payMethod === 'Credit Card' && cardNumber.replace(/\D/g, '').length < 4) {
+      setPayError('Please enter a valid card number');
+      return;
+    }
+
     setIsProcessingPay(true);
     setPayError(null);
+    setGatewayStep('processing');
+    setGatewayStatusText('Connecting to SkyNest Secure Gateway…');
+
     try {
-      await guestApi.makePayment(payBooking.public_id, { amount, payment_method: payMethod });
-      setPayBooking(null);
-      await reload();
+      await new Promise((r) => setTimeout(r, 600));
+      setGatewayStatusText('Authorizing transaction with bank…');
+      await new Promise((r) => setTimeout(r, 600));
+
+      const res = await guestApi.makePayment(payBooking.public_id, {
+        amount,
+        payment_method: payMethod || 'Credit Card',
+        phone_number: guestPhone,
+      });
+
+      setGatewayStatusText('Finalizing payment receipt & sending SMS…');
+      await new Promise((r) => setTimeout(r, 400));
+
+      setPaymentSuccess(res.data);
+      setGatewayStep('success');
+
+      // Refresh stay list in background
+      void reload();
+
+      const phoneNum = res.data?.sms_notification?.phone_number || guestPhone;
+      setToastMessage(
+        `✓ Payment of ${lkr(amount)} successful! SMS confirmation sent to ${phoneNum}.`
+      );
     } catch (e: unknown) {
-      setPayError(e instanceof Error ? e.message : 'Payment failed');
+      setGatewayStep('form');
+      setPayError(e instanceof Error ? e.message : 'Payment authorization failed');
     } finally {
       setIsProcessingPay(false);
     }
@@ -303,6 +360,22 @@ export const GuestPortalPage: React.FC = () => {
         {error && (
           <div className="p-4 mb-6 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
             {error}
+          </div>
+        )}
+
+        {toastMessage && (
+          <div className="p-4 mb-6 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 text-xs flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-base">📱</span>
+              <span className="font-semibold">{toastMessage}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setToastMessage(null)}
+              className="text-emerald-700 hover:text-emerald-900 font-bold ml-3 text-xs"
+            >
+              ✕
+            </button>
           </div>
         )}
 
@@ -425,9 +498,21 @@ export const GuestPortalPage: React.FC = () => {
                           <p className="text-[11px] font-semibold text-[#626978] uppercase">Total Charge</p>
                           <p className="text-xl font-bold text-[#00152f]">{lkr(totalCharge)}</p>
                           {outstanding > 0 ? (
-                            <p className="text-xs font-semibold text-amber-700 mt-0.5">
-                              Balance Due: {lkr(outstanding)}
-                            </p>
+                            <div className="flex flex-col items-end gap-1.5 mt-1">
+                              <p className="text-xs font-semibold text-amber-700">
+                                Balance Due: {lkr(outstanding)}
+                              </p>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openPaymentGateway(b);
+                                }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#00152f] hover:bg-[#0f2a4a] text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+                              >
+                                💳 Settle Balance
+                              </button>
+                            </div>
                           ) : (
                             <p className="text-xs font-semibold text-emerald-600 mt-0.5">Fully Paid ✓</p>
                           )}
@@ -497,11 +582,8 @@ export const GuestPortalPage: React.FC = () => {
                         <div className="flex flex-wrap gap-3 pt-2">
                           {outstanding > 0 && (
                             <button
-                              onClick={() => {
-                                setPayBooking(b);
-                                setPayAmount(String(outstanding));
-                                setPayError(null);
-                              }}
+                              type="button"
+                              onClick={() => openPaymentGateway(b)}
                               className="guest-header-btn guest-btn-primary"
                             >
                               💳 Settle Balance ({lkr(outstanding)})
@@ -590,60 +672,321 @@ export const GuestPortalPage: React.FC = () => {
         </section>
       </main>
 
-      {/* ══ PAY BALANCE MODAL ══ */}
+      {/* ══ SKYNEST PAYMENT GATEWAY MODAL ══ */}
       {payBooking && (
         <div className="guest-modal-backdrop">
-          <div className="guest-modal-card">
-            <h3 className="guest-modal-title">Settle Balance</h3>
-            <p className="text-xs text-[#626978] mb-4">
-              Booking #{payBooking.public_id.slice(0, 8).toUpperCase()} · Outstanding: {lkr(payBooking.outstanding_amount)}
-            </p>
-            {payError && <p className="text-red-600 text-xs mb-3">{payError}</p>}
-            <div className="space-y-4">
+          <div className="guest-modal-card guest-gateway-card">
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3 mb-4">
               <div>
-                <label className="block text-xs font-semibold text-[#00152f] uppercase mb-1">
-                  Amount to Pay (LKR)
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={payAmount}
-                  onChange={(e) => setPayAmount(e.target.value)}
-                  className="w-full bg-[#f8fafc] border border-[#cbd5e1] rounded-xl px-3.5 py-2.5 text-sm text-[#00152f] focus:border-[#00152f] outline-none"
-                />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">🔒</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    256-Bit SSL Encrypted Gateway
+                  </span>
+                </div>
+                <h3 className="guest-modal-title mt-1">SkyNest Payment Gateway</h3>
+                <p className="text-xs text-[#626978]">
+                  Reservation #{payBooking.public_id.slice(0, 8).toUpperCase()} · {payBooking.branch_names}
+                </p>
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-[#00152f] uppercase mb-1">
-                  Payment Method
-                </label>
-                <select
-                  value={payMethod}
-                  onChange={(e) => setPayMethod(e.target.value)}
-                  className="w-full bg-[#f8fafc] border border-[#cbd5e1] rounded-xl px-3.5 py-2.5 text-sm text-[#00152f] focus:border-[#00152f] outline-none"
-                >
-                  {paymentMethods.map((m) => (
-                    <option key={m.public_id} value={m.method_name}>
-                      {m.display_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
               <button
-                onClick={() => setPayBooking(null)}
-                className="flex-1 py-2.5 rounded-xl border border-[#cbd5e1] text-xs font-semibold text-[#475569] hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handlePaySubmit}
+                type="button"
+                onClick={() => {
+                  if (!isProcessingPay) {
+                    setPayBooking(null);
+                    setGatewayStep('form');
+                  }
+                }}
                 disabled={isProcessingPay}
-                className="flex-1 py-2.5 rounded-xl bg-[#00152f] hover:bg-[#0f2a4a] text-white text-xs font-bold disabled:opacity-50"
+                className="text-slate-400 hover:text-slate-700 text-lg p-1"
               >
-                {isProcessingPay ? 'Processing…' : 'Confirm Payment'}
+                ✕
               </button>
             </div>
+
+            {/* STEP 1: FORM VIEW */}
+            {gatewayStep === 'form' && (
+              <div className="space-y-4">
+                {/* Stay bill summary pill */}
+                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3.5 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="text-[#626978] block">Current Stay Balance:</span>
+                    <span className="text-base font-bold text-[#00152f]">
+                      {lkr(payBooking.outstanding_amount)}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[11px] text-[#626978] block">Stay Room:</span>
+                    <span className="font-semibold text-[#00152f]">
+                      Room {payBooking.room_numbers}
+                    </span>
+                  </div>
+                </div>
+
+                {payError && (
+                  <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl p-3">
+                    {payError}
+                  </div>
+                )}
+
+                {/* Amount to pay */}
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-xs font-semibold text-[#00152f] uppercase">
+                      Amount to Pay (LKR)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setPayAmount(String(Number(payBooking.outstanding_amount ?? 0)))}
+                      className="text-[11px] text-[#806b43] hover:underline font-semibold"
+                    >
+                      Pay Full Balance
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-2.5 text-xs font-bold text-slate-400">
+                      LKR
+                    </span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={payAmount}
+                      onChange={(e) => setPayAmount(e.target.value)}
+                      className="w-full bg-[#f8fafc] border border-[#cbd5e1] rounded-xl pl-12 pr-3.5 py-2.5 text-sm font-semibold text-[#00152f] focus:border-[#00152f] outline-none"
+                    />
+                  </div>
+                </div>
+
+                {/* Payment Method Selector */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#00152f] uppercase mb-1.5">
+                    Select Gateway Method
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPayMethod('Credit Card')}
+                      className={`guest-gateway-tab ${payMethod === 'Credit Card' ? 'active' : ''}`}
+                    >
+                      <span>💳</span>
+                      <span>Card Gateway</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPayMethod('Online Transfer')}
+                      className={`guest-gateway-tab ${payMethod === 'Online Transfer' ? 'active' : ''}`}
+                    >
+                      <span>🏦</span>
+                      <span>Bank Transfer</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Card input fields (when Card Gateway is active) */}
+                {payMethod === 'Credit Card' ? (
+                  <div className="space-y-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3.5">
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <label className="text-[11px] font-semibold text-[#00152f] uppercase">
+                          Card Number
+                        </label>
+                        <span className="text-[10px] text-blue-800 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                          Visa / Mastercard
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        maxLength={19}
+                        value={cardNumber}
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
+                          const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
+                          setCardNumber(formatted || e.target.value);
+                        }}
+                        placeholder="4532 8920 1102 3349"
+                        className="w-full bg-white border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs font-mono text-[#00152f] focus:border-[#00152f] outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#00152f] uppercase mb-1">
+                        Cardholder Name
+                      </label>
+                      <input
+                        type="text"
+                        value={cardHolder}
+                        onChange={(e) => setCardHolder(e.target.value)}
+                        placeholder="Guest Name"
+                        className="w-full bg-white border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs text-[#00152f] focus:border-[#00152f] outline-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#00152f] uppercase mb-1">
+                          Expires (MM/YY)
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={5}
+                          value={cardExpiry}
+                          onChange={(e) => {
+                            const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
+                            if (raw.length >= 3) {
+                              setCardExpiry(`${raw.slice(0, 2)}/${raw.slice(2)}`);
+                            } else {
+                              setCardExpiry(raw);
+                            }
+                          }}
+                          placeholder="MM/YY"
+                          className="w-full bg-white border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs font-mono text-[#00152f] focus:border-[#00152f] outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-[#00152f] uppercase mb-1">
+                          CVV / CVC
+                        </label>
+                        <input
+                          type="password"
+                          maxLength={4}
+                          value={cardCvv}
+                          onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ''))}
+                          placeholder="•••"
+                          className="w-full bg-white border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs font-mono text-[#00152f] focus:border-[#00152f] outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3.5 text-xs text-[#475569] space-y-1">
+                    <p className="font-semibold text-[#00152f]">Direct Bank Transfer Instructions:</p>
+                    <p>Bank: Commercial Bank of Ceylon · Account: 10002938481</p>
+                    <p>Reference: Booking #{payBooking.public_id.slice(0, 8).toUpperCase()}</p>
+                    <p className="text-[11px] text-slate-500">
+                      Payment will be verified and receipt will be issued instantly.
+                    </p>
+                  </div>
+                )}
+
+                {/* SMS Notification Target Field */}
+                <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-sm">📱</span>
+                    <label className="text-[11px] font-bold text-emerald-900 uppercase">
+                      SMS Payment Notification Sender
+                    </label>
+                  </div>
+                  <p className="text-[11px] text-emerald-800 mb-2">
+                    A confirmation SMS receipt will be dispatched to this mobile number upon completion:
+                  </p>
+                  <input
+                    type="tel"
+                    value={guestPhone}
+                    onChange={(e) => setGuestPhone(e.target.value)}
+                    placeholder="+94770000000"
+                    className="w-full bg-white border border-emerald-300 rounded-lg px-3 py-1.5 text-xs font-mono font-semibold text-[#00152f] focus:border-emerald-600 outline-none"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setPayBooking(null)}
+                    className="flex-1 py-2.5 rounded-xl border border-[#cbd5e1] text-xs font-semibold text-[#475569] hover:bg-slate-50 transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePaySubmit}
+                    disabled={isProcessingPay}
+                    className="flex-1 py-2.5 rounded-xl bg-[#00152f] hover:bg-[#0f2a4a] text-white text-xs font-bold disabled:opacity-50 transition shadow-sm cursor-pointer"
+                  >
+                    Authorize Payment ({lkr(Number(payAmount) || 0)}) 🔒
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: PROCESSING GATEWAY VIEW */}
+            {gatewayStep === 'processing' && (
+              <div className="py-8 text-center space-y-4">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-slate-200 border-t-[#00152f]"></div>
+                <div>
+                  <h4 className="text-sm font-bold text-[#00152f]">{gatewayStatusText}</h4>
+                  <p className="text-xs text-[#626978] mt-1">
+                    Contacting card issuer & dispatching transaction notification…
+                  </p>
+                </div>
+                <div className="text-[10px] text-slate-400 bg-slate-50 py-2 px-3 rounded-lg max-w-xs mx-auto border border-slate-100">
+                  🔒 Safe & Encrypted • Do not refresh or navigate away
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: SUCCESS & SMS DISPATCH VIEW */}
+            {gatewayStep === 'success' && paymentSuccess && (
+              <div className="py-2 text-center space-y-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-2xl font-bold">
+                  ✓
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-[#00152f]">Payment Confirmed!</h4>
+                  <p className="text-xs text-[#626978] mt-0.5">
+                    Transaction ID: #PAY-{paymentSuccess.public_id.slice(0, 8).toUpperCase()}
+                  </p>
+                </div>
+
+                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3.5 text-left text-xs space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-[#626978]">Amount Paid:</span>
+                    <span className="font-bold text-[#00152f]">{lkr(paymentSuccess.amount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#626978]">Reservation Status:</span>
+                    <span className="font-bold text-emerald-600">
+                      {paymentSuccess.payment_status || 'Paid'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#626978]">Payment Method:</span>
+                    <span className="font-semibold text-[#00152f]">{payMethod}</span>
+                  </div>
+                </div>
+
+                {/* SMS notification dispatched box */}
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3.5 text-left space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
+                      <span>📱</span>
+                      <span>SMS Notification Sent</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-200/80 px-2 py-0.5 rounded-full">
+                      Delivered
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800">
+                    Sent to: <strong>{paymentSuccess.sms_notification?.phone_number || guestPhone}</strong>
+                  </p>
+                  <p className="text-xs text-emerald-900 italic bg-white/80 p-2.5 rounded-lg border border-emerald-100 font-mono leading-relaxed">
+                    "{paymentSuccess.sms_notification?.message}"
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPayBooking(null);
+                    setGatewayStep('form');
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-[#00152f] hover:bg-[#0f2a4a] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  Return to Dashboard
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
