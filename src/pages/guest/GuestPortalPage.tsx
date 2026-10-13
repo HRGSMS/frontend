@@ -111,19 +111,42 @@ export const GuestPortalPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const [p, b, s, methods, cfg] = await Promise.all([
+      const [pRes, bRes, sRes, mRes, cRes] = await Promise.allSettled([
         guestApi.getProfile(),
         guestApi.getBookings(),
         guestApi.getServices(),
         guestApi.getPaymentMethods(),
-        guestApi.getHotelConfig().catch(() => null),
+        guestApi.getHotelConfig(),
       ]);
-      setProfile(p);
-      setBookings(b);
-      setServices(s);
-      setPaymentMethods(methods);
-      setHotelConfig(cfg);
-      if (methods.length > 0) setPayMethod(methods[0].method_name);
+
+      if (pRes.status === 'fulfilled') {
+        setProfile(pRes.value);
+      }
+      if (bRes.status === 'fulfilled') {
+        setBookings(bRes.value);
+      }
+      if (sRes.status === 'fulfilled') {
+        setServices(sRes.value);
+      }
+      if (mRes.status === 'fulfilled') {
+        setPaymentMethods(mRes.value);
+        if (mRes.value.length > 0) setPayMethod(mRes.value[0].method_name);
+      }
+      if (cRes.status === 'fulfilled') {
+        setHotelConfig(cRes.value);
+      }
+
+      // If both core guest data calls failed, present the server error message
+      if (pRes.status === 'rejected' && bRes.status === 'rejected') {
+        const extractMsg = (err: unknown) => {
+          if (err && typeof err === 'object' && 'response' in err) {
+            const res = (err as { response?: { data?: { error?: string } } }).response;
+            if (res?.data?.error) return res.data.error;
+          }
+          return err instanceof Error ? err.message : 'Unable to connect to database';
+        };
+        setError(extractMsg(pRes.reason));
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Failed to load guest portal data');
     } finally {
@@ -286,7 +309,7 @@ export const GuestPortalPage: React.FC = () => {
         {/* ── Eyebrow & Hero Title (FrontDesk style) ── */}
         <p className="guest-eyebrow">GUEST SERVICES · STAY OVERVIEW</p>
         <h1 className="guest-hero-heading">
-          Welcome back, {profile?.first_name || user?.name || 'Valued Guest'}.
+          Welcome back, {profile?.first_name || (user?.name && user.name !== 'Guest' ? user.name : '') || 'Valued Guest'}.
         </h1>
         <p className="guest-hero-desc">
           Here is a clear overview of your current room reservations, stay balance, and requested amenities.

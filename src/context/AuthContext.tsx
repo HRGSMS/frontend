@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { authClient, type Session } from '../lib/auth-client';
 import { authenticate, endSession, readSession } from '../lib/auth-session';
 
+import { authBaseURL } from '../lib/config';
 import { AuthContext } from './auth-state';
 
 const AUTH_CHANGE = 'hrgms:auth-change';
@@ -72,9 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string;
   }) => {
     try {
-      const authBase =
-        import.meta.env.VITE_AUTH_BASE_URL || 'http://localhost:4000/api/auth';
-      const res = await fetch(`${authBase}/guest-sign-up`, {
+      const res = await fetch(`${authBaseURL}/guest-sign-up`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
