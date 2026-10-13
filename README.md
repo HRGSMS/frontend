@@ -56,7 +56,6 @@ tests/
 
 Visual references are stored in `public/stitch-screens/`; they are design assets, not application routes.
 
-## Checks
 
 ```bash
 npm test
