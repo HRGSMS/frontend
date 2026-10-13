@@ -12,6 +12,12 @@ import {
   type PaymentResult,
 } from '../../api/guestApi';
 import { FloatingContactButtonAuto } from '../../components/FloatingContactButton';
+import {
+  validateCard,
+  formatCardNumber,
+  formatExpiry,
+  getCardBrand,
+} from '../../lib/payment-validation';
 import './GuestPortalPage.css';
 
 /* ── Status badges matching FrontDesk Dashboard ────────────────── */
@@ -95,10 +101,11 @@ export const GuestPortalPage: React.FC = () => {
   const [payError, setPayError] = useState<string | null>(null);
   const [gatewayStep, setGatewayStep] = useState<'form' | 'processing' | 'success'>('form');
   const [gatewayStatusText, setGatewayStatusText] = useState('Connecting to SkyNest Secure Gateway…');
-  const [cardNumber, setCardNumber] = useState('4532 8920 1102 3349');
+  const [cardNumber, setCardNumber] = useState('');
   const [cardHolder, setCardHolder] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('12/28');
-  const [cardCvv, setCardCvv] = useState('789');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvv, setCardCvv] = useState('');
+  const [bankRef, setBankRef] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
   const [paymentSuccess, setPaymentSuccess] = useState<PaymentResult | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -192,12 +199,11 @@ export const GuestPortalPage: React.FC = () => {
     setPayError(null);
     setGatewayStep('form');
     setPaymentSuccess(null);
-    setCardNumber('4532 8920 1102 3349');
-    setCardExpiry('12/28');
-    setCardCvv('789');
-    setCardHolder(
-      profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : 'Guest Cardholder'
-    );
+    setCardNumber('');
+    setCardExpiry('');
+    setCardCvv('');
+    setCardHolder('');
+    setBankRef('');
     setGuestPhone(profile?.phone_number || '+94760218879');
   };
 
@@ -209,9 +215,23 @@ export const GuestPortalPage: React.FC = () => {
       setPayError('Please enter a valid payment amount');
       return;
     }
-    if (payMethod === 'Credit Card' && cardNumber.replace(/\D/g, '').length < 4) {
-      setPayError('Please enter a valid card number');
-      return;
+
+    if (payMethod === 'Credit Card') {
+      const cardVal = validateCard({
+        number: cardNumber,
+        name: cardHolder,
+        expiry: cardExpiry,
+        cvv: cardCvv,
+      });
+      if (!cardVal.valid) {
+        setPayError(cardVal.error || 'Please enter valid credit card details');
+        return;
+      }
+    } else if (payMethod === 'Online Transfer') {
+      if (!bankRef.trim()) {
+        setPayError('Please enter your bank transfer reference or transaction number');
+        return;
+      }
     }
 
     setIsProcessingPay(true);
@@ -221,7 +241,7 @@ export const GuestPortalPage: React.FC = () => {
 
     try {
       await new Promise((r) => setTimeout(r, 600));
-      setGatewayStatusText('Authorizing transaction with bank…');
+      setGatewayStatusText('Verifying payment details with banking network…');
       await new Promise((r) => setTimeout(r, 600));
 
       const res = await guestApi.makePayment(payBooking.public_id, {
@@ -792,19 +812,15 @@ export const GuestPortalPage: React.FC = () => {
                           Card Number
                         </label>
                         <span className="text-[10px] text-blue-800 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                          Visa / Mastercard
+                          {getCardBrand(cardNumber)}
                         </span>
                       </div>
                       <input
                         type="text"
                         maxLength={19}
                         value={cardNumber}
-                        onChange={(e) => {
-                          const raw = e.target.value.replace(/\D/g, '').slice(0, 16);
-                          const formatted = raw.match(/.{1,4}/g)?.join(' ') || raw;
-                          setCardNumber(formatted || e.target.value);
-                        }}
-                        placeholder="4532 8920 1102 3349"
+                        onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                        placeholder="•••• •••• •••• ••••"
                         className="w-full bg-white border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs font-mono text-[#00152f] focus:border-[#00152f] outline-none"
                       />
                     </div>
@@ -817,7 +833,7 @@ export const GuestPortalPage: React.FC = () => {
                         type="text"
                         value={cardHolder}
                         onChange={(e) => setCardHolder(e.target.value)}
-                        placeholder="Guest Name"
+                        placeholder="Cardholder Full Name"
                         className="w-full bg-white border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs text-[#00152f] focus:border-[#00152f] outline-none"
                       />
                     </div>
@@ -831,14 +847,7 @@ export const GuestPortalPage: React.FC = () => {
                           type="text"
                           maxLength={5}
                           value={cardExpiry}
-                          onChange={(e) => {
-                            const raw = e.target.value.replace(/\D/g, '').slice(0, 4);
-                            if (raw.length >= 3) {
-                              setCardExpiry(`${raw.slice(0, 2)}/${raw.slice(2)}`);
-                            } else {
-                              setCardExpiry(raw);
-                            }
-                          }}
+                          onChange={(e) => setCardExpiry(formatExpiry(e.target.value))}
                           placeholder="MM/YY"
                           className="w-full bg-white border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs font-mono text-[#00152f] focus:border-[#00152f] outline-none"
                         />
@@ -857,15 +866,30 @@ export const GuestPortalPage: React.FC = () => {
                         />
                       </div>
                     </div>
+
+                    <div className="text-[10px] text-slate-500 bg-white/70 p-2 rounded-lg border border-slate-200">
+                      💡 <em>Card validation is active. Accepts real cards or test cards (e.g. <code>4000 0000 0000 0002</code>, future date, 3-digit CVV).</em>
+                    </div>
                   </div>
                 ) : (
-                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3.5 text-xs text-[#475569] space-y-1">
-                    <p className="font-semibold text-[#00152f]">Direct Bank Transfer Instructions:</p>
-                    <p>Bank: Commercial Bank of Ceylon · Account: 10002938481</p>
-                    <p>Reference: Booking #{payBooking.public_id.slice(0, 8).toUpperCase()}</p>
-                    <p className="text-[11px] text-slate-500">
-                      Payment will be verified and receipt will be issued instantly.
-                    </p>
+                  <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-3.5 text-xs text-[#475569] space-y-3">
+                    <div>
+                      <p className="font-semibold text-[#00152f]">Direct Bank Transfer Instructions:</p>
+                      <p className="text-[11px] text-slate-600 mt-1">Bank: Commercial Bank of Ceylon · Account: 10002938481</p>
+                      <p className="text-[11px] text-slate-600">Booking Reference: #{payBooking.public_id.slice(0, 8).toUpperCase()}</p>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[#00152f] uppercase mb-1">
+                        Bank Transfer Reference / Transaction ID *
+                      </label>
+                      <input
+                        type="text"
+                        value={bankRef}
+                        onChange={(e) => setBankRef(e.target.value)}
+                        placeholder="e.g. TXN-892019482"
+                        className="w-full bg-white border border-[#cbd5e1] rounded-lg px-3 py-2 text-xs font-mono text-[#00152f] focus:border-[#00152f] outline-none"
+                      />
+                    </div>
                   </div>
                 )}
 

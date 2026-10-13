@@ -8,6 +8,12 @@ import {
   type PaymentMethod,
 } from '../../api/guestApi';
 import { useAuth } from '../../context/auth-state';
+import {
+  validateCard,
+  formatCardNumber,
+  formatExpiry,
+  getCardBrand,
+} from '../../lib/payment-validation';
 import './PublicRoomsPage.css';
 
 const CONFIG_DEFAULTS: HotelConfig = {
@@ -49,6 +55,12 @@ export const PublicRoomsPage: React.FC = () => {
   const [bookingRoom, setBookingRoom] = useState<AvailableRoom | null>(null);
   const [paymentChoice, setPaymentChoice] = useState<'half' | 'full'>('half');
   const [paymentMethod, setPaymentMethod] = useState('');
+  const [roomCardNumber, setRoomCardNumber] = useState('');
+  const [roomCardHolder, setRoomCardHolder] = useState('');
+  const [roomCardExpiry, setRoomCardExpiry] = useState('');
+  const [roomCardCvv, setRoomCardCvv] = useState('');
+  const [roomBankRef, setRoomBankRef] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
   const [isBooking, setIsBooking] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
@@ -163,6 +175,28 @@ export const PublicRoomsPage: React.FC = () => {
     }
     setIsBooking(true);
     setBookingError(null);
+
+    // Validate payment details for the required upfront deposit
+    const activeMethod = paymentMethod || paymentMethods[0]?.method_name || 'Credit Card';
+    if (activeMethod === 'Credit Card') {
+      const cardVal = validateCard({
+        number: roomCardNumber,
+        name: roomCardHolder,
+        expiry: roomCardExpiry,
+        cvv: roomCardCvv,
+      });
+      if (!cardVal.valid) {
+        setIsBooking(false);
+        setBookingError(cardVal.error || 'Please provide valid card details');
+        return;
+      }
+    } else if (activeMethod === 'Online Transfer') {
+      if (!roomBankRef.trim()) {
+        setIsBooking(false);
+        setBookingError('Please enter your bank transfer reference or transaction ID');
+        return;
+      }
+    }
 
     const checkinTime = config.checkin_time ?? '14:00';
     const checkoutTime = config.checkout_time ?? '11:00';
@@ -431,6 +465,14 @@ export const PublicRoomsPage: React.FC = () => {
                           } else {
                             setBookingRoom(room);
                             setBookingError(null);
+                            setBookingSuccess(null);
+                            setPaymentChoice('half');
+                            setPaymentMethod(paymentMethods[0]?.method_name || 'Credit Card');
+                            setRoomCardNumber('');
+                            setRoomCardHolder(user?.name && user.name !== 'Guest' ? user.name : '');
+                            setRoomCardExpiry('');
+                            setRoomCardCvv('');
+                            setRoomBankRef('');
                           }
                         }}
                         className="public-book-btn"
@@ -583,26 +625,136 @@ export const PublicRoomsPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Payment method selector */}
-                <div>
-                  <label className="block text-xs font-semibold text-slate-800 mb-1">
-                    Payment Method *
-                  </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
-                  >
-                    {paymentMethods.length > 0 ? (
-                      paymentMethods.map((m) => (
-                        <option key={m.public_id} value={m.method_name}>
-                          {m.display_name}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="Credit Card">Credit Card</option>
-                    )}
-                  </select>
+                {/* Payment method selector & details */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      Payment Method *
+                    </label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
+                    >
+                      {paymentMethods.length > 0 ? (
+                        paymentMethods.map((m) => (
+                          <option key={m.public_id} value={m.method_name}>
+                            {m.display_name}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="Credit Card">Credit Card</option>
+                      )}
+                    </select>
+                  </div>
+
+                  {(paymentMethod === 'Credit Card' || (!paymentMethod && paymentMethods[0]?.method_name === 'Credit Card')) && (
+                    <div className="space-y-3 bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="text-[11px] font-semibold text-slate-800 uppercase">
+                            Card Number *
+                          </label>
+                          <span className="text-[10px] text-blue-800 font-bold bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                            {getCardBrand(roomCardNumber)}
+                          </span>
+                        </div>
+                        <input
+                          type="text"
+                          maxLength={19}
+                          value={roomCardNumber}
+                          onChange={(e) => setRoomCardNumber(formatCardNumber(e.target.value))}
+                          placeholder="•••• •••• •••• ••••"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-800 uppercase mb-1">
+                          Cardholder Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={roomCardHolder}
+                          onChange={(e) => setRoomCardHolder(e.target.value)}
+                          placeholder="Cardholder Full Name"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-slate-800"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-800 uppercase mb-1">
+                            Expires (MM/YY) *
+                          </label>
+                          <input
+                            type="text"
+                            maxLength={5}
+                            value={roomCardExpiry}
+                            onChange={(e) => setRoomCardExpiry(formatExpiry(e.target.value))}
+                            placeholder="MM/YY"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-800 uppercase mb-1">
+                            CVV / CVC *
+                          </label>
+                          <input
+                            type="password"
+                            maxLength={4}
+                            value={roomCardCvv}
+                            onChange={(e) => setRoomCardCvv(e.target.value.replace(/\D/g, ''))}
+                            placeholder="•••"
+                            className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="text-[10px] text-slate-500 bg-white/70 p-2 rounded-lg border border-slate-200">
+                        💡 <em>Card validation is active. Enter real card details or test credentials (e.g. <code>4000 0000 0000 0002</code>, future date, 3-digit CVV).</em>
+                      </div>
+                    </div>
+                  )}
+
+                  {paymentMethod === 'Online Transfer' && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-700 space-y-2">
+                      <p className="font-semibold text-slate-900">Direct Bank Transfer Instructions:</p>
+                      <p className="text-[11px] text-slate-600">Bank: Commercial Bank of Ceylon · Account: 10002938481</p>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-800 uppercase mb-1">
+                          Bank Reference / Transaction ID *
+                        </label>
+                        <input
+                          type="text"
+                          value={roomBankRef}
+                          onChange={(e) => setRoomBankRef(e.target.value)}
+                          placeholder="e.g. TXN-892019482"
+                          className="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-slate-800"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SMS Notification Target Field */}
+                  <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="text-sm">📱</span>
+                      <label className="text-[11px] font-bold text-emerald-900 uppercase">
+                        SMS Confirmation Phone
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-emerald-800 mb-2">
+                      A payment confirmation SMS will be dispatched to this mobile number:
+                    </p>
+                    <input
+                      type="tel"
+                      value={guestPhone}
+                      onChange={(e) => setGuestPhone(e.target.value)}
+                      placeholder="+94770000000"
+                      className="w-full bg-white border border-emerald-300 rounded-lg px-3 py-1.5 text-xs font-mono font-semibold text-slate-900 focus:border-emerald-600 outline-none"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex gap-2 pt-2">
