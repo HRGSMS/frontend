@@ -22,6 +22,7 @@ import GuestPortalPage from '../pages/guest/GuestPortalPage';
 import SystemSettingsPage from '../pages/admin/SystemSettingsPage';
 import ServiceStaffDashboard from '../pages/services/ServiceStaffDashboard';
 import AnalyticsPage from '../pages/manager/AnalyticsPage';
+import LandingPage from '../pages/LandingPage';
 
 function Loading() {
   return (
@@ -78,7 +79,7 @@ export function AppRouter() {
       <Route path="/login" element={<PublicRoute />} />
       <Route path="/guest/login" element={<Navigate to="/login" replace />} />
       <Route path="/rooms" element={<PublicRoomsPage />} />
-      <Route path="/" element={<Navigate to="/rooms" replace />} />
+      <Route path="/" element={<LandingPage />} />
 
       {/* ── Guest portal (authenticated guests only) ── */}
       <Route element={<GuestPortalRoute />}>

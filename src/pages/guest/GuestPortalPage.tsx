@@ -358,18 +358,47 @@ export const GuestPortalPage: React.FC = () => {
           <div className="guest-header-actions">
             <button
               onClick={() => navigate('/rooms')}
-              className="guest-header-btn guest-btn-outline"
+              className="guest-official-btn guest-btn-browse"
+              title="Explore available rooms and suites"
             >
-              Browse Rooms
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+              <span>Browse Rooms</span>
             </button>
-            <span className="text-xs text-[#626978] hidden sm:inline-block">
-              {profile ? `${profile.first_name} ${profile.last_name}` : user?.name}
-            </span>
+
+            {/* Official Guest Member Capsule */}
+            <div className="guest-official-user-badge">
+              <span className="guest-official-avatar" aria-hidden="true">
+                {(profile
+                  ? `${profile.first_name[0] ?? ''}${profile.last_name[0] ?? ''}`
+                  : (user?.name ? user.name.slice(0, 2) : 'G')
+                ).toUpperCase()}
+              </span>
+              <div className="guest-official-user-meta hidden sm:flex flex-col">
+                <span className="guest-official-user-name">
+                  {profile
+                    ? `${profile.first_name} ${profile.last_name}`
+                    : (user?.name && user.name !== 'Guest' ? user.name : 'Registered Guest')}
+                </span>
+                <span className="guest-official-user-status">
+                  Verified Guest · SkyNest Member
+                </span>
+              </div>
+            </div>
+
             <button
               onClick={() => signOut().then(() => navigate('/'))}
-              className="guest-header-btn guest-btn-outline text-red-600 hover:text-red-700"
+              className="guest-official-btn guest-btn-signout"
+              title="Sign out of guest account"
             >
-              Sign Out
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              <span>Sign Out</span>
             </button>
           </div>
         </div>
