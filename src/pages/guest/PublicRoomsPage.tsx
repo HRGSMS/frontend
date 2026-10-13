@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/auth-state';
 import {
-  guestApi,
   type AvailableRoom,
   type BranchItem,
+  guestApi,
   type HotelConfig,
   type PaymentMethod,
 } from '../../api/guestApi';
-import { FloatingContactButton } from '../../components/FloatingContactButton';
+import { useAuth } from '../../context/auth-state';
+import './PublicRoomsPage.css';
 
-/* ── Default fallbacks while config is loading ─────────────────── */
 const CONFIG_DEFAULTS: HotelConfig = {
   hotel_name: 'SkyNest Hotels',
   hotel_tagline: 'Luxury Stays & Serenity',
@@ -54,30 +53,58 @@ export const PublicRoomsPage: React.FC = () => {
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
 
-  /* ── Load config + branches + initial rooms ─────────────────────── */
+  /* ── Load config + branches + initial rooms safely ──────────────── */
   useEffect(() => {
     const bootstrap = async () => {
       setLoading(true);
+      setError(null);
       try {
-        const [cfg, branchList, methodList, roomList] = await Promise.all([
+        const [cfgRes, branchRes, methodRes, roomRes] = await Promise.allSettled([
           guestApi.getHotelConfig(),
           guestApi.getBranches(),
           guestApi.getPaymentMethods(),
           guestApi.getRooms({ available_from: checkIn, available_to: checkOut }),
         ]);
-        setConfig(cfg);
-        setBranches(branchList);
-        setPaymentMethods(methodList);
-        // Default to first active method
-        if (methodList.length) setPaymentMethod(methodList[0].method_name);
-        setRooms(roomList);
+
+        if (cfgRes.status === 'fulfilled') {
+          setConfig(cfgRes.value);
+        }
+
+        if (methodRes.status === 'fulfilled') {
+          setPaymentMethods(methodRes.value);
+          if (methodRes.value.length) setPaymentMethod(methodRes.value[0].method_name);
+        }
+
+        if (roomRes.status === 'fulfilled') {
+          setRooms(roomRes.value);
+          // If branch endpoint succeeded, use it; otherwise derive from rooms
+          if (branchRes.status === 'fulfilled' && branchRes.value.length > 0) {
+            setBranches(branchRes.value);
+          } else {
+            const derivedBranches = Array.from(
+              new Map(
+                roomRes.value.map((r) => [
+                  r.branch_public_id,
+                  { public_id: r.branch_public_id, name: r.branch_name, location_city: '' },
+                ]),
+              ).values(),
+            );
+            setBranches(derivedBranches);
+          }
+        } else if (roomRes.status === 'rejected') {
+          const reason =
+            roomRes.reason instanceof Error
+              ? roomRes.reason.message
+              : 'Unable to connect to live room inventory';
+          setError(reason);
+        }
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Unable to load data');
+        setError(err instanceof Error ? err.message : 'Unable to load room data');
       } finally {
         setLoading(false);
       }
     };
-    bootstrap();
+    void bootstrap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -87,6 +114,17 @@ export const PublicRoomsPage: React.FC = () => {
     try {
       const data = await guestApi.getRooms({ available_from: checkIn, available_to: checkOut });
       setRooms(data);
+      if (branches.length === 0) {
+        const derivedBranches = Array.from(
+          new Map(
+            data.map((r) => [
+              r.branch_public_id,
+              { public_id: r.branch_public_id, name: r.branch_name, location_city: '' },
+            ]),
+          ).values(),
+        );
+        setBranches(derivedBranches);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Unable to load room availability');
     } finally {
@@ -100,7 +138,7 @@ export const PublicRoomsPage: React.FC = () => {
       setError('Check-out date must be after check-in date');
       return;
     }
-    fetchRooms();
+    void fetchRooms();
   };
 
   /* ── Filtered rooms ─────────────────────────────────────────────── */
@@ -128,7 +166,6 @@ export const PublicRoomsPage: React.FC = () => {
     setIsBooking(true);
     setBookingError(null);
 
-    // Use check-in/out times from the DB config
     const checkinTime = config.checkin_time ?? '14:00';
     const checkoutTime = config.checkout_time ?? '11:00';
 
@@ -139,7 +176,6 @@ export const PublicRoomsPage: React.FC = () => {
         room_public_ids: [bookingRoom.public_id],
       });
 
-      // The backend's sp_calculate_bill returns the real total_charge
       const realTotal = Number(newBooking.total_charge ?? 0);
       const halfAmount = Math.round(realTotal / 2);
 
@@ -177,32 +213,25 @@ export const PublicRoomsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d1824] text-slate-100 flex flex-col font-sans">
+    <div className="public-rooms-root">
       {/* ── Header ── */}
-      <header className="border-b border-white/10 bg-[#09121d]/90 backdrop-blur sticky top-0 z-40 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#1b3b38] border border-[#c5a86a] text-[#c5a86a] font-bold flex items-center justify-center text-sm shadow-md">
-              {config.hotel_name.slice(0, 2).toUpperCase()}
+      <header className="public-rooms-header">
+        <div className="public-rooms-header-inner">
+          <Link to="/" className="public-brand-lockup">
+            <div className="public-brand-monogram">
+              {config.hotel_name.slice(0, 2).toUpperCase() || 'SN'}
             </div>
             <div>
-              <span className="font-semibold text-lg tracking-wide text-white block leading-tight">
-                {config.hotel_name}
-              </span>
-              <span className="text-[10px] uppercase tracking-widest text-[#c5a86a]">
-                {config.hotel_tagline}
-              </span>
+              <span className="public-brand-title">{config.hotel_name}</span>
+              <span className="public-brand-tagline">{config.hotel_tagline}</span>
             </div>
           </Link>
 
-          <nav className="flex items-center gap-4">
+          <nav className="public-header-actions">
             {config.hotline_number && (
-              <a
-                href={`tel:${config.hotline_number}`}
-                className="hidden sm:flex items-center gap-2 text-xs text-[#e4d4aa] hover:text-white px-3 py-1.5 rounded-full border border-[#c5a86a]/40 bg-[#1b3b38]/40"
-              >
+              <a href={`tel:${config.hotline_number}`} className="public-hotline-btn">
                 <span>📞 Hotline:</span>
-                <span className="font-mono font-bold">{config.hotline_number}</span>
+                <span className="font-semibold text-slate-800">{config.hotline_number}</span>
               </a>
             )}
 
@@ -210,23 +239,21 @@ export const PublicRoomsPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Link
                   to={user?.role === 'guest' ? '/guest/dashboard' : '/frontdesk/dashboard'}
-                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-[#c5a86a] text-[#0d1824] hover:bg-[#d8bd80] transition"
+                  className="public-btn-primary"
                 >
                   {user?.role === 'guest' ? 'My Guest Portal' : 'Staff Dashboard'}
                 </Link>
                 <button
+                  type="button"
                   onClick={() => signOut()}
-                  className="text-xs text-slate-300 hover:text-white px-3 py-2"
+                  className="text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1"
                 >
                   Sign Out
                 </button>
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Link
-                  to="/login"
-                  className="px-4 py-2 text-xs font-semibold rounded-lg border border-[#c5a86a] text-[#c5a86a] hover:bg-[#c5a86a] hover:text-[#0d1824] transition"
-                >
+                <Link to="/login" className="public-btn-primary">
                   Sign In / Register
                 </Link>
               </div>
@@ -235,37 +262,29 @@ export const PublicRoomsPage: React.FC = () => {
         </div>
       </header>
 
-      {/* ── Hero ── */}
-      <section className="relative py-14 px-6 text-center bg-gradient-to-b from-[#09121d] via-[#112133] to-[#0d1824]">
-        <div className="max-w-4xl mx-auto">
-          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#c5a86a] mb-2 block">
+      {/* ── Hero Section ── */}
+      <section className="public-hero-section">
+        <div className="public-hero-inner">
+          <p className="public-hero-eyebrow">
             {branches.length > 0
-              ? `${branches.length} Location${branches.length > 1 ? 's' : ''} across Sri Lanka`
-              : "Sri Lanka's Finest Luxury Escapes"}
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-serif text-white font-normal tracking-wide">
+              ? `${branches.length} LOCATION${branches.length > 1 ? 'S' : ''} ACROSS SRI LANKA`
+              : "SRI LANKA'S FINEST LUXURY ESCAPES"}
+          </p>
+          <h1 className="public-hero-heading">
             Find Your Sanctuary at {config.hotel_name}
           </h1>
-          <p className="mt-3 text-slate-300 text-sm sm:text-base max-w-2xl mx-auto">
-            {config.hotel_description}
-          </p>
+          <p className="public-hero-desc">{config.hotel_description}</p>
         </div>
 
         {/* ── Availability Search Bar ── */}
-        <div className="mt-8 max-w-5xl mx-auto bg-[#172738]/95 p-4 sm:p-6 rounded-2xl border border-white/10 shadow-2xl backdrop-blur">
-          <form
-            onSubmit={handleSearch}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end text-left"
-          >
-            {/* Branch filter — from database */}
+        <div className="public-search-card">
+          <form onSubmit={handleSearch} className="public-search-form">
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Branch Location
-              </label>
+              <label className="public-search-label">Branch Location</label>
               <select
                 value={selectedBranch}
                 onChange={(e) => setSelectedBranch(e.target.value)}
-                className="w-full bg-[#0d1824] border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#c5a86a]"
+                className="public-search-select"
               >
                 <option value="All">All Locations</option>
                 {branches.map((b) => (
@@ -277,40 +296,35 @@ export const PublicRoomsPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Check-In Date
-              </label>
+              <label className="public-search-label">Check-In Date</label>
               <input
                 type="date"
                 min={today}
                 value={checkIn}
                 onChange={(e) => setCheckIn(e.target.value)}
-                className="w-full bg-[#0d1824] border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#c5a86a]"
+                className="public-search-input"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">
-                Check-Out Date
-              </label>
+              <label className="public-search-label">Check-Out Date</label>
               <input
                 type="date"
                 min={checkIn || today}
                 value={checkOut}
                 onChange={(e) => setCheckOut(e.target.value)}
-                className="w-full bg-[#0d1824] border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#c5a86a]"
+                className="public-search-input"
                 required
               />
             </div>
 
-            {/* Guests filter — capacity is pulled from room_type.capacity */}
             <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1">Guests</label>
+              <label className="public-search-label">Guests</label>
               <select
                 value={minCapacity}
                 onChange={(e) => setMinCapacity(e.target.value)}
-                className="w-full bg-[#0d1824] border border-white/20 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#c5a86a]"
+                className="public-search-select"
               >
                 {[1, 2, 3, 4].map((n) => (
                   <option key={n} value={String(n)}>
@@ -321,47 +335,45 @@ export const PublicRoomsPage: React.FC = () => {
             </div>
 
             <div>
-              <button
-                type="submit"
-                className="w-full bg-[#c5a86a] text-[#0d1824] font-semibold py-2.5 px-4 rounded-lg hover:bg-[#d8bd80] transition shadow-md text-sm flex items-center justify-center gap-2"
-              >
-                <span>🔍</span>
-                <span>Check Availability</span>
+              <button type="submit" className="public-search-btn">
+                <span>🔍 Check Availability</span>
               </button>
             </div>
           </form>
         </div>
       </section>
 
-      {/* ── Rooms Grid ── */}
-      <main className="max-w-7xl mx-auto px-6 py-10 flex-1 w-full">
-        <div className="flex items-center justify-between mb-6">
+      {/* ── Rooms Results Section ── */}
+      <main className="public-rooms-container">
+        <div className="public-results-header">
           <div>
-            <h2 className="text-xl font-semibold text-white">
+            <h2 className="public-results-title">
               Available Rooms & Suites ({filteredRooms.length})
             </h2>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="public-results-subtitle">
               Rates for stay between {checkIn} and {checkOut} ({nights}{' '}
               {nights === 1 ? 'night' : 'nights'})
             </p>
           </div>
-          <div className="text-xs text-[#c5a86a]">✓ 50% Advance Half-Payment accepted</div>
+          <div className="public-halfpay-badge">
+            ✓ 50% Advance Half-Payment accepted
+          </div>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-900/40 border border-red-500/50 text-red-200 text-sm">
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="py-20 text-center text-slate-400">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#c5a86a] mb-2"></div>
-            <p>Checking live room availability...</p>
+          <div className="py-20 text-center text-slate-500">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-slate-300 border-t-slate-800 mb-3"></div>
+            <p className="text-sm font-medium">Checking live room availability across all branches...</p>
           </div>
         ) : filteredRooms.length === 0 ? (
-          <div className="text-center py-16 bg-[#122133] rounded-2xl border border-white/10 p-8">
-            <p className="text-slate-300 text-base">
+          <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+            <p className="text-slate-800 text-base font-medium">
               No rooms match your filter criteria for these dates.
             </p>
             <p className="text-slate-500 text-xs mt-1">
@@ -369,7 +381,7 @@ export const PublicRoomsPage: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="public-rooms-grid">
             {filteredRooms.map((room) => {
               const isAvailable = room.booking_availability === 1;
               const roomNightlyTotal = Math.round(Number(room.daily_rate) * nights);
@@ -378,66 +390,60 @@ export const PublicRoomsPage: React.FC = () => {
                 : [];
 
               return (
-                <div
-                  key={room.public_id}
-                  className="bg-[#122133] rounded-2xl border border-white/10 overflow-hidden shadow-lg hover:border-[#c5a86a]/50 transition-all flex flex-col justify-between"
-                >
-                  {/* Card Header */}
-                  <div className="h-44 bg-gradient-to-br from-[#1a384f] to-[#0e2233] p-5 flex flex-col justify-between relative">
-                    <div className="flex justify-between items-start">
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#0d1824]/80 text-[#c5a86a] border border-[#c5a86a]/30">
+                <div key={room.public_id} className="public-room-card">
+                  {/* Card Banner */}
+                  <div className="public-card-banner">
+                    <div className="public-card-meta-top">
+                      <span className="public-branch-pill">
                         {room.branch_name}
                       </span>
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-medium ${
-                          isAvailable
-                            ? 'bg-emerald-900/60 text-emerald-300 border border-emerald-500/30'
-                            : 'bg-amber-900/60 text-amber-300 border border-amber-500/30'
+                        className={`public-avail-pill ${
+                          isAvailable ? 'available' : 'reserved'
                         }`}
                       >
                         {isAvailable ? '● Available' : 'Reserved'}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[11px] text-slate-400 uppercase tracking-wider block">
+                      <span className="public-room-num">
                         Room {room.room_number}
                       </span>
-                      <h3 className="text-xl font-serif text-white font-normal">
+                      <h3 className="public-room-type">
                         {room.type_name} Room
                       </h3>
                     </div>
                   </div>
 
-                  {/* Card Details */}
-                  <div className="p-5 flex-1 flex flex-col justify-between gap-4">
-                    <div className="space-y-2 text-xs text-slate-300">
-                      <div className="flex justify-between py-1 border-b border-white/5">
-                        <span className="text-slate-400">Max Capacity:</span>
-                        <span className="font-semibold text-white">
+                  {/* Card Body */}
+                  <div className="public-card-body">
+                    <div className="public-details-list">
+                      <div className="public-detail-row">
+                        <span className="public-detail-label">Max Capacity:</span>
+                        <span className="public-detail-value">
                           👤 {room.capacity} {room.capacity === 1 ? 'Guest' : 'Guests'}
                         </span>
                       </div>
-                      <div className="flex justify-between py-1 border-b border-white/5">
-                        <span className="text-slate-400">Nightly Rate:</span>
-                        <span className="font-semibold text-white">
+                      <div className="public-detail-row">
+                        <span className="public-detail-label">Nightly Rate:</span>
+                        <span className="public-detail-value">
                           {currency} {Number(room.daily_rate).toLocaleString()}
                         </span>
                       </div>
-                      {/* Amenities from database */}
-                      <div className="flex justify-between py-1 border-b border-white/5">
-                        <span className="text-slate-400">Amenities:</span>
-                        <span className="text-slate-300 text-right max-w-[60%]">
-                          {amenityList.length > 0 ? amenityList.join(', ') : 'Details at reception'}
+                      <div className="public-detail-row">
+                        <span className="public-detail-label">Amenities:</span>
+                        <span className="text-slate-600 text-right max-w-[60%] text-xs font-medium">
+                          {amenityList.length > 0 ? amenityList.join(', ') : 'Included'}
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <div className="flex items-baseline justify-between mb-3">
-                        <span className="text-[11px] text-slate-400">
-                          Total for {nights} {nights === 1 ? 'night' : 'nights'} (before tax):
+                      <div className="public-price-summary mb-3">
+                        <span className="public-price-label">
+                          Total for {nights} {nights === 1 ? 'night' : 'nights'}:
                         </span>
-                        <span className="text-base font-bold text-[#c5a86a]">
+                        <span className="public-price-amount">
                           {fmt(roomNightlyTotal)}
                         </span>
                       </div>
@@ -451,7 +457,7 @@ export const PublicRoomsPage: React.FC = () => {
                             setBookingError(null);
                           }
                         }}
-                        className="w-full bg-[#1b3b38] hover:bg-[#25524e] text-white py-2.5 px-4 rounded-xl text-xs font-semibold tracking-wider uppercase border border-[#c5a86a]/40 hover:border-[#c5a86a] transition shadow-md"
+                        className="public-book-btn"
                       >
                         {isAuthenticated ? 'Book This Room' : 'Sign In to Book'}
                       </button>
@@ -466,132 +472,135 @@ export const PublicRoomsPage: React.FC = () => {
 
       {/* ── Reservation Modal ── */}
       {bookingRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-[#122133] border border-white/20 rounded-2xl max-w-lg w-full p-6 text-slate-100 shadow-2xl">
-            <div className="flex justify-between items-start pb-4 border-b border-white/10">
+        <div className="public-modal-backdrop">
+          <div className="public-modal-card">
+            <div className="public-modal-header">
               <div>
-                <h3 className="text-xl font-serif text-white">Confirm Reservation</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="public-modal-title">Confirm Reservation</h3>
+                <p className="public-modal-subtitle">
                   {bookingRoom.branch_name} • Room {bookingRoom.room_number} (
                   {bookingRoom.type_name})
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setBookingRoom(null)}
-                className="text-slate-400 hover:text-white text-xl"
+                className="public-close-btn"
               >
                 ✕
               </button>
             </div>
 
             {bookingSuccess ? (
-              <div className="py-8 text-center text-emerald-300 space-y-2">
-                <div className="text-4xl">✓</div>
+              <div className="py-8 text-center text-emerald-700 space-y-2">
+                <div className="text-4xl text-emerald-600">✓</div>
                 <p className="font-semibold text-lg">{bookingSuccess}</p>
-                <p className="text-xs text-slate-400">Redirecting to your guest dashboard...</p>
+                <p className="text-xs text-slate-500">Redirecting to your guest dashboard...</p>
               </div>
             ) : (
               <div className="py-4 space-y-4">
                 {bookingError && (
-                  <div className="p-3 bg-red-900/40 border border-red-500/40 rounded-xl text-red-200 text-xs">
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs">
                     ⚠ {bookingError}
                   </div>
                 )}
 
                 {/* Stay dates from config */}
-                <div className="grid grid-cols-2 gap-3 bg-[#0d1824] p-3 rounded-xl text-xs border border-white/5">
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl text-xs border border-slate-200">
                   <div>
-                    <span className="text-slate-400 block">Check-In:</span>
-                    <span className="font-semibold text-white">
+                    <span className="text-slate-500 block">Check-In:</span>
+                    <span className="font-semibold text-slate-800">
                       {checkIn} (from {config.checkin_time})
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-400 block">Check-Out:</span>
-                    <span className="font-semibold text-white">
+                    <span className="text-slate-500 block">Check-Out:</span>
+                    <span className="font-semibold text-slate-800">
                       {checkOut} (until {config.checkout_time})
                     </span>
                   </div>
                 </div>
 
-                {/* Pricing — base rate estimate; final total confirmed by backend */}
-                <div className="bg-[#0d1824] p-4 rounded-xl space-y-2 text-xs border border-white/5">
-                  <div className="flex justify-between text-slate-300">
+                {/* Pricing summary */}
+                <div className="bg-slate-50 p-4 rounded-xl space-y-2 text-xs border border-slate-200">
+                  <div className="flex justify-between text-slate-600">
                     <span>
                       Room Rate ({nights} nights @ {currency}{' '}
                       {Number(bookingRoom.daily_rate).toLocaleString()}):
                     </span>
-                    <span>
+                    <span className="font-medium text-slate-800">
                       {fmt(Math.round(Number(bookingRoom.daily_rate) * nights))}
                     </span>
                   </div>
-                  <div className="flex justify-between text-slate-400 text-[11px]">
-                    <span>+ Tax (per branch rate, calculated at confirmation)</span>
+                  <div className="flex justify-between text-slate-500 text-[11px]">
+                    <span>+ Tax (per branch rate, calculated automatically)</span>
                   </div>
-                  <div className="flex justify-between text-[11px] font-bold text-white pt-2 border-t border-white/10">
+                  <div className="flex justify-between text-xs font-bold text-slate-900 pt-2 border-t border-slate-200">
                     <span>Estimate before tax:</span>
-                    <span className="text-[#c5a86a]">
+                    <span className="text-slate-900">
                       {fmt(Math.round(Number(bookingRoom.daily_rate) * nights))}
                     </span>
                   </div>
-                  <p className="text-[10px] text-slate-500">
-                    Exact total (with branch tax) will be shown in your dashboard after booking.
-                  </p>
                 </div>
 
                 {/* Payment preference */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-200 mb-2">
-                    Select Payment Preference:
+                  <label className="block text-xs font-semibold text-slate-800 mb-2">
+                    Payment Option:
                   </label>
                   <div className="space-y-2">
                     {[
                       {
                         value: 'half' as const,
-                        label: 'Pay Half Deposit Now (50%)',
-                        sub: 'Secure your room today. Pay the remaining 50% at check-in.',
+                        label: 'Pay 50% Advance Now',
+                        desc: 'Pay half today to lock in your reservation; settle remainder at check-in.',
                       },
                       {
                         value: 'full' as const,
-                        label: 'Pay in Full Now (100%)',
-                        sub: 'Complete total payment today for zero hassle at arrival.',
+                        label: 'Pay Full Amount Now',
+                        desc: 'Settle in full upfront.',
                       },
                       {
                         value: 'later' as const,
-                        label: 'Pay on Arrival at Hotel',
-                        sub: 'Reserve without paying now. Status will show as Payment Pending.',
+                        label: 'Pay at Check-In',
+                        desc: 'Reserve now with 0 advance; pay the full balance upon arrival.',
                       },
                     ].map((opt) => (
                       <label
                         key={opt.value}
-                        className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-[#0d1824] cursor-pointer hover:border-[#c5a86a]"
+                        className={`block p-3 rounded-xl border text-xs cursor-pointer transition ${
+                          paymentChoice === opt.value
+                            ? 'border-slate-800 bg-slate-50 shadow-sm'
+                            : 'border-slate-200 hover:border-slate-300'
+                        }`}
                       >
-                        <input
-                          type="radio"
-                          name="paymentChoice"
-                          checked={paymentChoice === opt.value}
-                          onChange={() => setPaymentChoice(opt.value)}
-                          className="text-[#c5a86a]"
-                        />
-                        <div className="flex-1 text-xs">
-                          <div className="font-semibold text-white">{opt.label}</div>
-                          <p className="text-[11px] text-slate-400">{opt.sub}</p>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="paymentChoice"
+                            value={opt.value}
+                            checked={paymentChoice === opt.value}
+                            onChange={() => setPaymentChoice(opt.value)}
+                            className="accent-slate-800"
+                          />
+                          <span className="font-semibold text-slate-800">{opt.label}</span>
                         </div>
+                        <p className="text-[11px] text-slate-500 mt-1 pl-5">{opt.desc}</p>
                       </label>
                     ))}
                   </div>
                 </div>
 
-                {/* Payment method — from database */}
-                {paymentChoice !== 'later' && paymentMethods.length > 0 && (
+                {/* Payment method selector */}
+                {paymentChoice !== 'later' && (
                   <div>
-                    <label className="block text-xs font-semibold text-slate-200 mb-1">
-                      Payment Method
+                    <label className="block text-xs font-semibold text-slate-800 mb-1">
+                      Payment Method:
                     </label>
                     <select
                       value={paymentMethod}
                       onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full bg-[#0d1824] border border-white/20 rounded-lg px-3 py-2 text-xs text-white"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
                     >
                       {paymentMethods.map((m) => (
                         <option key={m.public_id} value={m.method_name}>
@@ -602,22 +611,22 @@ export const PublicRoomsPage: React.FC = () => {
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex gap-3 pt-3">
+                <div className="flex gap-2 pt-2">
                   <button
                     type="button"
                     onClick={() => setBookingRoom(null)}
-                    className="flex-1 py-2.5 rounded-xl border border-white/20 text-xs font-medium text-slate-300 hover:text-white"
+                    disabled={isBooking}
+                    className="flex-1 py-2.5 px-4 text-xs font-semibold rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
+                    onClick={() => void handleConfirmReservation()}
                     disabled={isBooking}
-                    onClick={handleConfirmReservation}
-                    className="flex-1 py-2.5 rounded-xl bg-[#c5a86a] hover:bg-[#d8bd80] text-[#0d1824] text-xs font-bold transition shadow-lg disabled:opacity-50"
+                    className="flex-1 py-2.5 px-4 text-xs font-semibold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition disabled:opacity-50"
                   >
-                    {isBooking ? 'Processing...' : 'Confirm & Reserve'}
+                    {isBooking ? 'Processing...' : 'Confirm Reservation'}
                   </button>
                 </div>
               </div>
@@ -626,29 +635,11 @@ export const PublicRoomsPage: React.FC = () => {
         </div>
       )}
 
-      <FloatingContactButton phoneNumber={config.hotline_number} label={config.hotline_label} />
-
       {/* ── Footer ── */}
-      <footer className="border-t border-white/10 bg-[#09121d] py-6 px-6 text-center text-xs text-slate-400">
-        <p>
-          © {new Date().getFullYear()} {config.hotel_name} Sri Lanka. {config.copyright_text}
-        </p>
-        {branches.length > 0 && (
-          <p className="mt-1 text-slate-500">
-            Branches: {branches.map((b) => b.name).join(' • ')}
-            {config.hotline_number && (
-              <>
-                {' | '}Hotline:{' '}
-                <a href={`tel:${config.hotline_number}`} className="text-[#c5a86a] underline">
-                  {config.hotline_number}
-                </a>
-              </>
-            )}
-          </p>
-        )}
+      <footer className="public-rooms-footer">
+        <p className="max-w-4xl mx-auto">{config.copyright_text}</p>
       </footer>
     </div>
   );
 };
-
 export default PublicRoomsPage;
