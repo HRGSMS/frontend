@@ -205,7 +205,7 @@ export const Login = () => {
           </div>
 
           {/* Session / System Auth Error */}
-          {authError && (
+          {authError && !authError.toLowerCase().includes('failed to fetch') && (
             <div role="alert" className="sn-alert-warn">
               <p>{authError}</p>
               <button

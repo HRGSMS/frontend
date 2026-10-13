@@ -38,7 +38,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       if (current !== revision.current) return;
       setData(null);
-      setAuthError(message(error));
+      const msg = message(error);
+      if (lastActivity.current > 0 || !msg.toLowerCase().includes('failed to fetch')) {
+        setAuthError(msg);
+      }
     } finally {
       if (current === revision.current) setIsLoading(false);
     }

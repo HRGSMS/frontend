@@ -1,10 +1,18 @@
 import { createAuthClient } from 'better-auth/react';
 import { adminClient } from 'better-auth/client/plugins';
-import { apiBaseURL } from './config';
+import { authBaseURL } from './config';
+
+// Ensure baseURL and basePath are cleanly extracted from the configured authBaseURL
+const authUrl = new URL(
+  authBaseURL,
+  typeof window !== 'undefined' ? window.location.origin : 'http://localhost:4000',
+);
+const baseURL = authUrl.origin;
+const basePath = authUrl.pathname.replace(/\/$/, '') || '/api/auth';
 
 export const authClient = createAuthClient({
-  baseURL: apiBaseURL.replace(/\/api$/, ''), // Use base server URL (e.g., http://localhost:4000)
-  basePath: '/api/auth',
+  baseURL,
+  basePath,
   plugins: [adminClient()],
   fetchOptions: { credentials: 'include' },
 });
