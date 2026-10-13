@@ -71,14 +71,6 @@ function GuestPortalRoute() {
   return <Outlet />;
 }
 
-function Home() {
-  const { isLoading, isAuthenticated, user } = useAuth();
-
-  if (isLoading) return <Loading />;
-
-  return <Navigate to={isAuthenticated ? homeForRole(user?.role) : '/login'} replace />;
-}
-
 export function AppRouter() {
   return (
     <Routes>
@@ -86,7 +78,7 @@ export function AppRouter() {
       <Route path="/login" element={<PublicRoute />} />
       <Route path="/guest/login" element={<Navigate to="/login" replace />} />
       <Route path="/rooms" element={<PublicRoomsPage />} />
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Navigate to="/rooms" replace />} />
 
       {/* ── Guest portal (authenticated guests only) ── */}
       <Route element={<GuestPortalRoute />}>

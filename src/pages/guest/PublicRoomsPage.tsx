@@ -47,7 +47,7 @@ export const PublicRoomsPage: React.FC = () => {
 
   // Reservation modal state
   const [bookingRoom, setBookingRoom] = useState<AvailableRoom | null>(null);
-  const [paymentChoice, setPaymentChoice] = useState<'half' | 'full' | 'later'>('half');
+  const [paymentChoice, setPaymentChoice] = useState<'half' | 'full'>('half');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [isBooking, setIsBooking] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
@@ -151,9 +151,7 @@ export const PublicRoomsPage: React.FC = () => {
   /* ── Pricing ──────────────────────────────────────────────────────── */
   const nights = Math.max(
     1,
-    Math.round(
-      (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24),
-    ),
+    Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24)),
   );
 
   /* ── Confirm reservation ─────────────────────────────────────────── */
@@ -174,22 +172,9 @@ export const PublicRoomsPage: React.FC = () => {
         check_in_time: `${checkIn} ${checkinTime}:00`,
         check_out_time: `${checkOut} ${checkoutTime}:00`,
         room_public_ids: [bookingRoom.public_id],
+        payment_method: paymentMethod || 'Credit Card',
+        payment_option: paymentChoice,
       });
-
-      const realTotal = Number(newBooking.total_charge ?? 0);
-      const halfAmount = Math.round(realTotal / 2);
-
-      if (paymentChoice === 'half') {
-        await guestApi.makePayment(newBooking.public_id, {
-          amount: halfAmount,
-          payment_method: paymentMethod,
-        });
-      } else if (paymentChoice === 'full') {
-        await guestApi.makePayment(newBooking.public_id, {
-          amount: realTotal,
-          payment_method: paymentMethod,
-        });
-      }
 
       setBookingSuccess(
         `Reservation confirmed! Reference: ${newBooking.public_id.slice(0, 8).toUpperCase()}`,
@@ -270,9 +255,7 @@ export const PublicRoomsPage: React.FC = () => {
               ? `${branches.length} LOCATION${branches.length > 1 ? 'S' : ''} ACROSS SRI LANKA`
               : "SRI LANKA'S FINEST LUXURY ESCAPES"}
           </p>
-          <h1 className="public-hero-heading">
-            Find Your Sanctuary at {config.hotel_name}
-          </h1>
+          <h1 className="public-hero-heading">Find Your Sanctuary at {config.hotel_name}</h1>
           <p className="public-hero-desc">{config.hotel_description}</p>
         </div>
 
@@ -355,9 +338,7 @@ export const PublicRoomsPage: React.FC = () => {
               {nights === 1 ? 'night' : 'nights'})
             </p>
           </div>
-          <div className="public-halfpay-badge">
-            ✓ 50% Advance Half-Payment accepted
-          </div>
+          <div className="public-halfpay-badge">✓ 50% Advance Deposit Required to Confirm</div>
         </div>
 
         {error && (
@@ -369,7 +350,9 @@ export const PublicRoomsPage: React.FC = () => {
         {loading ? (
           <div className="py-20 text-center text-slate-500">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-slate-300 border-t-slate-800 mb-3"></div>
-            <p className="text-sm font-medium">Checking live room availability across all branches...</p>
+            <p className="text-sm font-medium">
+              Checking live room availability across all branches...
+            </p>
           </div>
         ) : filteredRooms.length === 0 ? (
           <div className="public-empty-state text-center py-16 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
@@ -386,7 +369,10 @@ export const PublicRoomsPage: React.FC = () => {
               const isAvailable = room.booking_availability === 1;
               const roomNightlyTotal = Math.round(Number(room.daily_rate) * nights);
               const amenityList = room.amenities
-                ? room.amenities.split(',').map((a) => a.trim()).filter(Boolean)
+                ? room.amenities
+                    .split(',')
+                    .map((a) => a.trim())
+                    .filter(Boolean)
                 : [];
 
               return (
@@ -394,24 +380,16 @@ export const PublicRoomsPage: React.FC = () => {
                   {/* Card Banner */}
                   <div className="public-card-banner">
                     <div className="public-card-meta-top">
-                      <span className="public-branch-pill">
-                        {room.branch_name}
-                      </span>
+                      <span className="public-branch-pill">{room.branch_name}</span>
                       <span
-                        className={`public-avail-pill ${
-                          isAvailable ? 'available' : 'reserved'
-                        }`}
+                        className={`public-avail-pill ${isAvailable ? 'available' : 'reserved'}`}
                       >
                         {isAvailable ? '● Available' : 'Reserved'}
                       </span>
                     </div>
                     <div>
-                      <span className="public-room-num">
-                        Room {room.room_number}
-                      </span>
-                      <h3 className="public-room-type">
-                        {room.type_name} Room
-                      </h3>
+                      <span className="public-room-num">Room {room.room_number}</span>
+                      <h3 className="public-room-type">{room.type_name} Room</h3>
                     </div>
                   </div>
 
@@ -443,9 +421,7 @@ export const PublicRoomsPage: React.FC = () => {
                         <span className="public-price-label">
                           Total for {nights} {nights === 1 ? 'night' : 'nights'}:
                         </span>
-                        <span className="public-price-amount">
-                          {fmt(roomNightlyTotal)}
-                        </span>
+                        <span className="public-price-amount">{fmt(roomNightlyTotal)}</span>
                       </div>
                       <button
                         type="button"
@@ -541,29 +517,45 @@ export const PublicRoomsPage: React.FC = () => {
                       {fmt(Math.round(Number(bookingRoom.daily_rate) * nights))}
                     </span>
                   </div>
+                  <div className="flex justify-between text-xs font-bold text-emerald-800 pt-1">
+                    <span>
+                      Due Now (
+                      {paymentChoice === 'full' ? '100% Full Payment' : '50% Advance Deposit'}):
+                    </span>
+                    <span>
+                      {fmt(
+                        Math.round(
+                          paymentChoice === 'full'
+                            ? Number(bookingRoom.daily_rate) * nights
+                            : (Number(bookingRoom.daily_rate) * nights) / 2,
+                        ),
+                      )}
+                    </span>
+                  </div>
+                  {paymentChoice === 'half' && (
+                    <div className="flex justify-between text-[11px] text-slate-500">
+                      <span>Remaining 50% Balance:</span>
+                      <span>Payable at hotel check-in</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Payment preference */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-800 mb-2">
-                    Payment Option:
+                    Payment Preference:
                   </label>
                   <div className="space-y-2">
                     {[
                       {
                         value: 'half' as const,
-                        label: 'Pay 50% Advance Now',
-                        desc: 'Pay half today to lock in your reservation; settle remainder at check-in.',
+                        label: 'Pay 50% Advance Deposit Now (Required)',
+                        desc: 'Pay half today to lock in your reservation; settle remaining 50% at check-in.',
                       },
                       {
                         value: 'full' as const,
-                        label: 'Pay Full Amount Now',
-                        desc: 'Settle in full upfront.',
-                      },
-                      {
-                        value: 'later' as const,
-                        label: 'Pay at Check-In',
-                        desc: 'Reserve now with 0 advance; pay the full balance upon arrival.',
+                        label: 'Pay Full Amount Now (100%)',
+                        desc: 'Settle in full upfront for express arrival.',
                       },
                     ].map((opt) => (
                       <label
@@ -592,24 +584,26 @@ export const PublicRoomsPage: React.FC = () => {
                 </div>
 
                 {/* Payment method selector */}
-                {paymentChoice !== 'later' && (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-800 mb-1">
-                      Payment Method:
-                    </label>
-                    <select
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
-                    >
-                      {paymentMethods.map((m) => (
+                <div>
+                  <label className="block text-xs font-semibold text-slate-800 mb-1">
+                    Payment Method *
+                  </label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-slate-800"
+                  >
+                    {paymentMethods.length > 0 ? (
+                      paymentMethods.map((m) => (
                         <option key={m.public_id} value={m.method_name}>
                           {m.display_name}
                         </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+                      ))
+                    ) : (
+                      <option value="Credit Card">Credit Card</option>
+                    )}
+                  </select>
+                </div>
 
                 <div className="flex gap-2 pt-2">
                   <button

@@ -116,6 +116,8 @@ export const guestApi = {
     check_in_time: string;
     check_out_time: string;
     room_public_ids: string[];
+    payment_method: string;
+    payment_option?: 'half' | 'full';
   }) => {
     const res = await apiClient.post<{ data: GuestBooking }>('/guest/bookings', data);
     return res.data.data;
