@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/auth-state';
-import { guestApi, type BranchItem, type HotelConfig } from '../api/guestApi';
+import { guestApi, authRecoveryApi, type BranchItem, type HotelConfig } from '../api/guestApi';
 import './Login.css';
 
 // SVG Icons for password visibility toggle
@@ -54,6 +54,91 @@ export const Login = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Password Recovery state
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [forgotStep, setForgotStep] = useState<'request' | 'reset'>('request');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetToken, setResetToken] = useState(searchParams.get('token') || '');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const tokenParam = searchParams.get('token');
+    const tabParam = searchParams.get('tab');
+    if (tokenParam || tabParam === 'reset') {
+      if (tokenParam) setResetToken(tokenParam);
+      setForgotStep('reset');
+      setIsForgotModalOpen(true);
+    }
+  }, [searchParams]);
+
+  const handleOpenForgot = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setForgotEmail(email.trim());
+    setForgotError(null);
+    setForgotSuccess(null);
+    setIsForgotModalOpen(true);
+  };
+
+  const handleRequestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotSuccess(null);
+    setForgotLoading(true);
+
+    try {
+      const res = await authRecoveryApi.forgotPassword(forgotEmail.trim());
+      setForgotSuccess(res.message || 'Password reset token generated.');
+      if (res.data?.token) {
+        setResetToken(res.data.token);
+        setForgotStep('reset');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to generate reset token';
+      setForgotError(msg);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleApplyReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotSuccess(null);
+
+    if (newPassword.length < 8) {
+      setForgotError('New password must be at least 8 characters long');
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      setForgotError('Passwords do not match');
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const res = await authRecoveryApi.resetPasswordDirect(resetToken.trim(), newPassword);
+      setForgotSuccess(res.message || 'Password updated successfully! You can now sign in.');
+      setTimeout(() => {
+        setIsForgotModalOpen(false);
+        setForgotSuccess(null);
+        setForgotStep('request');
+        if (forgotEmail) setEmail(forgotEmail);
+        setPassword('');
+      }, 1600);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to update password';
+      setForgotError(msg);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
 
   useEffect(() => {
     Promise.all([
@@ -310,16 +395,14 @@ export const Login = () => {
               </div>
 
               <div className="sn-form-meta">
-                <a
-                  href="#forgot"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert('Please contact front desk or hotel administration for credential assistance.');
-                  }}
+                <button
+                  type="button"
+                  onClick={handleOpenForgot}
                   className="sn-forgot-link"
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit' }}
                 >
                   Forgot Password?
-                </a>
+                </button>
               </div>
 
               {/* Submit Button */}
@@ -559,6 +642,201 @@ export const Login = () => {
           )}
         </div>
       </footer>
+
+      {/* ── Password Recovery Modal ── */}
+      {isForgotModalOpen && (
+        <div
+          className="sn-modal-backdrop"
+          onClick={() => {
+            setIsForgotModalOpen(false);
+            setForgotError(null);
+            setForgotSuccess(null);
+          }}
+        >
+          <div className="sn-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="sn-modal-header">
+              <div className="sn-modal-badge">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                Account Recovery
+              </div>
+              <button
+                type="button"
+                className="sn-modal-close"
+                onClick={() => {
+                  setIsForgotModalOpen(false);
+                  setForgotError(null);
+                  setForgotSuccess(null);
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            <h3 className="sn-modal-title">
+              {forgotStep === 'request' ? 'Reset Your Password' : 'Set New Password'}
+            </h3>
+            <p className="sn-modal-subtitle">
+              {forgotStep === 'request'
+                ? 'Enter your registered email address and we will generate a secure reset token connected to your account.'
+                : 'Enter your verification token and your new password to restore account access.'}
+            </p>
+
+            {forgotError && (
+              <div className="sn-alert sn-alert-error" style={{ marginBottom: 16 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>{forgotError}</span>
+              </div>
+            )}
+
+            {forgotSuccess && (
+              <div className="sn-alert sn-alert-success" style={{ marginBottom: 16 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+                <span>{forgotSuccess}</span>
+              </div>
+            )}
+
+            {forgotStep === 'request' ? (
+              <form onSubmit={handleRequestReset} className="sn-modal-form">
+                <div className="sn-form-group">
+                  <label className="sn-label">Registered Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="e.g. guest@example.com or staff@hotel.com"
+                    className="sn-input"
+                  />
+                </div>
+
+                <div className="sn-modal-actions">
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="sn-submit-btn"
+                  >
+                    {forgotLoading ? 'Verifying with Database...' : 'Generate Reset Token'}
+                  </button>
+                </div>
+
+                <div className="sn-modal-footer-link">
+                  <span>Already have a reset token?</span>{' '}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotStep('reset');
+                      setForgotError(null);
+                    }}
+                    className="sn-link-btn"
+                  >
+                    Enter token & set password →
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={handleApplyReset} className="sn-modal-form">
+                {resetToken && (
+                  <div className="sn-modal-token-box">
+                    <div className="sn-modal-token-label">Active Verification Token:</div>
+                    <div className="sn-modal-token-code">{resetToken}</div>
+                  </div>
+                )}
+
+                <div className="sn-form-group">
+                  <label className="sn-label">Verification Token</label>
+                  <input
+                    type="text"
+                    required
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    placeholder="Paste reset token here"
+                    className="sn-input"
+                    style={{ fontFamily: 'monospace' }}
+                  />
+                </div>
+
+                <div className="sn-form-group">
+                  <label className="sn-label">New Password (min 8 characters)</label>
+                  <div className="sn-password-wrapper">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      required
+                      minLength={8}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new strong password"
+                      className="sn-input"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="sn-password-toggle"
+                      aria-label="Toggle password visibility"
+                    >
+                      {showNewPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="sn-form-group">
+                  <label className="sn-label">Confirm New Password</label>
+                  <div className="sn-password-wrapper">
+                    <input
+                      type={showConfirmNewPassword ? 'text' : 'password'}
+                      required
+                      minLength={8}
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      placeholder="Re-type new password"
+                      className="sn-input"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                      className="sn-password-toggle"
+                      aria-label="Toggle confirm password visibility"
+                    >
+                      {showConfirmNewPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="sn-modal-actions">
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="sn-submit-btn"
+                  >
+                    {forgotLoading ? 'Updating Password...' : 'Reset Password & Sign In'}
+                  </button>
+                </div>
+
+                <div className="sn-modal-footer-link">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotStep('request');
+                      setForgotError(null);
+                    }}
+                    className="sn-link-btn"
+                  >
+                    ← Back to email input
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

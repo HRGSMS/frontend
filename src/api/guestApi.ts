@@ -193,3 +193,23 @@ export const guestApi = {
     return res.data.data;
   },
 };
+
+export const authRecoveryApi = {
+  forgotPassword: async (email: string) => {
+    const res = await apiClient.post<{
+      status: boolean;
+      message: string;
+      data: { email: string; name: string; role: string; token: string; expires_at: string };
+    }>('/auth/forgot-password', { email });
+    return res.data;
+  },
+
+  resetPasswordDirect: async (token: string, newPassword: string) => {
+    const res = await apiClient.post<{
+      status: boolean;
+      message: string;
+    }>('/auth/reset-password-direct', { token, newPassword });
+    return res.data;
+  },
+};
+
