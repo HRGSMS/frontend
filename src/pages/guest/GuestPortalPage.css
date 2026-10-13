@@ -1,0 +1,318 @@
+/* GuestPortalPage.css — Matching FrontDeskDashboard Light Aesthetic */
+.guest-portal-root {
+  --gp-ink: #00152f;
+  --gp-muted: #626978;
+  --gp-line: #e9ecf5;
+  --gp-gold: #806b43;
+  --gp-navy: #00152f;
+  --gp-navy-hover: #0f2a4a;
+  
+  color-scheme: light;
+  color: var(--gp-ink);
+  background: radial-gradient(ellipse at 100% 0%, #f0f3ff 0, transparent 40%), #f9f9ff;
+  min-height: 100vh;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+.guest-portal-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--gp-line);
+  padding: 16px 24px;
+}
+
+.guest-portal-header-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.guest-brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.guest-brand-monogram {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #00152f;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(0, 21, 47, 0.15);
+}
+
+.guest-brand-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--gp-ink);
+}
+
+.guest-brand-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--gp-gold);
+  margin-left: 8px;
+}
+
+.guest-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.guest-header-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.guest-btn-outline {
+  border: 1px solid var(--gp-line);
+  background: #ffffff;
+  color: var(--gp-ink);
+}
+
+.guest-btn-outline:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.guest-btn-primary {
+  background: var(--gp-navy);
+  color: #ffffff;
+  border: 1px solid var(--gp-navy);
+  box-shadow: 0 2px 8px rgba(0, 21, 47, 0.15);
+}
+
+.guest-btn-primary:hover {
+  background: var(--gp-navy-hover);
+  box-shadow: 0 4px 12px rgba(0, 21, 47, 0.25);
+}
+
+/* Page Container */
+.guest-main-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 36px 24px 60px;
+}
+
+/* Page Hero Eyebrow & Serif Title */
+.guest-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: var(--gp-gold);
+  text-transform: uppercase;
+  margin: 0 0 10px;
+}
+
+.guest-hero-heading {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(30px, 3vw, 42px);
+  font-weight: 400;
+  letter-spacing: -1.2px;
+  line-height: 1.15;
+  color: var(--gp-ink);
+  margin: 0 0 10px;
+}
+
+.guest-hero-desc {
+  font-size: 14px;
+  color: var(--gp-muted);
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+/* 4-Card Metrics Grid */
+.guest-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.guest-metric-card {
+  background: #ffffff;
+  border: 1px solid var(--gp-line);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 3px 12px rgba(0, 21, 47, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.guest-metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.guest-metric-title {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gp-muted);
+  margin: 0;
+}
+
+.guest-metric-icon {
+  font-size: 16px;
+  color: var(--gp-gold);
+}
+
+.guest-metric-value {
+  font-size: 36px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  color: var(--gp-ink);
+  margin: 16px 0 6px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.guest-metric-note {
+  font-size: 12px;
+  color: var(--gp-muted);
+  margin: 0;
+}
+
+/* Featured Metric Card (Deep Navy) */
+.guest-metric-featured {
+  background: linear-gradient(120deg, #00152f, #0f2a4a);
+  border-color: #00152f;
+  color: #ffffff;
+}
+
+.guest-metric-featured .guest-metric-title {
+  color: #cbd5e1;
+}
+
+.guest-metric-featured .guest-metric-value {
+  color: #ffffff;
+}
+
+.guest-metric-featured .guest-metric-note {
+  color: #94a3b8;
+}
+
+/* Section Header */
+.guest-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--gp-line);
+}
+
+.guest-section-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gp-ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.guest-badge-count {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+/* Stay Card */
+.guest-stay-card {
+  background: #ffffff;
+  border: 1px solid var(--gp-line);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 21, 47, 0.03);
+  margin-bottom: 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.guest-stay-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 14px rgba(0, 21, 47, 0.06);
+}
+
+.guest-stay-header-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 20px 24px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.guest-stay-expanded {
+  background: #fafbfd;
+  border-top: 1px solid var(--gp-line);
+  padding: 24px;
+}
+
+/* Modals */
+.guest-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 21, 47, 0.55);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 16px;
+}
+
+.guest-modal-card {
+  background: #ffffff;
+  border: 1px solid var(--gp-line);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 460px;
+  padding: 28px;
+  box-shadow: 0 24px 48px -12px rgba(0, 21, 47, 0.25);
+  color: var(--gp-ink);
+}
+
+.guest-modal-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--gp-ink);
+  margin: 0 0 8px;
+}

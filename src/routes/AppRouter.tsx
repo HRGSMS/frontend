@@ -18,7 +18,6 @@ import GuestServiceRequestPage from '../pages/frontdesk/GuestServiceRequestPage'
 import ServiceCataloguePage from '../pages/frontdesk/ServiceCataloguePage';
 import ReportsPage from '../pages/reports/ReportsPage';
 import PublicRoomsPage from '../pages/guest/PublicRoomsPage';
-import GuestAuthPage from '../pages/guest/GuestAuthPage';
 import GuestPortalPage from '../pages/guest/GuestPortalPage';
 import SystemSettingsPage from '../pages/admin/SystemSettingsPage';
 import ServiceStaffDashboard from '../pages/services/ServiceStaffDashboard';
@@ -64,7 +63,7 @@ function GuestPortalRoute() {
   const { isLoading, isAuthenticated, user } = useAuth();
 
   if (isLoading) return <Loading />;
-  if (!isAuthenticated) return <Navigate to="/guest/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
   // Staff members are redirected to their own home
   if (user?.role && user.role !== 'guest') {
     return <Navigate to={homeForRole(user.role)} replace />;
@@ -85,7 +84,7 @@ export function AppRouter() {
     <Routes>
       {/* ── Public / guest-facing routes ── */}
       <Route path="/login" element={<PublicRoute />} />
-      <Route path="/guest/login" element={<GuestAuthPage />} />
+      <Route path="/guest/login" element={<Navigate to="/login" replace />} />
       <Route path="/rooms" element={<PublicRoomsPage />} />
       <Route path="/" element={<Home />} />
 
