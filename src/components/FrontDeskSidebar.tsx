@@ -45,6 +45,10 @@ export function FrontDeskSidebar() {
           <Icon name="bed" size={17} />
           Service Catalogue
         </NavLink>
+        <NavLink to="/frontdesk/card-payment" className={navClassName}>
+          <Icon name="creditCard" size={17} />
+          Card Payment
+        </NavLink>
       </nav>
       <div className="fd-sidebar-bottom">
         <Link to="/frontdesk/reservations/new" className="fd-button">

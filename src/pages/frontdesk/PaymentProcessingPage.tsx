@@ -13,6 +13,10 @@ export default function PaymentProcessingPage() {
   // Payment Form States
   const [paymentAmount, setPaymentAmount] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('Credit Card');
+  const [cardNumber, setCardNumber] = useState<string>('');
+  const [cardHolder, setCardHolder] = useState<string>('');
+  const [cardExpiry, setCardExpiry] = useState<string>('');
+  const [cardCvc, setCardCvc] = useState<string>('');
   const [referenceNote, setReferenceNote] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -408,12 +412,145 @@ export default function PaymentProcessingPage() {
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                   >
-                    <option value="Credit Card">Credit Card (Visa / Mastercard)</option>
+                    <option value="Credit Card">Credit Card (Visa / Mastercard / Amex)</option>
+                    <option value="Debit Card">Debit Card</option>
                     <option value="Cash">Cash (Front Desk Counter)</option>
                     <option value="Bank Transfer">Bank Wire Transfer</option>
-                    <option value="Debit Card">Debit Card</option>
                   </select>
                 </div>
+
+                {/* Card Payment Form (shown for Credit Card and Debit Card) */}
+                {(paymentMethod === 'Credit Card' || paymentMethod === 'Debit Card') && (
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, #f0f4ff 0%, #fafcff 100%)',
+                      border: '1px solid #dbeafe',
+                      borderRadius: '12px',
+                      padding: '16px',
+                      marginBottom: '16px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        borderBottom: '1px solid #e0e7ff',
+                        paddingBottom: '8px',
+                        marginBottom: '12px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        color: '#1e3a8a',
+                      }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="2" y="5" width="20" height="14" rx="2" />
+                          <line x1="2" y1="10" x2="22" y2="10" />
+                        </svg>
+                        Card Payment Gateway (Terminal)
+                      </span>
+                      <span style={{ fontSize: '10px', color: '#3b82f6', letterSpacing: '0.5px' }}>
+                        VISA &bull; MC &bull; AMEX
+                      </span>
+                    </div>
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                        Card Number *
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={19}
+                        value={cardNumber}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+                          setCardNumber(val);
+                        }}
+                        placeholder="4532 •••• •••• 8892"
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid #cbd5e1',
+                          background: '#fff',
+                          fontFamily: 'monospace',
+                          fontSize: '13px',
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                        Cardholder Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={cardHolder || selectedBooking.guestName}
+                        onChange={(e) => setCardHolder(e.target.value)}
+                        placeholder="JOHN SMITH"
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid #cbd5e1',
+                          background: '#fff',
+                          textTransform: 'uppercase',
+                          fontSize: '12px',
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                          Expiry (MM/YY) *
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={5}
+                          value={cardExpiry}
+                          onChange={(e) => {
+                            let val = e.target.value.replace(/\D/g, '');
+                            if (val.length > 2) val = `${val.slice(0, 2)}/${val.slice(2, 4)}`;
+                            setCardExpiry(val);
+                          }}
+                          placeholder="12/28"
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #cbd5e1',
+                            background: '#fff',
+                            fontFamily: 'monospace',
+                            fontSize: '13px',
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                          CVC / CVV *
+                        </label>
+                        <input
+                          type="password"
+                          maxLength={4}
+                          value={cardCvc}
+                          onChange={(e) => setCardCvc(e.target.value.replace(/\D/g, ''))}
+                          placeholder="123"
+                          style={{
+                            width: '100%',
+                            padding: '8px 12px',
+                            borderRadius: '8px',
+                            border: '1px solid #cbd5e1',
+                            background: '#fff',
+                            fontFamily: 'monospace',
+                            fontSize: '13px',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Cashier Notes */}
                 <div className="pp-form-group">
