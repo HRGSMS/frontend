@@ -1,9 +1,9 @@
 import { createAuthClient } from 'better-auth/react';
 import { adminClient } from 'better-auth/client/plugins';
-import { authBaseURL } from './config';
+import { apiBaseURL } from './config';
 
 export const authClient = createAuthClient({
-  baseURL: authBaseURL,
+  baseURL: apiBaseURL.replace(/\/api$/, ''), // Use base server URL (e.g., http://localhost:4000)
   basePath: '/api/auth',
   plugins: [adminClient()],
   fetchOptions: { credentials: 'include' },
