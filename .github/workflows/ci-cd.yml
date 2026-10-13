@@ -1,4 +1,4 @@
-name: Frontend CI/CD
+name: Frontend CI/CD (Vercel + Oracle VPS)
 
 on:
   push:
@@ -15,6 +15,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # =========================================================================
+  # 1. CI CHECKS: Lint, Typecheck, Test, and Build Test
+  # =========================================================================
   checks:
     name: Frontend checks
     runs-on: ubuntu-latest
@@ -29,9 +32,25 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_AUTH_BASE_URL: ${{ secrets.VITE_AUTH_BASE_URL }}
+          VITE_SOCKET_URL: ${{ secrets.VITE_SOCKET_URL }}
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
 
-  deploy:
-    name: Deploy frontend
+      # Save the pre-built dist for the VPS deploy job
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+          retention-days: 1
+
+  # =========================================================================
+  # 2. DEPLOY TARGET 1: VERCEL
+  # =========================================================================
+  deploy_vercel:
+    name: Deploy to Vercel
     needs: checks
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -47,12 +66,12 @@ jobs:
         with:
           node-version: '24'
           cache: npm
-      - name: Check deployment secrets
+      - name: Check Vercel deployment secrets
         shell: bash
         run: |
           for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
             if [ -z "${!name}" ]; then
-              echo "::error::Missing GitHub production environment secret: $name"
+              echo "::error::Missing GitHub production secret: $name"
               exit 1
             fi
           done
@@ -79,3 +98,35 @@ jobs:
         run: vercel build --prod --token="$VERCEL_TOKEN"
       - name: Deploy production build
         run: vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN"
+
+  # =========================================================================
+  # 3. DEPLOY TARGET 2: ORACLE CLOUD VPS (Runs concurrently with Vercel)
+  # =========================================================================
+  deploy_vps:
+    name: Deploy to Oracle VPS
+    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+
+      - name: Deploy to VPS using rsync
+        env:
+          DEPLOY_KEY: ${{ secrets.OCI_SSH_KEY }}
+          HOST: ${{ secrets.OCI_HOST }}
+          USER: ${{ secrets.OCI_USERNAME }}
+          PORT: ${{ secrets.OCI_PORT || 22 }}
+          TARGET_DIR: /var/www/hrgsms/frontend/dist/
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p $PORT -H "$HOST" >> ~/.ssh/known_hosts
+
+          rsync -avz --delete -e "ssh -p $PORT -i ~/.ssh/deploy_key" dist/ "$USER@$HOST:$TARGET_DIR"
+          echo "==> Frontend deployed to Oracle VPS successfully!"
