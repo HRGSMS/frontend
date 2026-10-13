@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
 
 export interface OccupancyRecord {
+  room_public_id?: string;
   room_number: string;
   branch_name: string;
   type_name: string;

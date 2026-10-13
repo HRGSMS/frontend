@@ -379,12 +379,6 @@ export default function ReportsPage() {
             <Icon name="chart" size={17} />
             Analytics & reports
           </span>
-          {user?.role === 'manager' && (
-            <Link to="/manager/staff">
-              <Icon name="users" size={17} />
-              Staff management
-            </Link>
-          )}
         </nav>
         <div className="fd-sidebar-bottom">
           <Link
