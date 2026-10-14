@@ -20,6 +20,7 @@ import ReportsPage from '../pages/reports/ReportsPage';
 import PublicRoomsPage from '../pages/guest/PublicRoomsPage';
 import GuestPortalPage from '../pages/guest/GuestPortalPage';
 import SystemSettingsPage from '../pages/admin/SystemSettingsPage';
+import UserManagementPage from '../pages/admin/UserManagementPage';
 import ServiceStaffDashboard from '../pages/services/ServiceStaffDashboard';
 import AnalyticsPage from '../pages/manager/AnalyticsPage';
 import LandingPage from '../pages/LandingPage';
@@ -112,6 +113,7 @@ export function AppRouter() {
             {/* Admin */}
             <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/users" element={<UserManagementPage />} />
             <Route path="/admin/settings" element={<SystemSettingsPage />} />
             <Route path="/admin/reports" element={<ReportsPage />} />
 

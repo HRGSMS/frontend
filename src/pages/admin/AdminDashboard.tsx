@@ -14,10 +14,17 @@ function formatLKR(value: number | string | null | undefined): string {
   return `LKR ${num.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-type IconName = 'chart' | 'door' | 'settings' | 'refresh' | 'arrow' | 'money' | 'bed';
+type IconName = 'chart' | 'door' | 'settings' | 'refresh' | 'arrow' | 'money' | 'bed' | 'users';
 
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, ReactNode> = {
+    users: (
+      <>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+      </>
+    ),
     chart: <path d="M4 3v18h17M8 16v-5m5 5V7m5 9V4" />,
     door: <path d="M4 21h16M7 21V3h10v18M13 12h1" />,
     settings: (
@@ -148,6 +155,13 @@ export default function AdminDashboard() {
             <Icon name="refresh" size={16} />
           </button>
           <Link
+            to="/admin/users"
+            className="sn-dashboard-button inline-flex items-center gap-2 px-4 py-2 border border-gray-300 hover:bg-gray-100 text-gray-800 text-sm font-medium rounded-lg shadow-xs transition-colors bg-white"
+          >
+            <Icon name="users" size={17} />
+            Manage Users
+          </Link>
+          <Link
             to="/admin/reports"
             className="sn-dashboard-button inline-flex items-center gap-2 px-4 py-2 bg-[#224846] hover:bg-[#193634] text-white text-sm font-medium rounded-lg shadow-sm transition-colors"
           >
@@ -271,7 +285,33 @@ export default function AdminDashboard() {
       {/* Main Administrative Modules Grid */}
       <section className="mt-8">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Management & Operations Portals</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {/* User Management Card */}
+          <Link
+            to="/admin/users"
+            className="sn-admin-portal group relative flex flex-col justify-between p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-purple-300 transition-all"
+          >
+            <div>
+              <div className="flex items-center justify-between">
+                <div className="h-10 w-10 rounded-lg bg-purple-50 text-purple-700 flex items-center justify-center">
+                  <Icon name="users" size={22} />
+                </div>
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                  Access Control
+                </span>
+              </div>
+              <h3 className="mt-4 font-semibold text-gray-900 text-lg group-hover:text-purple-700 transition-colors">
+                User Management
+              </h3>
+              <p className="mt-2 text-sm text-gray-600 line-clamp-3">
+                Provision new Front Desk and Manager accounts, update staff roles, and audit registered users.
+              </p>
+            </div>
+            <div className="mt-6 flex items-center text-sm font-semibold text-purple-700">
+              Manage accounts <Icon name="arrow" size={15} />
+            </div>
+          </Link>
+
           {/* Reports & Analytics Card */}
           <Link
             to="/admin/reports"

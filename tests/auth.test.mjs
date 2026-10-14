@@ -242,3 +242,88 @@ test('front desk staff cannot access reports pages while managers and admins can
   assert.equal(canAccessPath('admin', '/admin/reports'), true);
   assert.equal(canAccessPath('admin', '/manager/reports'), true);
 });
+test('only admin can access the user management workspace', () => {
+  assert.equal(canAccessPath('admin', '/admin/users'), true);
+  assert.equal(canAccessPath('manager', '/admin/users'), false);
+  assert.equal(canAccessPath('front_desk', '/admin/users'), false);
+  assert.equal(canAccessPath('service_staff', '/admin/users'), false);
+  assert.equal(canAccessPath('guest', '/admin/users'), false);
+});
+test('Better Auth admin client lists users and provisions frontdesk and manager users', async () => {
+  const { client, calls } = mockClient([
+    {
+      body: {
+        users: [
+          { id: 'u-1', name: 'Admin', email: 'admin@hotel.com', role: 'admin' },
+          { id: 'u-2', name: 'Front Desk', email: 'frontdesk@hotel.com', role: 'front_desk' },
+        ],
+        total: 2,
+      },
+    },
+    {
+      body: {
+        user: { id: 'u-3', name: 'New FD', email: 'newfd@hotel.com', role: 'front_desk' },
+      },
+    },
+    {
+      body: {
+        user: { id: 'u-4', name: 'New Manager', email: 'mgr@hotel.com', role: 'manager' },
+      },
+    },
+    {
+      body: { success: true },
+    },
+    {
+      body: { success: true },
+    },
+  ]);
+
+  // 1. List users
+  const listResult = await client.admin.listUsers({ query: { limit: 10 } });
+  assert.equal(listResult.data.users.length, 2);
+  assert.equal(new URL(calls[0].url).pathname, '/api/auth/admin/list-users');
+  assert.equal(calls[0].init.method, 'GET');
+
+  // 2. Create Front Desk user
+  const createFdResult = await client.admin.createUser({
+    name: 'New FD',
+    email: 'newfd@hotel.com',
+    password: 'password123',
+    role: 'front_desk',
+  });
+  assert.equal(createFdResult.data.user.role, 'front_desk');
+  assert.equal(new URL(calls[1].url).pathname, '/api/auth/admin/create-user');
+  assert.equal(calls[1].init.method, 'POST');
+  assert.deepEqual(JSON.parse(calls[1].init.body), {
+    name: 'New FD',
+    email: 'newfd@hotel.com',
+    password: 'password123',
+    role: 'front_desk',
+  });
+
+  // 3. Create Manager user
+  const createMgrResult = await client.admin.createUser({
+    name: 'New Manager',
+    email: 'mgr@hotel.com',
+    password: 'password123',
+    role: 'manager',
+  });
+  assert.equal(createMgrResult.data.user.role, 'manager');
+  assert.equal(new URL(calls[2].url).pathname, '/api/auth/admin/create-user');
+  assert.deepEqual(JSON.parse(calls[2].init.body), {
+    name: 'New Manager',
+    email: 'mgr@hotel.com',
+    password: 'password123',
+    role: 'manager',
+  });
+
+  // 4. Update Role
+  await client.admin.setRole({ userId: 'u-3', role: 'manager' });
+  assert.equal(new URL(calls[3].url).pathname, '/api/auth/admin/set-role');
+  assert.deepEqual(JSON.parse(calls[3].init.body), { userId: 'u-3', role: 'manager' });
+
+  // 5. Remove User
+  await client.admin.removeUser({ userId: 'u-3' });
+  assert.equal(new URL(calls[4].url).pathname, '/api/auth/admin/remove-user');
+  assert.deepEqual(JSON.parse(calls[4].init.body), { userId: 'u-3' });
+});
