@@ -1,11 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { bookingStore, type Booking } from '../../lib/bookingStore';
+import { requestError } from '../../lib/request-error';
 import { formatLKR } from '../../lib/currency';
 
 export default function CheckInOutPage() {
   const [activeTab, setActiveTab] = useState<'arrivals' | 'departures'>('arrivals');
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [notification, setNotification] = useState<string | null>(null);
@@ -63,6 +66,8 @@ export default function CheckInOutPage() {
   }, [currentList, searchQuery]);
 
   const openActionModal = (booking: Booking, type: 'check-in' | 'check-out') => {
+    setActionError(null);
+    setNotification(null);
     setSelectedBookingForAction(booking);
     setActionType(type);
     setIdVerified(true);
@@ -72,12 +77,15 @@ export default function CheckInOutPage() {
   };
 
   const closeActionModal = () => {
+    if (isSubmitting) return;
     setSelectedBookingForAction(null);
     setActionType(null);
   };
 
   const handleConfirmAction = async () => {
-    if (!selectedBookingForAction || !actionType) return;
+    if (!selectedBookingForAction || !actionType || isSubmitting) return;
+    setIsSubmitting(true);
+    setActionError(null);
 
     const newStatus = actionType === 'check-in' ? 'Checked-In' : 'Checked-Out';
 
@@ -95,11 +103,13 @@ export default function CheckInOutPage() {
             : `Guest ${updated.guestName} successfully checked out from Room ${updated.roomNumbers}.`,
         );
         setTimeout(() => setNotification(null), 4000);
+        setSelectedBookingForAction(null);
+        setActionType(null);
       }
     } catch (err) {
-      console.error('Failed to execute action', err);
+      setActionError(requestError(err));
     } finally {
-      closeActionModal();
+      setIsSubmitting(false);
     }
   };
 
@@ -405,6 +415,7 @@ export default function CheckInOutPage() {
                 <button
                   type="button"
                   onClick={closeActionModal}
+                  disabled={isSubmitting}
                   className="text-slate-400 hover:text-slate-600 text-xl font-bold"
                 >
                   &times;
@@ -488,11 +499,20 @@ export default function CheckInOutPage() {
                 )}
               </div>
 
+              {actionError && (
+                <div
+                  role="alert"
+                  className="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+                >
+                  {actionError}
+                </div>
+              )}
               {/* Modal Buttons */}
               <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-3">
                 <button
                   type="button"
                   onClick={closeActionModal}
+                  disabled={isSubmitting}
                   className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Cancel
@@ -500,13 +520,18 @@ export default function CheckInOutPage() {
                 <button
                   type="button"
                   onClick={handleConfirmAction}
+                  disabled={isSubmitting}
                   className={`rounded-lg px-4 py-2 text-xs font-semibold text-white shadow-xs ${
                     actionType === 'check-in'
                       ? 'bg-emerald-700 hover:bg-emerald-800'
                       : 'bg-blue-900 hover:bg-blue-800'
                   }`}
                 >
-                  {actionType === 'check-in' ? 'Complete Check-In' : 'Complete Check-Out'}
+                  {isSubmitting
+                    ? 'Processing…'
+                    : actionType === 'check-in'
+                      ? 'Complete Check-In'
+                      : 'Complete Check-Out'}
                 </button>
               </div>
             </div>

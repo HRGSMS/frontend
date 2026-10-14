@@ -1,11 +1,14 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { bookingStore, type Booking, type BookingStatus } from '../../lib/bookingStore';
+import { requestError } from '../../lib/request-error';
 import { formatLKR } from '../../lib/currency';
 
 export default function ReservationsListPage() {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('All');
@@ -44,6 +47,10 @@ export default function ReservationsListPage() {
   }, []);
 
   const handleQuickStatusChange = async (id: string | number, newStatus: BookingStatus) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setActionError(null);
+    setStatusMessage(null);
     try {
       const updated = await bookingStore.updateBookingStatus(id, newStatus);
       if (updated) {
@@ -52,7 +59,9 @@ export default function ReservationsListPage() {
         setTimeout(() => setStatusMessage(null), 3000);
       }
     } catch (err) {
-      console.error('Failed to update status', err);
+      setActionError(requestError(err));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -154,6 +163,14 @@ export default function ReservationsListPage() {
         </div>
 
         {/* Status Notification */}
+        {actionError && (
+          <div
+            role="alert"
+            className="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+          >
+            {actionError}
+          </div>
+        )}
         {statusMessage && (
           <div className="mt-4 rounded-lg bg-emerald-50 border border-emerald-200 p-3.5 text-sm font-medium text-emerald-800 flex items-center justify-between animate-fadeIn">
             <div className="flex items-center gap-2">
@@ -467,6 +484,7 @@ export default function ReservationsListPage() {
                             <button
                               type="button"
                               onClick={() => handleQuickStatusChange(b.id, 'Checked-In')}
+                              disabled={isSubmitting}
                               className="rounded-md bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-800 hover:bg-blue-100 transition-colors"
                               title="Check In guest"
                             >
@@ -477,6 +495,7 @@ export default function ReservationsListPage() {
                             <button
                               type="button"
                               onClick={() => handleQuickStatusChange(b.id, 'Checked-Out')}
+                              disabled={isSubmitting}
                               className="rounded-md bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-200 transition-colors"
                               title="Check Out guest"
                             >

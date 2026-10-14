@@ -56,7 +56,9 @@ export const bookingStore = {
   // Fetches bookings from Vidath's GET /api/bookings and syncs with store
   async fetchBookings(filters?: { status?: string; branchId?: number }): Promise<Booking[]> {
     try {
-      const apiResponse = await reservationApi.listBookings(filters?.status ? { status: filters.status } : {});
+      const apiResponse = await reservationApi.listBookings(
+        filters?.status ? { status: filters.status } : {},
+      );
       const backendRows = apiResponse?.data;
 
       if (Array.isArray(backendRows)) {
@@ -181,34 +183,41 @@ export const bookingStore = {
   // Calls Vidath's PATCH /api/bookings/:publicId for Check-In, Check-Out, Cancellation
   async updateBookingStatus(id: string | number, status: BookingStatus): Promise<Booking | null> {
     const local = getStoredLocalBookings();
-    const idx = local.findIndex((b) => String(b.id) === String(id) || String(b.publicId) === String(id));
-    if (idx === -1) return null;
+    const idx = local.findIndex(
+      (b) => String(b.id) === String(id) || String(b.publicId) === String(id),
+    );
+    if (idx === -1) throw new Error('Reservation not found. Refresh the page and try again.');
 
     const existing = local[idx];
+    const publicId = String(existing.publicId || id);
+    // Only persist the transition after the server accepts the database update.
+    let response;
+    if (status === 'Checked-In') {
+      response = await reservationApi.checkIn(publicId);
+    } else if (status === 'Checked-Out') {
+      response = await reservationApi.checkOut(publicId);
+    } else if (status === 'Cancelled') {
+      response = await reservationApi.cancelBooking(publicId);
+    } else {
+      response = await reservationApi.updateBooking(publicId, { booking_status: status });
+    }
+    if (response?.success === false || response?.error) {
+      throw new Error(response.error || response.message || 'The reservation update was rejected.');
+    }
+
     const updatedBooking: Booking = {
       ...existing,
       bookingStatus: status,
       cancellationTime:
         status === 'Cancelled' ? new Date().toISOString() : existing.cancellationTime,
     };
-
-    local[idx] = updatedBooking;
-    saveLocalBookings(local);
-
-    try {
-      const publicId = String(existing.publicId || id);
-      if (status === 'Checked-In') {
-        await reservationApi.checkIn(publicId);
-      } else if (status === 'Checked-Out') {
-        await reservationApi.checkOut(publicId);
-      } else if (status === 'Cancelled') {
-        await reservationApi.cancelBooking(publicId);
-      } else {
-        await reservationApi.updateBooking(publicId, { booking_status: status });
-      }
-    } catch (err) {
-      console.warn('Backend status update fallback to local state', err);
-    }
+    // Re-read the cache so other bookings updated during the request are preserved.
+    const current = getStoredLocalBookings();
+    saveLocalBookings(
+      current.map((booking) =>
+        String(booking.id) === String(existing.id) ? updatedBooking : booking,
+      ),
+    );
 
     return updatedBooking;
   },
@@ -220,13 +229,19 @@ export const bookingStore = {
     paymentMethod: string = 'Credit Card',
   ): Promise<Booking | null> {
     const local = getStoredLocalBookings();
-    const idx = local.findIndex((b) => String(b.id) === String(id) || String(b.publicId) === String(id));
+    const idx = local.findIndex(
+      (b) => String(b.id) === String(id) || String(b.publicId) === String(id),
+    );
     if (idx === -1) return null;
 
     const existing = local[idx];
     const newOutstanding = Math.max(0, existing.outstandingAmount - amount);
     const newPaymentStatus: PaymentStatus =
-      newOutstanding === 0 ? 'Paid' : newOutstanding < existing.totalCharge ? 'Partially Paid' : 'Pending';
+      newOutstanding === 0
+        ? 'Paid'
+        : newOutstanding < existing.totalCharge
+          ? 'Partially Paid'
+          : 'Pending';
 
     const updatedBooking: Booking = {
       ...existing,
@@ -259,7 +274,9 @@ export const bookingStore = {
   ) {
     try {
       const local = getStoredLocalBookings();
-      const existing = local.find((b) => String(b.id) === String(id) || String(b.publicId) === String(id));
+      const existing = local.find(
+        (b) => String(b.id) === String(id) || String(b.publicId) === String(id),
+      );
       const publicId = String(existing?.publicId || id);
 
       return await serviceApi.orderService(publicId, {
