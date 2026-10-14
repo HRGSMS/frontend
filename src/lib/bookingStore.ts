@@ -232,9 +232,20 @@ export const bookingStore = {
     const idx = local.findIndex(
       (b) => String(b.id) === String(id) || String(b.publicId) === String(id),
     );
-    if (idx === -1) return null;
+    if (idx === -1) throw new Error('Reservation not found. Refresh the page and try again.');
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error('Please enter a valid payment amount greater than zero.');
+    }
 
     const existing = local[idx];
+    const response = await billingApi.recordPayment(String(existing.publicId || id), {
+      amount,
+      payment_method: paymentMethod,
+    });
+    if (response?.success === false || response?.error) {
+      throw new Error(response.error || response.message || 'The payment was rejected.');
+    }
+
     const newOutstanding = Math.max(0, existing.outstandingAmount - amount);
     const newPaymentStatus: PaymentStatus =
       newOutstanding === 0
@@ -249,18 +260,12 @@ export const bookingStore = {
       paymentStatus: newPaymentStatus,
     };
 
-    local[idx] = updatedBooking;
-    saveLocalBookings(local);
-
-    try {
-      const publicId = String(existing.publicId || id);
-      await billingApi.recordPayment(publicId, {
-        amount,
-        payment_method: paymentMethod,
-      });
-    } catch (err) {
-      console.warn('Backend payment record fallback to local state', err);
-    }
+    const current = getStoredLocalBookings();
+    saveLocalBookings(
+      current.map((booking) =>
+        String(booking.id) === String(existing.id) ? updatedBooking : booking,
+      ),
+    );
 
     return updatedBooking;
   },

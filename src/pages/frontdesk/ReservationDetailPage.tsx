@@ -13,6 +13,8 @@ export default function ReservationDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
   const [isConfirmingCancel, setIsConfirmingCancel] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('Credit Card');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
@@ -50,17 +52,28 @@ export default function ReservationDetailPage() {
     }
   };
 
-  const handleSettleBalance = () => {
-    if (!booking) return;
-    const updated: Booking = {
-      ...booking,
-      outstandingAmount: 0,
-      paymentStatus: 'Paid',
-    };
-    setBooking(updated);
-    setIsProcessingPayment(false);
-    setNotification('Outstanding balance successfully settled.');
-    setTimeout(() => setNotification(null), 4000);
+  const handleSettleBalance = async () => {
+    if (!booking || isSubmitting) return;
+    setIsSubmitting(true);
+    setPaymentError(null);
+    setNotification(null);
+    try {
+      const updated = await bookingStore.recordPayment(
+        booking.id,
+        booking.outstandingAmount,
+        paymentMethod,
+      );
+      if (updated) {
+        setBooking(updated);
+        setIsProcessingPayment(false);
+        setNotification('Outstanding balance successfully settled.');
+        setTimeout(() => setNotification(null), 4000);
+      }
+    } catch (err) {
+      setPaymentError(requestError(err));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isLoading) {
@@ -263,17 +276,31 @@ export default function ReservationDetailPage() {
               </p>
               <div className="mt-4 space-y-3">
                 <label className="block text-xs font-semibold text-slate-700">Payment Method</label>
-                <select className="block w-full rounded-lg border border-slate-200 p-2 text-sm">
-                  <option>Credit Card (POS Terminal)</option>
-                  <option>Cash (Front Desk Till)</option>
-                  <option>Direct Bank Transfer</option>
-                  <option>Room Bill Master</option>
+                <select
+                  value={paymentMethod}
+                  onChange={(event) => setPaymentMethod(event.target.value)}
+                  disabled={isSubmitting}
+                  className="block w-full rounded-lg border border-slate-200 p-2 text-sm"
+                >
+                  <option value="Credit Card">Credit Card (POS Terminal)</option>
+                  <option value="Cash">Cash (Front Desk Till)</option>
+                  <option value="Bank Transfer">Direct Bank Transfer</option>
+                  <option value="Debit Card">Debit Card</option>
                 </select>
               </div>
+              {paymentError && (
+                <div
+                  role="alert"
+                  className="mt-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+                >
+                  {paymentError}
+                </div>
+              )}
               <div className="mt-6 flex justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsProcessingPayment(false)}
+                  disabled={isSubmitting}
                   className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50"
                 >
                   Cancel
@@ -281,9 +308,12 @@ export default function ReservationDetailPage() {
                 <button
                   type="button"
                   onClick={handleSettleBalance}
+                  disabled={isSubmitting}
                   className="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-800"
                 >
-                  Confirm Settle {formatLKR(booking.outstandingAmount)}
+                  {isSubmitting
+                    ? 'Processing…'
+                    : `Confirm Settle ${formatLKR(booking.outstandingAmount)}`}
                 </button>
               </div>
             </div>
@@ -482,7 +512,10 @@ export default function ReservationDetailPage() {
                 <div className="mt-5">
                   <button
                     type="button"
-                    onClick={() => setIsProcessingPayment(true)}
+                    onClick={() => {
+                      setPaymentError(null);
+                      setIsProcessingPayment(true);
+                    }}
                     className="w-full rounded-xl bg-blue-900 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-blue-800 transition-colors"
                   >
                     Settle Balance ({formatLKR(booking.outstandingAmount)})

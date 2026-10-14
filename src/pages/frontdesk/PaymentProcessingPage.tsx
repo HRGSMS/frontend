@@ -77,10 +77,10 @@ export default function PaymentProcessingPage() {
 
   const handleProcessPayment = async (e: FormEvent) => {
     e.preventDefault();
-    if (!selectedBooking) return;
+    if (!selectedBooking || isProcessing) return;
 
     const amount = Number(paymentAmount);
-    if (!amount || amount <= 0) {
+    if (!Number.isFinite(amount) || amount <= 0) {
       setErrorMessage('Please enter a valid payment amount greater than zero.');
       return;
     }

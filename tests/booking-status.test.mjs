@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import ts from 'typescript';
 
 // Execute the real store with isolated API and browser-storage dependencies.
-function setup(checkOut) {
-  const booking = { id: 'booking-1', publicId: 'booking-1', bookingStatus: 'Checked-In' };
+function setup(checkOut, recordPayment) {
+  const booking = { id: 'booking-1', publicId: 'booking-1', bookingStatus: 'Checked-In', outstandingAmount: 100, totalCharge: 100, paymentStatus: 'Pending' };
   let stored = JSON.stringify([booking]);
   const localStorage = {
     getItem: () => stored,
@@ -18,6 +18,7 @@ function setup(checkOut) {
   const exports = {};
   const require = (name) => {
     if (name === '../api/reservationApi') return { reservationApi: { checkOut } };
+    if (name === '../api/billingApi') return { billingApi: { recordPayment } };
     return {};
   };
   new Function('require', 'exports', 'localStorage', outputText)(require, exports, localStorage);
@@ -50,4 +51,46 @@ test('an explicit API rejection does not mark checkout successful', async () => 
   const { store, read } = setup(async () => ({ success: false, message: 'Checkout rejected' }));
   await assert.rejects(store.updateBookingStatus('booking-1', 'Checked-Out'), /Checkout rejected/);
   assert.equal(read().bookingStatus, 'Checked-In');
+});
+
+
+test('settlement waits for payment acceptance and sends the selected method', async () => {
+  let finish;
+  const { store, read } = setup(undefined, (id, payload) => {
+    assert.equal(id, 'booking-1');
+    assert.deepEqual(payload, { amount: 100, payment_method: 'Cash' });
+    return new Promise((resolve) => { finish = resolve; });
+  });
+  const pending = store.recordPayment('booking-1', 100, 'Cash');
+  assert.equal(read().outstandingAmount, 100);
+  finish({ success: true });
+  assert.equal((await pending).paymentStatus, 'Paid');
+  assert.equal(read().outstandingAmount, 0);
+});
+
+for (const response of [new Error('Payment rejected'), { success: false, message: 'Payment rejected' }]) {
+  test(`failed settlement preserves the balance (${response instanceof Error ? 'request' : 'response'})`, async () => {
+    const { store, read } = setup(undefined, async () => {
+      if (response instanceof Error) throw response;
+      return response;
+    });
+    await assert.rejects(store.recordPayment('booking-1', 100, 'Cash'), /Payment rejected/);
+    assert.equal(read().outstandingAmount, 100);
+    assert.equal(read().paymentStatus, 'Pending');
+  });
+}
+
+test('partial payment leaves the remaining balance outstanding', async () => {
+  const { store, read } = setup(undefined, async () => ({ success: true }));
+  await store.recordPayment('booking-1', 40, 'Cash');
+  assert.equal(read().outstandingAmount, 60);
+  assert.equal(read().paymentStatus, 'Partially Paid');
+});
+
+test('invalid payment amounts never reach the API', async () => {
+  const { store, read } = setup(undefined, () => assert.fail('Unexpected payment request'));
+  for (const amount of [0, -1, NaN, Infinity]) {
+    await assert.rejects(store.recordPayment('booking-1', amount), /valid payment amount/);
+  }
+  assert.equal(read().outstandingAmount, 100);
 });
